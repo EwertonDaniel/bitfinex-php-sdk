@@ -1,40 +1,40 @@
 <?php
 
+use EwertonDaniel\Bitfinex\Bitfinex;
 use EwertonDaniel\Bitfinex\Core\Services\BitfinexPublic;
-use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 
-test('Can retrieve bitfinex public class', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic)->toBeInstanceOf(BitfinexPublic::class);
+test('Can retrieve bitfinex public class', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public())->toBeInstanceOf(BitfinexPublic::class);
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
 
-test('Can retrieve bitfinex platform status', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic->platformStatus())->toBeArray();
+test('Can retrieve bitfinex platform status', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public()->platformStatus())->toBeArray();
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
 
-test('Can retrieve bitfinex ticker', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic->ticker('EURUSD', 'trading'))->toBeArray();
+test('Can retrieve bitfinex ticker', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public()->ticker('EURUSD', 'trading'))->toBeArray();
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
 
-test('Can retrieve bitfinex tickers', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic->tickers(['EURUSD', 'BTCUSD'], 'trading'))->toBeArray();
+test('Can retrieve bitfinex tickers', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public()->tickers(['EURUSD', 'BTCUSD'], 'trading'))->toBeArray();
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
 
-test('Can retrieve bitfinex ticker history', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic->tickerHistory(['EURUSD', 'BTCUSD']))->toBeArray();
+test('Can retrieve bitfinex ticker history', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public()->tickerHistory(['EURUSD', 'BTCUSD']))->toBeArray();
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
 
-test('Can retrieve bitfinex trades', function (BitfinexPublic $bitfinexPublic) {
-    expect($bitfinexPublic->trades('BTCUSD', 'trading'))->toBeArray();
+test('Can retrieve bitfinex trades', function (Bitfinex $bitfinex) {
+    expect($bitfinex->public()->trades('BTCUSD', 'trading'))->toBeArray();
 })->with([
-    'Bitfinex Public' => fn() => Bitfinex::public(),
+    'Bitfinex Public' => fn() => new Bitfinex(),
 ]);
