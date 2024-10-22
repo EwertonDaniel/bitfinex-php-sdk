@@ -3,77 +3,34 @@
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use Closure;
-use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Utils;
-use Illuminate\Support\Collection;
-use Psr\Http\Message\StreamInterface;
 
-class BitfinexResponse
+abstract class BitfinexResponse
 {
-    private readonly int $statusCode;
+    public readonly bool $success;
 
-    private readonly string $contents;
+    public readonly int $statusCode;
 
-    private readonly StreamInterface $body;
+    public readonly array $headers;
 
-    private readonly array $array;
+    public mixed $contents;
 
-    private readonly array $headers;
-
-    public function __construct(private readonly Response $response)
+    public function __construct(Response $response)
     {
+        $this->success = $response->getStatusCode() < 300;
         $this->statusCode = $response->getStatusCode();
-        $this->headers = $this->response->getHeaders();
-        $this->body = $response->getBody();
-        $this->contents = $this->body->getContents();
-        $this->array = GetThis::ifTrueOrFallback(
-            boolean: $this->statusCode < 300,
-            callback: fn () => Utils::jsonDecode($this->contents, true),
-            fallback: []
-        );
+
+        if ($this->success) {
+            $this->headers = $response->getHeaders();
+            $this->contents = Utils::jsonDecode($response->getBody()->getContents(), true);
+        }
     }
 
-    final public function getStatusCode(): int
+    final public function transformContent(Closure $closure): static
     {
-        return $this->statusCode;
-    }
+        $this->contents = $closure($this->contents);
 
-    final public function getHeaders(): array
-    {
-        return $this->headers;
-    }
-
-    final public function getBody(): StreamInterface
-    {
-        return $this->body;
-    }
-
-    final public function getContents(): string
-    {
-        return $this->contents;
-    }
-
-    final public function result(?Closure $closure = null): array
-    {
-        return [
-            'success' => $this->success(),
-            'status' => $this->getStatusCode(),
-            'headers' => $this->getHeaders(),
-            'body' => GetThis::ifTrueOrFallback(
-                boolean: $closure && $this->success(),
-                callback: fn () => $closure($this->array),
-                fallback: fn () => $this->collect()),
-        ];
-    }
-
-    final public function success(): bool
-    {
-        return $this->statusCode < 300;
-    }
-
-    final public function collect(): Collection
-    {
-        return collect($this->array);
+        return $this;
     }
 }
