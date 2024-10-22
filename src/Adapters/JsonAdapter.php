@@ -21,11 +21,12 @@ abstract class JsonAdapter
     /** @throws Exception */
     public function transform(): array
     {
-        if (!file_exists($this->file)) {
+        if (! file_exists($this->file)) {
             throw new Exception("File not found: {$this->file}");
         }
 
         $contents = file_get_contents($this->file);
+
         return Utils::jsonDecode($contents, true);
     }
 }

@@ -8,6 +8,6 @@ class UrlAdapter extends JsonAdapter
 {
     protected function getFilePath(): string
     {
-        return __DIR__ . '/../../resources/urls.json';
+        return __DIR__.'/../../resources/urls.json';
     }
 }

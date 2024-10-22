@@ -8,17 +8,21 @@ use EwertonDaniel\Bitfinex\Core\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Core\Services\BitfinexAuthenticated;
 use EwertonDaniel\Bitfinex\Core\Services\BitfinexPublic;
 use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexCredentials;
+use Exception;
 
 class Bitfinex
 {
+    /** @throws Exception */
     final public static function public(): BitfinexPublic
     {
-        return new BitfinexPublic(url: new UrlBuilder());
+        return new BitfinexPublic(url: (new UrlBuilder)->setBaseUrl('public'));
     }
 
-    final public static function authenticated(BitfinexCredentials|null $credentials = null): BitfinexAuthenticated
+    /** @throws Exception */
+    final public static function authenticated(?BitfinexCredentials $credentials = null): BitfinexAuthenticated
     {
-        $credentials = $credentials ?? new BitfinexCredentials();
-        return new BitfinexAuthenticated(url: new UrlBuilder(), credentials: $credentials);
+        $credentials = $credentials ?? new BitfinexCredentials;
+
+        return new BitfinexAuthenticated(url: (new UrlBuilder)->setBaseUrl('private'), credentials: $credentials);
     }
 }

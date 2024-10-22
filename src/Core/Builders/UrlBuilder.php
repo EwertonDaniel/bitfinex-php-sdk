@@ -12,15 +12,18 @@ use Illuminate\Support\Arr;
 class UrlBuilder
 {
     private readonly array $urls;
+
     private readonly array $paths;
+
     private string $baseUrl;
+
     private string $path;
 
     /**  @throws Exception */
     public function __construct()
     {
-        $this->urls = (new UrlAdapter())->transform();
-        $this->paths = (new PathAdapter())->transform();
+        $this->urls = (new UrlAdapter)->transform();
+        $this->paths = (new PathAdapter)->transform();
     }
 
     /**
@@ -35,6 +38,7 @@ class UrlBuilder
         }
 
         $this->baseUrl = $url;
+
         return $this;
     }
 
@@ -42,18 +46,21 @@ class UrlBuilder
     {
         $url = "{$this->baseUrl}/$this->path";
         $this->resetPath();
+
         return $url;
     }
 
     public function resetPath(): static
     {
         $this->path = '';
+
         return $this;
     }
 
     public function resetUrl(): static
     {
         $this->baseUrl = '';
+
         return $this;
     }
 
@@ -66,12 +73,12 @@ class UrlBuilder
             throw new Exception("Path not found: {$path}");
         }
 
-        if (!empty($params)) {
+        if (! empty($params)) {
             $path = str_replace(array_keys($params), array_values($params), $path);
         }
 
         $this->path = $path;
+
         return $this;
     }
-
 }

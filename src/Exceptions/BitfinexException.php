@@ -11,11 +11,10 @@ use Throwable;
 class BitfinexException extends Exception implements ClientExceptionInterface
 {
     public function __construct(
-        string     $message = '',
-        int        $code = 0,
+        string $message = '',
+        int $code = 0,
         ?Throwable $previous = null
-    )
-    {
+    ) {
         parent::__construct($message, $code, $previous);
     }
 

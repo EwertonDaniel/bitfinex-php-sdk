@@ -14,8 +14,11 @@ class BitfinexResponse
     private readonly int $statusCode;
 
     private readonly string $contents;
+
     private readonly StreamInterface $body;
+
     private readonly array $array;
+
     private readonly array $headers;
 
     public function __construct(private readonly Response $response)
@@ -26,7 +29,7 @@ class BitfinexResponse
         $this->contents = $this->body->getContents();
         $this->array = GetThis::ifTrueOrFallback(
             boolean: $this->statusCode < 300,
-            callback: fn() => Utils::jsonDecode($this->contents, true),
+            callback: fn () => Utils::jsonDecode($this->contents, true),
             fallback: []
         );
     }
@@ -51,7 +54,7 @@ class BitfinexResponse
         return $this->contents;
     }
 
-    final public function result(Closure|null $closure = null): array
+    final public function result(?Closure $closure = null): array
     {
         return [
             'success' => $this->success(),
@@ -59,8 +62,8 @@ class BitfinexResponse
             'headers' => $this->getHeaders(),
             'body' => GetThis::ifTrueOrFallback(
                 boolean: $closure && $this->success(),
-                callback: fn() => $closure($this->array),
-                fallback: fn() => $this->collect()),
+                callback: fn () => $closure($this->array),
+                fallback: fn () => $this->collect()),
         ];
     }
 

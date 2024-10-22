@@ -12,41 +12,51 @@ class TradingPair
 {
     /**@note Pair, ex.: EURUSD, BTCUSD, ETHUSD */
     public readonly string $pair;
+
     /**@note Symbol, ex.: tEURUSD, tBTCUSD, tETHUSD */
     public readonly string $symbol;
-    /**@note Price of last highest bid */
-    public readonly float|null $bid;
-    /**@note Sum of the 25 highest bid sizes */
-    public readonly float|null $bidSize;
-    /**@note Price of last lowest ask */
-    public readonly float|null $ask;
-    /**@note Sum of the 25 lowest ask sizes */
-    public readonly float|null $askSize;
-    /**@note Amount that the last price has changed since yesterday */
-    public readonly float|null $dailyChange;
-    /**@note Relative price change since yesterday (*100 for percentage change) */
-    public readonly float|null $dailyChangeRelative;
-    /**@note Price of the last trade */
-    public readonly float|null $lastPrice;
-    /**@note Daily volume */
-    public readonly float|null $volume;
-    /**@note Daily high */
-    public readonly float|null $high;
-    /**@note Daily low */
-    public readonly float|null $low;
 
+    /**@note Price of last highest bid */
+    public readonly ?float $bid;
+
+    /**@note Sum of the 25 highest bid sizes */
+    public readonly ?float $bidSize;
+
+    /**@note Price of last lowest ask */
+    public readonly ?float $ask;
+
+    /**@note Sum of the 25 lowest ask sizes */
+    public readonly ?float $askSize;
+
+    /**@note Amount that the last price has changed since yesterday */
+    public readonly ?float $dailyChange;
+
+    /**@note Relative price change since yesterday (*100 for percentage change) */
+    public readonly ?float $dailyChangeRelative;
+
+    /**@note Price of the last trade */
+    public readonly ?float $lastPrice;
+
+    /**@note Daily volume */
+    public readonly ?float $volume;
+
+    /**@note Daily high */
+    public readonly ?float $high;
+
+    /**@note Daily low */
+    public readonly ?float $low;
 
     public function __construct(string $symbol, array $data)
     {
         $this->pair = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 't'),
-            callback: fn() => substr($symbol, 1),
+            callback: fn () => substr($symbol, 1),
             fallback: $symbol
         );
         $this->symbol = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 't'),
             callback: $symbol,
-            fallback: fn() => "t$symbol"
+            fallback: fn () => "t$symbol"
         );
         $this->bid = Arr::get($data, 0);
         $this->bidSize = Arr::get($data, 1);

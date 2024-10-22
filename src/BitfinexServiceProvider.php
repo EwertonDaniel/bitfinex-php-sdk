@@ -11,17 +11,17 @@ class BitfinexServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/bitfinex.php', 'bitfinex');
+        $this->mergeConfigFrom(__DIR__.'/../config/bitfinex.php', 'bitfinex');
 
         $this->app->singleton('bitfinex', function ($app) {
-            return new Bitfinex();
+            return new Bitfinex;
         });
     }
 
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/bitfinex.php' => config_path('bitfinex.php'),
+            __DIR__.'/../config/bitfinex.php' => config_path('bitfinex.php'),
         ], 'config');
     }
 }

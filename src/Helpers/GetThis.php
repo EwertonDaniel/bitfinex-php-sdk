@@ -10,7 +10,7 @@ class GetThis
 {
     public static function ifTrueOrFallback(mixed $boolean, mixed $callback, mixed $fallback = null): mixed
     {
-        return (!is_null($boolean) && $boolean !== false) ?
+        return (! is_null($boolean) && $boolean !== false) ?
             self::resolveValue($callback) :
             self::resolveValue($fallback);
     }

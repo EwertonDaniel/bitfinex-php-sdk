@@ -10,14 +10,19 @@ class PairTrade
 {
     /** @note Pair of the trade */
     public readonly string $pair;
+
     /** @note Symbol of the trade */
     public readonly string $symbol;
+
     /** @note ID of the trade */
     public readonly int $id;
+
     /** @note Millisecond epoch timestamp */
     public readonly int $mts;
+
     /** @note How much was bought (positive) or sold (negative) */
     public readonly float $amount;
+
     /** @note Price at which the trade was executed */
     public readonly float $price;
 
@@ -25,13 +30,13 @@ class PairTrade
     {
         $this->pair = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 't'),
-            callback: fn() => substr($symbol, 1),
+            callback: fn () => substr($symbol, 1),
             fallback: $symbol
         );
         $this->symbol = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 't'),
             callback: $symbol,
-            fallback: fn() => "t$symbol"
+            fallback: fn () => "t$symbol"
         );
         $this->id = $data[0];
         $this->mts = $data[1];
