@@ -1,0 +1,15 @@
+{
+  "path": {
+    "public": {
+      "status": "platform/status",
+      "ticker": "ticker/typesymbol",
+      "tickers": "tickers",
+      "ticker_history": "tickers/hist",
+      "trades": "trades/typesymbol/hist",
+      "book": "book/typesymbol/precision"
+    },
+    "authenticated": {
+      "wallets": "/auth/r/wallets"
+    }
+  }
+}

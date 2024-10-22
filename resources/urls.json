@@ -1,0 +1,6 @@
+{
+  "url": {
+    "public": "https://api-pub.bitfinex.com/v2",
+    "private": "https://api.bitfinex.com/v2"
+  }
+}
