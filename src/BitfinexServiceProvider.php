@@ -11,7 +11,9 @@ class BitfinexServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/bitfinex.php', 'bitfinex');
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/bitfinex.php', 'bitfinex'
+        );
 
         $this->app->singleton('bitfinex', function ($app) {
             return new Bitfinex;
