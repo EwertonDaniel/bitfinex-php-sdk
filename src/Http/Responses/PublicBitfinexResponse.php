@@ -13,9 +13,7 @@ class PublicBitfinexResponse extends BitfinexResponse
 {
     final public function platformStatus(): BitfinexResponse
     {
-        return $this->transformContent(fn ($content) => [
-            'status' => new PlatformStatus($content),
-        ]);
+        return $this->transformContent(fn ($content) => new PlatformStatus($content));
     }
 
     final public function tickers(string $type): BitfinexResponse
