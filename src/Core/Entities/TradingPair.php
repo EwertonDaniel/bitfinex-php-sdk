@@ -32,7 +32,7 @@ class TradingPair
     public readonly ?float $dailyChange;
 
     /**@note Relative price change since yesterday (*100 for percentage change) */
-    public readonly ?float $dailyChangeRelative;
+    public readonly ?float $dailyChangePercentage;
 
     /**@note Price of the last trade */
     public readonly ?float $lastPrice;
@@ -63,7 +63,7 @@ class TradingPair
         $this->ask = Arr::get($data, 2);
         $this->askSize = Arr::get($data, 3);
         $this->dailyChange = Arr::get($data, 4);
-        $this->dailyChangeRelative = Arr::get($data, 5);
+        $this->dailyChangePercentage = Arr::get($data, 5);
         $this->lastPrice = Arr::get($data, 6);
         $this->volume = Arr::get($data, 7);
         $this->high = Arr::get($data, 8);
