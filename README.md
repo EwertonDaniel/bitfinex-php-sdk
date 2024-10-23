@@ -68,7 +68,6 @@ In a future development stage, the following additional public REST endpoints an
 #### Calculation Endpoints
 
 - **Market Average Price** (POST)
-- **Foreign Exchange Rate** (POST)
 
 Stay tuned for updates as these endpoints become available!
 
