@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EwertonDaniel\Bitfinex\Helpers;
 
 class AssetToCurrencyConverter

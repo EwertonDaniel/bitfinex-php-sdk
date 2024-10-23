@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use EwertonDaniel\Bitfinex\Core\Entities\CurrencyTrade;
