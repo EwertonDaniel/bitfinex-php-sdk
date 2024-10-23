@@ -48,6 +48,7 @@ Currently, the following public REST endpoints are available for use:
 - **Tickers** (GET)
 - **Tickers History** (GET)
 - **Trades** (GET)
+- **Foreign Exchange Rate** (POST)
 
 ### Upcoming Endpoints
 
