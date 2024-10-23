@@ -21,7 +21,7 @@ use Exception;
  *
  * @email contact@ewertondaniel.work
  *
- * @version 0.1.1
+ * @version 0.1.2
  *
  * @since 2024-10-22
  *
