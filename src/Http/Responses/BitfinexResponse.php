@@ -14,7 +14,7 @@ abstract class BitfinexResponse
 
     public readonly array $headers;
 
-    public mixed $contents;
+    public mixed $content;
 
     public function __construct(Response $response)
     {
@@ -23,13 +23,13 @@ abstract class BitfinexResponse
 
         if ($this->success) {
             $this->headers = $response->getHeaders();
-            $this->contents = Utils::jsonDecode($response->getBody()->getContents(), true);
+            $this->content = Utils::jsonDecode($response->getBody()->getContents(), true);
         }
     }
 
     final public function transformContent(Closure $closure): static
     {
-        $this->contents = $closure($this->contents);
+        $this->content = $closure($this->content);
 
         return $this;
     }

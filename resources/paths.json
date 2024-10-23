@@ -5,7 +5,9 @@
     "tickers": "tickers",
     "ticker_history": "tickers/hist",
     "trades": "trades/typesymbol/hist",
-    "book": "book/typesymbol/precision"
+    "book": "book/typesymbol/precision",
+    "market_average_price": "calc/trade/avg",
+    "foreign_exchange_rate": "calc/fx"
   },
   "private": {
     "wallets": "/auth/r/wallets"

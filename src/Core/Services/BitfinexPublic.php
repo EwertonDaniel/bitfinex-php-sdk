@@ -49,33 +49,6 @@ class BitfinexPublic
     }
 
     /**
-     * Provides a high-level overview of the state of the market for a specified pair.
-     * It shows the current best bid and ask, the last traded price, daily volume,
-     * and price movement over the last day.
-     *
-     * @throws BitfinexException
-     *
-     * @note This method interacts with the ticker endpoint of the Bitfinex API.
-     */
-    final public function ticker(string $symbol, string $type): BitfinexResponse
-    {
-        try {
-
-            $params = ['symbol' => $symbol, 'type' => GetThis::type($type)];
-
-            $url = $this->url->setPath(path: 'public.ticker', params: $params)->get();
-
-            $response = new PublicBitfinexResponse($this->client->get($url));
-
-            return $response->ticker($symbol, $params['type']);
-
-        } catch (GuzzleException|Exception $e) {
-
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
-    }
-
-    /**
      * @throws BitfinexException
      *
      * @note The tickers endpoint provides a high level overview of the state of the market.
@@ -106,30 +79,48 @@ class BitfinexPublic
     }
 
     /**
-     * Retrieves the price of an asset (e.g., BTC, XMR, ETH) in USD using the Bitfinex ticker endpoint.
-     * After obtaining the asset's price in USD, it calculates the cross-rate for another currency,
-     * such as EUR, by converting the asset's USD price into the target currency (e.g., USD to EUR).
-     * This is achieved by first retrieving the asset's USD price, followed by a secondary ticker request
-     * for the USD to target currency pair.
+     * @throws BitfinexException
+     *
+     * @note Calculate the exchange rate between two currencies
+     */
+    final public function foreignExchangeRate(string $baseCurrency, string $quoteCurrency): BitfinexResponse
+    {
+        try {
+
+            $url = $this->url->setPath(path: 'public.foreign_exchange_rate')->get();
+
+            $response = new PublicBitfinexResponse($this->client->post($url, ['json' => ['ccy1' => $baseCurrency, 'ccy2' => $quoteCurrency]]));
+
+            return $response->foreignExchangeRate($baseCurrency, $quoteCurrency);
+
+        } catch (GuzzleException|Exception $e) {
+            throw new BitfinexException($e->getMessage(), $e->getCode());
+        }
+    }
+
+    /**
+     * Provides a high-level overview of the state of the market for a specified pair.
+     * It shows the current best bid and ask, the last traded price, daily volume,
+     * and price movement over the last day.
      *
      * @throws BitfinexException
      *
-     * @note This method involves two ticker requests: one for the asset's USD price and one for the USD to target currency conversion.
+     * @note This method interacts with the ticker endpoint of the Bitfinex API.
      */
-    final public function crossRate($symbol, $currency): BitfinexResponse
+    final public function ticker(string $symbol, string $type): BitfinexResponse
     {
         try {
-            $url['asset'] = $this->url->setPath(path: 'public.ticker', params: ['symbol' => $symbol, 'type' => 't'])->get();
 
-            $response = new PublicBitfinexResponse($this->client->get($url['asset']));
-            $crossSymbol = "USD$currency";
+            $params = ['symbol' => $symbol, 'type' => GetThis::type($type)];
 
-            $url['currency'] = $this->url->setPath(path: 'public.ticker', params: ['symbol' => $crossSymbol, 'type' => 't'])->get();
-            $currencyResponse = new PublicBitfinexResponse($this->client->get($url['currency']));
+            $url = $this->url->setPath(path: 'public.ticker', params: $params)->get();
 
-            return $response->crossRateTicker($symbol, $currencyResponse->ticker($crossSymbol, 't')->contents);
+            $response = new PublicBitfinexResponse($this->client->get($url));
+
+            return $response->ticker($symbol, $params['type']);
 
         } catch (GuzzleException|Exception $e) {
+
             throw new BitfinexException($e->getMessage(), $e->getCode());
         }
     }

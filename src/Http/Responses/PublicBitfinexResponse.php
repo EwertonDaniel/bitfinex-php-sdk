@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use EwertonDaniel\Bitfinex\Core\Entities\CurrencyTrade;
+use EwertonDaniel\Bitfinex\Core\Entities\ForeignExchangeRate;
 use EwertonDaniel\Bitfinex\Core\Entities\FundingCurrency;
 use EwertonDaniel\Bitfinex\Core\Entities\PairTrade;
 use EwertonDaniel\Bitfinex\Core\Entities\PlatformStatus;
@@ -59,16 +60,9 @@ class PublicBitfinexResponse extends BitfinexResponse
         );
     }
 
-    public function crossRateTicker($symbol, mixed $usdEurTradingPair): BitfinexResponse
+    public function foreignExchangeRate(string $in, string $out): BitfinexResponse
     {
-        return $this->transformContent(function ($ticker) use ($symbol, $usdEurTradingPair) {
-            $tradingPair = new TradingPair($symbol, $ticker);
-
-            return [
-                $usdEurTradingPair->pair => $usdEurTradingPair,
-                $tradingPair->pair => $tradingPair,
-            ];
-        });
+        return $this->transformContent(fn ($rate) => new ForeignExchangeRate($in, $out, $rate));
     }
 
     final public function ticker(string $symbol, string $type): BitfinexResponse

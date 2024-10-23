@@ -16,19 +16,6 @@ The **Bitfinex PHP SDK** is a lightweight PHP library designed to simplify inter
 - Full support for Laravel 9, 10, and 11.
 - Utilizes Guzzle for HTTP requests.
 
-## Requirements
-
-- PHP 8.1 or higher.
-- Guzzle HTTP client library.
-- Laravel 9, 10, or 11 (optional for Laravel-based features).
-
-## Installation
-
-To install the package using Composer, run the following command:
-
-```bash
-composer require ewertondaniel/bitfinex-php-sdk
-```
 ## API Documentation
 
 ### What is the Bitfinex API?
