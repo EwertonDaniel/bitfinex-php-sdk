@@ -3,6 +3,14 @@
 ![Packagist Version](https://img.shields.io/packagist/v/ewertondaniel/bitfinex-php-sdk)
 ![Packagist License](https://img.shields.io/packagist/l/ewertondaniel/bitfinex-php-sdk)
 
+## Installation
+
+To install the package using Composer, run the following command:
+
+```
+composer require ewertondaniel/bitfinex-php-sdk
+```
+
 ## Overview
 
 The **Bitfinex PHP SDK** is a lightweight PHP library designed to simplify interaction with the Bitfinex REST API. This SDK allows developers to easily integrate advanced cryptocurrency trading functionalities into PHP applications. Whether building automated trading bots, monitoring market trends, or developing custom trading platforms, this SDK makes the integration with Bitfinex straightforward and efficient.

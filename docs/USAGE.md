@@ -2,12 +2,6 @@
 
 This guide describes how to use the public endpoints provided by the `bitfinex-php-sdk`.
 
-## Requirements
-
-- PHP 8.1 or higher.
-- Guzzle HTTP client library.
-- Laravel 9, 10, or 11 (optional for Laravel-based features).
-
 ## Installation
 
 To install the package using Composer, run the following command:
@@ -15,6 +9,12 @@ To install the package using Composer, run the following command:
 ```bash
 composer require ewertondaniel/bitfinex-php-sdk
 ```
+
+## Requirements
+
+- PHP 8.1 or higher.
+- Guzzle HTTP client library.
+- Laravel 9, 10, or 11 (optional for Laravel-based features).
 
 ## Public API Endpoints
 
