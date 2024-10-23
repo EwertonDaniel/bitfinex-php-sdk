@@ -77,4 +77,4 @@ This package is licensed under the [MIT License](LICENSE).
 
 ## Author
 
-- **Ewerton Daniel** - [github@ewertondaniel.work](mailto:github@ewertondaniel.work)
+**Ewerton Daniel** - [contact@ewertondaniel.work](mailto:github@ewertondaniel.work)
