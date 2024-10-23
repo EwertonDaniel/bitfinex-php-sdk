@@ -8,6 +8,7 @@ use EwertonDaniel\Bitfinex\Core\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Core\Services\BitfinexAuthenticated;
 use EwertonDaniel\Bitfinex\Core\Services\BitfinexPublic;
 use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexCredentials;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use Exception;
 
 /**
@@ -20,7 +21,7 @@ use Exception;
  *
  * @email contact@ewertondaniel.work
  *
- * @version 1.0.0
+ * @version 0.1.1
  *
  * @since 2024-10-22
  *
@@ -54,7 +55,7 @@ class Bitfinex
      */
     final public function authenticated(?BitfinexCredentials $credentials = null): BitfinexAuthenticated
     {
-        $credentials = $credentials ?? new BitfinexCredentials;
+        $credentials = GetThis::ifTrueOrFallback(is_null($credentials), fn () => new BitfinexCredentials, $credentials);
 
         return new BitfinexAuthenticated(url: $this->urlBuilder->setBaseUrl('private'), credentials: $credentials);
     }

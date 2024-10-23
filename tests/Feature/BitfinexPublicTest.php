@@ -26,6 +26,7 @@ test('Can retrieve bitfinex foreign exchange rate', function (Bitfinex $bitfinex
         'Euro/Dollar' => ['EUR', 'USD'],
         'Bitcoin/Dollar' => ['BTC', 'USD'],
         'Monero/Euro' => ['XMR', 'EUR'],
+        'Ethereum/Dollar' => ['ETH', 'USD'],
     ]);
 
 test('Can retrieve bitfinex tickers', function (Bitfinex $bitfinex) {
