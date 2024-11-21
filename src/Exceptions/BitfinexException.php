@@ -8,16 +8,35 @@ use Exception;
 use Psr\Http\Client\ClientExceptionInterface;
 use Throwable;
 
+/**
+ * Class BitfinexException
+ *
+ * Base exception class for Bitfinex-related errors.
+ * Implements PSR-18's `ClientExceptionInterface` for HTTP client compatibility.
+ *
+ * @author  Ewerton Daniel
+ *
+ * @contact contact@ewertondaniel.work
+ */
 class BitfinexException extends Exception implements ClientExceptionInterface
 {
-    public function __construct(
-        string $message = '',
-        int $code = 0,
-        ?Throwable $previous = null
-    ) {
+    /**
+     * Constructs the BitfinexException.
+     *
+     * @param  string  $message  The error message.
+     * @param  int  $code  The error code (default: 0).
+     * @param  Throwable|null  $previous  Optional previous exception for chaining.
+     */
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
+    {
         parent::__construct($message, $code, $previous);
     }
 
+    /**
+     * Converts the exception to a string representation.
+     *
+     * @return string The exception details as a formatted string.
+     */
     public function __toString(): string
     {
         return sprintf(
@@ -29,5 +48,23 @@ class BitfinexException extends Exception implements ClientExceptionInterface
             $this->line,
             $this->getTraceAsString()
         );
+    }
+
+    /**
+     * Converts the exception into an associative array for structured logging or debugging.
+     *
+     * @return array An array containing exception details.
+     */
+    public function toArray(): array
+    {
+        return [
+            'class' => __CLASS__,
+            'code' => $this->code,
+            'message' => $this->message,
+            'file' => $this->file,
+            'line' => $this->line,
+            'trace' => $this->getTrace(),
+            'previous' => $this->getPrevious()?->getMessage(),
+        ];
     }
 }

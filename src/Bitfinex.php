@@ -14,34 +14,42 @@ use Exception;
 /**
  * Class Bitfinex
  *
- * This class provides methods to interact with the Bitfinex API, enabling functionalities such as
- * retrieving ticker data, public trades, and platform status.
+ * Provides a streamlined interface to interact with the Bitfinex API, facilitating operations.
  *
- * @author Ewerton Daniel
+ * @author  Ewerton Daniel
  *
- * @email contact@ewertondaniel.work
+ * @email   contact@ewertondaniel.work
  *
- * @version 0.1.2
- *
- * @since 2024-10-22
+ * @since   2024-10-22
  *
  * @license MIT License
  *
- * @see https://docs.bitfinex.com/ for API documentation.
+ * @see     https://docs.bitfinex.com/ for API documentation.
  */
 class Bitfinex
 {
+    /**
+     * The builder for constructing API endpoint URLs.
+     */
     private UrlBuilder $urlBuilder;
 
+    /**
+     * Initializes the URL builder for interacting with the Bitfinex API.
+     */
     public function __construct()
     {
         $this->urlBuilder = new UrlBuilder;
     }
 
     /**
-     * Returns an instance of BitfinexPublic to interact with public endpoints.
+     * Provides access to public endpoints of the Bitfinex API.
      *
-     * @throws Exception
+     * This method initializes the `BitfinexPublic` service, which allows interaction with
+     * public endpoints, such as retrieving market data and platform status.
+     *
+     * @return BitfinexPublic Instance for interacting with public endpoints.
+     *
+     * @throws Exception If URL initialization fails.
      */
     final public function public(): BitfinexPublic
     {
@@ -49,14 +57,30 @@ class Bitfinex
     }
 
     /**
-     * Returns an instance of BitfinexAuthenticated to interact with private endpoints.
+     * Provides access to private (authenticated) endpoints of the Bitfinex API.
      *
-     * @throws Exception
+     * This method initializes the `BitfinexAuthenticated` service, which requires
+     * API credentials to interact with private endpoints, such as account details and
+     * user-specific operations.
+     *
+     * If no credentials are provided, a default instance is created.
+     *
+     * @param  BitfinexCredentials|null  $credentials  Optional API credentials for authentication.
+     * @return BitfinexAuthenticated Instance for interacting with private endpoints.
+     *
+     * @throws Exception If URL initialization or credentials setup fails.
      */
     final public function authenticated(?BitfinexCredentials $credentials = null): BitfinexAuthenticated
     {
-        $credentials = GetThis::ifTrueOrFallback(is_null($credentials), fn () => new BitfinexCredentials, $credentials);
+        $credentials = GetThis::ifTrueOrFallback(
+            boolean: is_null($credentials),
+            callback: fn () => new BitfinexCredentials,
+            fallback: $credentials
+        );
 
-        return new BitfinexAuthenticated(url: $this->urlBuilder->setBaseUrl('private'), credentials: $credentials);
+        return new BitfinexAuthenticated(
+            url: $this->urlBuilder->setBaseUrl('private'),
+            credentials: $credentials
+        );
     }
 }

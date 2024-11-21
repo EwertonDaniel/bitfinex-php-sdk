@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Adapters;
 
-use Exception;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException;
 use GuzzleHttp\Utils;
 
 abstract class JsonAdapter
@@ -18,11 +18,11 @@ abstract class JsonAdapter
 
     abstract protected function getFilePath(): string;
 
-    /** @throws Exception */
+    /** @throws BitfinexFileNotFoundException */
     public function transform(): array
     {
         if (! file_exists($this->file)) {
-            throw new Exception("File not found: {$this->file}");
+            throw new BitfinexFileNotFoundException($this->file);
         }
 
         $contents = file_get_contents($this->file);

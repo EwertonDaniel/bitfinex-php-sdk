@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Core\ValueObjects;
 
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+
 class BitfinexCredentials
 {
-    private readonly string $apiKey;
+    public readonly string $apiKey;
 
-    private readonly string $apiSecret;
+    public readonly string $apiSecret;
 
-    public function __construct(?string $apiKey = null, ?string $apiSecret = null)
+    public function __construct(?string $apiKey = null, ?string $apiSecret = null, public ?string $token = null)
     {
-        $this->apiKey = $apiKey ?? config('bitfinex.api_key');
-        $this->apiSecret = $apiSecret ?? config('bitfinex.api_secret');
+        if (is_null($token)) {
+            $this->apiKey = GetThis::ifTrueOrFallback($apiKey, $apiKey, fn () => config('bitfinex.api_key'));
+            $this->apiSecret = GetThis::ifTrueOrFallback($apiSecret, $apiSecret, fn () => config('bitfinex.api_secret'));
+        }
     }
 
-    final public function getApiKey(): ?string
+    final public function setToken(string $token): BitfinexCredentials
     {
-        return $this->apiKey;
-    }
+        $this->token = $token;
 
-    final public function getApiSecret(): ?string
-    {
-        return $this->apiSecret;
+        return $this;
     }
 }
