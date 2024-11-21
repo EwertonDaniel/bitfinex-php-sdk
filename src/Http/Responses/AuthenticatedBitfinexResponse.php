@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use EwertonDaniel\Bitfinex\Core\Entities\LoginInfo;
+use EwertonDaniel\Bitfinex\Core\Entities\Order;
 use EwertonDaniel\Bitfinex\Core\Entities\Summary;
 use EwertonDaniel\Bitfinex\Core\Entities\User;
 use EwertonDaniel\Bitfinex\Core\Entities\Wallet;
@@ -35,5 +36,10 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function wallets(): BitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['wallets' => array_map(fn ($data) => new Wallet($data), $content)]);
+    }
+
+    final public function orders(): BitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['orders' => array_map(fn ($data) => new Order($data), $content)]);
     }
 }

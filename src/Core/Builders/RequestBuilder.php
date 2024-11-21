@@ -116,9 +116,11 @@ class RequestBuilder
      * @param  string  $name  Body parameter name.
      * @param  mixed  $value  Body parameter value.
      */
-    final public function addBody(string $name, mixed $value): static
+    final public function addBody(string $name, mixed $value, bool $skipEmpty = false): static
     {
-        $this->body->__set($name, $value);
+        if (! $skipEmpty || ! empty($value)) {
+            $this->body->__set($name, $value);
+        }
 
         return $this;
     }

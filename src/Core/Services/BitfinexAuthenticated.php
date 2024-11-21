@@ -167,7 +167,24 @@ class BitfinexAuthenticated
         return $response->wallets();
     }
 
-    private function setEmptyBodyCredentials(string $apiPath): void
+    /**
+     * @throws GuzzleException
+     * @throws BitfinexPathNotFoundException
+     */
+    final public function retrieveOrders(?array $id = null, ?int $gid = null, ?string $cid = null, ?string $cidDate = null): BitfinexResponse
+    {
+        $request = $this->request($this->url->setPath('private.orders.retrieve_orders')->getPath());
+
+        foreach (['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate] as $key => $value) {
+            $this->request->addBody($key, $value, true);
+        }
+
+        $response = new AuthenticatedBitfinexResponse($request);
+
+        return $response->orders();
+    }
+
+    private function setCredentials(string $apiPath): void
     {
         $this->request->setCredentials(
             credentials: $this->credentials,
@@ -188,7 +205,7 @@ class BitfinexAuthenticated
             $this->request->setHeaders(['bfx-token' => $this->credentials->token]);
             $request = $this->client->post($apiPath, ['headers' => $this->request->headers->get()]);
         } else {
-            $this->setEmptyBodyCredentials($apiPath);
+            $this->setCredentials($apiPath);
             $request = $this->client->post($apiPath, $this->request->getOptions());
         }
 
