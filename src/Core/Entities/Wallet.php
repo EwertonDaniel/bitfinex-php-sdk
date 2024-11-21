@@ -35,6 +35,6 @@ class Wallet
         $this->unsettledInterest = GetThis::ifTrueOrFallback(isset($data[3]), fn () => $data[3], 0.0);
         $this->availableBalance = GetThis::ifTrueOrFallback(isset($data[4]), fn () => $data[4], 0.0);
         $this->lastChange = GetThis::ifTrueOrFallback(isset($data[5]), fn () => $data[5]);
-        $this->lastChangeMetadata = GetThis::ifTrueOrFallback(isset($data[6]), fn () => json_decode($data[6]), []);
+        $this->lastChangeMetadata = GetThis::ifTrueOrFallback(isset($data[6]), fn () => $data[6], []);
     }
 }

@@ -6,12 +6,14 @@ namespace EwertonDaniel\Bitfinex\Core\Services;
 
 use EwertonDaniel\Bitfinex\Core\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Core\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Core\Services\Authenticated\BitfinexAuthenticatedAccountAction;
+use EwertonDaniel\Bitfinex\Core\Services\Authenticated\BitfinexAuthenticatedOrder;
+use EwertonDaniel\Bitfinex\Core\Services\Authenticated\BitfinexAuthenticatedWallet;
 use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexCredentials;
 use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexSignature;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
-use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -32,12 +34,12 @@ class BitfinexAuthenticated
     /**
      * Holds the Bitfinex API credentials.
      */
-    private readonly BitfinexCredentials $credentials;
+    protected readonly BitfinexCredentials $credentials;
 
     /**
      * Builder for constructing HTTP requests.
      */
-    private readonly RequestBuilder $request;
+    protected readonly RequestBuilder $request;
 
     /**
      * HTTP client for sending requests to the Bitfinex API.
@@ -48,17 +50,17 @@ class BitfinexAuthenticated
      * Constructor initializes the URL builder and ensures credentials are set.
      * If no credentials are provided, a default instance is created.
      *
-     * @param  UrlBuilder  $url  Builder for constructing API endpoint URLs.
-     * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
+     * @param UrlBuilder $url Builder for constructing API endpoint URLs.
+     * @param BitfinexCredentials|null $credentials Optional API credentials.
      *
      * @throws Exception If an error occurs during credential fallback or setup.
      */
     public function __construct(private readonly UrlBuilder $url, ?BitfinexCredentials $credentials = null)
     {
         $this->credentials = GetThis::ifTrueOrFallback(
-            boolean: (bool) $credentials,
-            callback: fn () => $credentials,
-            fallback: fn () => new BitfinexCredentials
+            boolean: (bool)$credentials,
+            callback: fn() => $credentials,
+            fallback: fn() => new BitfinexCredentials
         );
 
         $this->request = (new RequestBuilder)->setMethod('POST');
@@ -75,15 +77,16 @@ class BitfinexAuthenticated
      * the request to the Bitfinex API. The token is generated for a specific scope,
      * with an optional time-to-live (TTL) and write permissions.
      *
-     * @param  string  $scope  The scope of the token (default: 'api').
-     * @param  int  $ttl  The token's time-to-live in seconds (default: 120).
-     * @param  bool  $writePermission  Whether the token has write permissions (default: false).
-     * @return BitfinexResponse The generated token.
+     * @param string $scope The scope of the token (default: 'api').
+     * @param int $ttl The token's time-to-live in seconds (default: 120).
+     * @param bool $writePermission Whether the token has write permissions (default: false).
+     * @param array|null $caps
+     * @return BitfinexAuthenticated The generated token.
      *
      * @throws BitfinexPathNotFoundException If the API path for token generation is not found.
      * @throws GuzzleException If the HTTP request to the API fails.
      */
-    final public function generateToken(string $scope = 'api', int $ttl = 120, bool $writePermission = false, ?array $caps = null): BitfinexResponse
+    final public function authenticate(string $scope = 'api', int $ttl = 120, bool $writePermission = false, ?array $caps = null): static
     {
         $apiPath = $this->url->setPath('private.account_actions.generate_token')->getPath();
 
@@ -110,105 +113,21 @@ class BitfinexAuthenticated
 
         $this->credentials->setToken($response->content['token']);
 
-        return $response;
+        return $this;
     }
 
-    /**
-     * @throws GuzzleException
-     * @throws BitfinexPathNotFoundException
-     */
-    final public function userInfo(): BitfinexResponse
+    final public function accountAction(): BitfinexAuthenticatedAccountAction
     {
-        $apiPath = $this->url->setPath('private.account_actions.user_info')->getPath();
-
-        $request = $this->request($apiPath);
-
-        $response = new AuthenticatedBitfinexResponse($request);
-
-        return $response->userInfo();
+        return new BitfinexAuthenticatedAccountAction($this->url, $this->credentials, $this->request, $this->client);
     }
 
-    /**
-     * @throws GuzzleException
-     * @throws BitfinexPathNotFoundException
-     */
-    final public function summary(): BitfinexResponse
+    final public function wallets(): BitfinexAuthenticatedWallet
     {
-        $request = $this->request($this->url->setPath('private.account_actions.summary')->getPath());
-
-        $response = new AuthenticatedBitfinexResponse($request);
-
-        return $response->summary();
+        return new BitfinexAuthenticatedWallet($this->url, $this->credentials, $this->request, $this->client);
     }
 
-    /**
-     * @throws GuzzleException
-     * @throws BitfinexPathNotFoundException
-     */
-    final public function loginHistory(): BitfinexResponse
+    final public function orders(): BitfinexAuthenticatedOrder
     {
-        $request = $this->request($this->url->setPath('private.account_actions.login_history')->getPath());
-
-        $response = new AuthenticatedBitfinexResponse($request);
-
-        return $response->loginHistory();
-    }
-
-    /**
-     * @throws GuzzleException
-     * @throws BitfinexPathNotFoundException
-     */
-    final public function wallets(): BitfinexResponse
-    {
-        $request = $this->request($this->url->setPath('private.wallets')->getPath());
-
-        $response = new AuthenticatedBitfinexResponse($request);
-
-        return $response->wallets();
-    }
-
-    /**
-     * @throws GuzzleException
-     * @throws BitfinexPathNotFoundException
-     */
-    final public function retrieveOrders(?array $id = null, ?int $gid = null, ?string $cid = null, ?string $cidDate = null): BitfinexResponse
-    {
-        $request = $this->request($this->url->setPath('private.orders.retrieve_orders')->getPath());
-
-        foreach (['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate] as $key => $value) {
-            $this->request->addBody($key, $value, true);
-        }
-
-        $response = new AuthenticatedBitfinexResponse($request);
-
-        return $response->orders();
-    }
-
-    private function setCredentials(string $apiPath): void
-    {
-        $this->request->setCredentials(
-            credentials: $this->credentials,
-            signature: new BitfinexSignature(
-                apiPath: $apiPath,
-                body: $this->request->body->__toString(),
-                apiSecret: $this->credentials->apiSecret
-            )
-        );
-    }
-
-    /**
-     * @throws GuzzleException
-     */
-    private function request(string $apiPath): \Psr\Http\Message\ResponseInterface
-    {
-        if (isset($this->credentials->token)) {
-            $this->request->setHeaders(['bfx-token' => $this->credentials->token]);
-            $request = $this->client->post($apiPath, ['headers' => $this->request->headers->get()]);
-        } else {
-            $this->setCredentials($apiPath);
-            $request = $this->client->post($apiPath, $this->request->getOptions());
-        }
-
-        return $request;
+        return new BitfinexAuthenticatedOrder($this->url, $this->credentials, $this->request, $this->client);
     }
 }

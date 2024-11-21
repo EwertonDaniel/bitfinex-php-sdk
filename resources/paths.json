@@ -1,11 +1,11 @@
 {
   "public": {
     "status": "v2/platform/status",
-    "ticker": "v2/ticker/typesymbol",
+    "ticker": "v2/ticker/{type}{symbol}",
     "tickers": "v2/tickers",
     "ticker_history": "v2/tickers/hist",
-    "trades": "v2/trades/typesymbol/hist",
-    "book": "v2/book/typesymbol/precision",
+    "trades": "v2/trades/{type}{symbol}/hist",
+    "book": "v2/book/{type}{symbol}/precision",
     "market_average_price": "v2/calc/trade/avg",
     "foreign_exchange_rate": "v2/calc/fx"
   },
@@ -13,6 +13,7 @@
     "wallets": "v2/auth/r/wallets",
     "orders": {
       "retrieve_orders": "v2/auth/r/orders",
+      "retrieve_orders_by_symbol": "v2/auth/r/orders/{symbol}",
       "submit_order": "v2/auth/w/order/submit",
       "order_update": "v2/auth/w/order/update",
       "cancel_order": "v2/auth/w/order/cancel",

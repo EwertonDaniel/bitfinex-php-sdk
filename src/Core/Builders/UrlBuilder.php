@@ -63,7 +63,7 @@ class UrlBuilder
     /**
      * Sets the base URL based on the provided type.
      *
-     * @param  string  $type  The type of base URL (e.g., 'public', 'private').
+     * @param string $type The type of base URL (e.g., 'public', 'private').
      * @return static Returns the instance for method chaining.
      *
      * @throws BitfinexUrlNotFoundException If the specified URL type is not found.
@@ -123,8 +123,8 @@ class UrlBuilder
      * Sets the API path based on the provided path identifier.
      * Replaces placeholders in the path with corresponding parameters.
      *
-     * @param  string  $path  The identifier for the path (e.g., 'ticker', 'order').
-     * @param  array  $params  An associative array of parameters to replace in the path.
+     * @param string $path The identifier for the path (e.g., 'ticker', 'order').
+     * @param array $params An associative array of parameters to replace in the path.
      * @return static Returns the instance for method chaining.
      *
      * @throws BitfinexPathNotFoundException If the specified path identifier is not found.
@@ -137,8 +137,9 @@ class UrlBuilder
             throw new BitfinexPathNotFoundException($path);
         }
 
-        if (! empty($params)) {
-            $foundPath = str_replace(array_keys($params), array_values($params), $foundPath);
+        if (!empty($params)) {
+            $keys = array_map(fn($key) => "{{$key}}", array_keys($params));
+            $foundPath = str_replace($keys, array_values($params), $foundPath);
         }
 
         $this->path = $foundPath;

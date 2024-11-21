@@ -96,6 +96,6 @@ class Order
         $this->hidden = GetThis::ifTrueOrFallback(isset($data[24]), fn () => $data[24] === 1, false);
         $this->placedId = GetThis::ifTrueOrFallback(isset($data[25]), fn () => $data[25]);
         $this->routing = GetThis::ifTrueOrFallback(isset($data[28]), fn () => $data[28]);
-        $this->meta = GetThis::ifTrueOrFallback(isset($data[31]) && is_array($data[31]), fn () => json_decode($data[31]), []);
+        $this->meta = GetThis::ifTrueOrFallback(isset($data[31]) && is_array($data[31]), fn () => $data[31], []);
     }
 }
