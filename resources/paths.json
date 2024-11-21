@@ -10,6 +10,87 @@
     "foreign_exchange_rate": "calc/fx"
   },
   "private": {
-    "wallets": "/auth/r/wallets"
+    "wallets": "/auth/r/wallets",
+    "orders": {
+      "retrieve_orders": "/auth/r/orders",
+      "submit_order": "/auth/w/order/submit",
+      "order_update": "/auth/w/order/update",
+      "cancel_order": "/auth/w/order/cancel",
+      "order_multi_op": "/auth/w/order/multi",
+      "cancel_order_multi": "/auth/w/order/cancel/multi",
+      "orders_history": "/auth/r/orders/hist",
+      "order_trades": "/auth/r/order/{symbol}:{id}/trades",
+      "trades": "/auth/r/trades/hist",
+      "ledgers": "/auth/r/ledgers/{currency}/hist"
+    },
+    "positions": {
+      "margin_info": "/auth/r/info/margin/{key}",
+      "retrieve_positions": "/auth/r/positions",
+      "claim_position": "/auth/w/position/claim",
+      "increase_position": "/auth/w/position/increase",
+      "increase_position_info": "/auth/r/position/increase/info",
+      "positions_history": "/auth/r/positions/hist",
+      "positions_snapshot": "/auth/r/positions/snap",
+      "positions_audit": "/auth/r/positions/audit",
+      "derivative_position_collateral": "/auth/w/deriv/collateral/set",
+      "derivative_position_collateral_limits": "/auth/calc/deriv/collateral/limits"
+    },
+    "funding": {
+      "active_funding_offers": "/auth/r/funding/offers/{symbol}",
+      "submit_funding_offer": "/auth/w/funding/offer/submit",
+      "cancel_funding_offer": "/auth/w/funding/offer/cancel",
+      "cancel_all_funding_offers": "/auth/w/funding/offer/cancel/all",
+      "funding_close": "/auth/w/funding/close",
+      "funding_auto_renew": "/auth/w/funding/auto",
+      "keep_funding": "/auth/w/funding/keep",
+      "funding_offers_history": "/auth/r/funding/offers/{symbol}/hist",
+      "funding_loans": "/auth/r/funding/loans/{symbol}",
+      "funding_loans_history": "/auth/r/funding/loans/{symbol}/hist",
+      "funding_credits": "/auth/r/funding/credits/{symbol}",
+      "funding_credits_history": "/auth/r/funding/credits/{symbol}/hist",
+      "funding_trades": "/auth/r/funding/trades/{symbol}/hist",
+      "funding_info": "/auth/r/info/funding/{key}"
+    },
+    "account_actions": {
+      "user_info": "/auth/r/info/user",
+      "summary": "/auth/r/summary",
+      "login_history": "/auth/r/logins/hist",
+      "key_permissions": "/auth/r/permissions",
+      "generate_token": "/auth/w/token",
+      "changelog": "/auth/r/audit/hist",
+      "transfer_between_wallets": "/auth/w/transfer",
+      "deposit_address": "/auth/w/deposit/address",
+      "generate_invoice": "/auth/w/deposit/invoice",
+      "withdrawal": "/auth/w/withdraw",
+      "movements": "/auth/r/movements",
+      "movements_history": "/auth/r/movements/{currency}/hist",
+      "alert_list": "/auth/r/alerts",
+      "alert_set": "/auth/w/alert/set",
+      "alert_delete": "/auth/w/alert/price:{symbol}:{price}/del",
+      "balance_available_for_orders_offers": "/auth/calc/order/avail",
+      "user_settings_write": "/auth/w/settings/set",
+      "user_settings_read": "/auth/r/settings",
+      "user_settings_delete": "/auth/w/settings/del"
+    },
+    "merchants": {
+      "submit_invoice": "/auth/w/ext/pay/invoice/create",
+      "submit_post_invoice": "/auth/w/ext/pay/invoice/create/pos",
+      "invoice_list": "/auth/r/ext/pay/invoices",
+      "invoice_list_paginated": "auth/r/ext/pay/invoices/paginated",
+      "invoice_count_stats": "/auth/r/ext/pay/invoice/stats/count",
+      "invoice_earnings_stats": "/auth/r/ext/pay/invoice/stats/earning",
+      "complete_invoice": "/auth/w/ext/pay/invoice/complete",
+      "expire_invoice": "/auth/w/ext/pay/invoice/expire",
+      "currency_Conversion_list": "/auth/r/ext/pay/settings/convert/list",
+      "add_currency_conversion": "/auth/w/ext/pay/settings/convert/create",
+      "remove_currency_conversion": "/auth/w/ext/pay/settings/convert/remove",
+      "merchant_limit": "/auth/r/ext/pay/settings/daily/limit",
+      "merchant_settings_write": "/auth/w/ext/pay/settings/set",
+      "merchant_settings_write_batch": "/auth/w/ext/pay/settings/set/batch",
+      "merchant_settings_read": "/auth/r/ext/pay/settings/get",
+      "merchant_settings_list": "/auth/r/ext/pay/settings/list",
+      "deposits_list": "/auth/r/ext/pay/deposits",
+      "unlinked_deposits_list": "/auth/r/ext/pay/deposits/unlinked"
+    }
   }
 }
