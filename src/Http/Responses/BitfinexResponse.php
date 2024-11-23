@@ -33,7 +33,7 @@ abstract class BitfinexResponse
     /**
      * Constructor initializes the response properties from the Guzzle HTTP response.
      *
-     * @param Response $response The HTTP response from the Bitfinex API.
+     * @param  Response  $response  The HTTP response from the Bitfinex API.
      */
     public function __construct(Response $response)
     {
@@ -89,6 +89,21 @@ abstract class BitfinexResponse
     }
 
     protected function keyPermissions(): BitfinexResponse
+    {
+        return $this;
+    }
+
+    protected function changelog(): BitfinexResponse
+    {
+        return $this;
+    }
+
+    protected function movements(): BitfinexResponse
+    {
+        return $this;
+    }
+
+    protected function movementInfo(): BitfinexResponse
     {
         return $this;
     }

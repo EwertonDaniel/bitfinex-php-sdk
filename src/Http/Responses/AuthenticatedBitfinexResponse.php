@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
-use EwertonDaniel\Bitfinex\Core\Entities\KeyPermission;
-use EwertonDaniel\Bitfinex\Core\Entities\LoginInfo;
-use EwertonDaniel\Bitfinex\Core\Entities\Order;
-use EwertonDaniel\Bitfinex\Core\Entities\Summary;
-use EwertonDaniel\Bitfinex\Core\Entities\User;
-use EwertonDaniel\Bitfinex\Core\Entities\Wallet;
+use EwertonDaniel\Bitfinex\Entities\ChangeLogItem;
+use EwertonDaniel\Bitfinex\Entities\KeyPermission;
+use EwertonDaniel\Bitfinex\Entities\LoginInfo;
+use EwertonDaniel\Bitfinex\Entities\Movement;
+use EwertonDaniel\Bitfinex\Entities\Order;
+use EwertonDaniel\Bitfinex\Entities\Summary;
+use EwertonDaniel\Bitfinex\Entities\User;
+use EwertonDaniel\Bitfinex\Entities\Wallet;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
 /**
@@ -19,6 +21,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * Converts raw API response content into structured entities for easier handling.
  *
  * @author  Ewerton
+ *
  * @contact contact@ewertondaniel.work
  */
 class AuthenticatedBitfinexResponse extends BitfinexResponse
@@ -60,7 +63,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
      */
     final public function loginHistory(): BitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['loginInfo' => array_map(fn ($data) => new LoginInfo($data), $content)]);
+        return $this->transformContent(fn ($content) => ['history' => array_map(fn ($data) => new LoginInfo($data), $content)]);
     }
 
     /**
@@ -70,7 +73,12 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
      */
     final public function keyPermissions(): BitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['keyPermissions' => array_map(fn ($data) => new KeyPermission($data), $content)]);
+        return $this->transformContent(fn ($content) => ['permissions' => array_map(fn ($data) => new KeyPermission($data), $content)]);
+    }
+
+    final public function changelog(): BitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['changelog' => array_map(fn ($data) => new ChangeLogItem($data), $content)]);
     }
 
     /**
@@ -101,5 +109,15 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function submitOrder(): BitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['order' => new Order($content)]);
+    }
+
+    final public function movements(): BitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['movements' => array_map(fn ($data) => new Movement($data), $content)]);
+    }
+
+    final public function movementInfo(): BitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['movement' => new Movement($content)]);
     }
 }

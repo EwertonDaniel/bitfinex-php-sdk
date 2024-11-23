@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
-use EwertonDaniel\Bitfinex\Core\Entities\CurrencyTrade;
-use EwertonDaniel\Bitfinex\Core\Entities\ForeignExchangeRate;
-use EwertonDaniel\Bitfinex\Core\Entities\FundingCurrency;
-use EwertonDaniel\Bitfinex\Core\Entities\PairTrade;
-use EwertonDaniel\Bitfinex\Core\Entities\PlatformStatus;
-use EwertonDaniel\Bitfinex\Core\Entities\TickerHistory;
-use EwertonDaniel\Bitfinex\Core\Entities\TradingPair;
+use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
+use EwertonDaniel\Bitfinex\Entities\ForeignExchangeRate;
+use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
+use EwertonDaniel\Bitfinex\Entities\PairTrade;
+use EwertonDaniel\Bitfinex\Entities\PlatformStatus;
+use EwertonDaniel\Bitfinex\Entities\TickerHistory;
+use EwertonDaniel\Bitfinex\Entities\TradingPair;
 
 class PublicBitfinexResponse extends BitfinexResponse
 {

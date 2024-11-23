@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex;
 
-use EwertonDaniel\Bitfinex\Core\Builders\UrlBuilder;
-use EwertonDaniel\Bitfinex\Core\Services\BitfinexAuthenticated;
-use EwertonDaniel\Bitfinex\Core\Services\BitfinexPublic;
-use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexCredentials;
+use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
+use EwertonDaniel\Bitfinex\Services\BitfinexAuthenticated;
+use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
+use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use Exception;
 
 /**
@@ -29,19 +29,6 @@ use Exception;
 class Bitfinex
 {
     /**
-     * The builder for constructing API endpoint URLs.
-     */
-    private UrlBuilder $urlBuilder;
-
-    /**
-     * Initializes the URL builder for interacting with the Bitfinex API.
-     */
-    public function __construct()
-    {
-        $this->urlBuilder = new UrlBuilder;
-    }
-
-    /**
      * Provides access to public endpoints of the Bitfinex API.
      *
      * This method initializes the `BitfinexPublic` service, which allows interaction with
@@ -53,7 +40,7 @@ class Bitfinex
      */
     final public function public(): BitfinexPublic
     {
-        return new BitfinexPublic($this->urlBuilder->setBaseUrl('public'));
+        return new BitfinexPublic((new UrlBuilder)->setBaseUrl('public'));
     }
 
     /**
@@ -79,7 +66,7 @@ class Bitfinex
         );
 
         return new BitfinexAuthenticated(
-            url: $this->urlBuilder->setBaseUrl('private'),
+            url: (new UrlBuilder)->setBaseUrl('private'),
             credentials: $credentials
         );
     }

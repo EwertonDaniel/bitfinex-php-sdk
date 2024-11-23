@@ -32,8 +32,6 @@ enum OrderType: string
 
     /**
      * Returns a human-readable description of the order type.
-     *
-     * @return string
      */
     final public function description(): string
     {

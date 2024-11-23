@@ -1,8 +1,8 @@
 <?php
 
 use EwertonDaniel\Bitfinex\Bitfinex;
-use EwertonDaniel\Bitfinex\Core\Services\BitfinexPublic;
 use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
+use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
 
 test('Can retrieve bitfinex public class', function (Bitfinex $bitfinex) {
     expect($bitfinex->public())->toBeInstanceOf(BitfinexPublic::class);

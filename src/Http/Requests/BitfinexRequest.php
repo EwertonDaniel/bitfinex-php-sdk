@@ -2,11 +2,11 @@
 
 namespace EwertonDaniel\Bitfinex\Http\Requests;
 
-use EwertonDaniel\Bitfinex\Core\Builders\RequestBuilder;
-use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexCredentials;
-use EwertonDaniel\Bitfinex\Core\ValueObjects\BitfinexSignature;
+use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
+use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
+use EwertonDaniel\Bitfinex\ValueObjects\BitfinexSignature;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -24,31 +24,29 @@ class BitfinexRequest
     /**
      * Constructor initializes the request builder, credentials, and HTTP client.
      *
-     * @param RequestBuilder $requestBuilder Instance of the request builder to manage request settings.
-     * @param BitfinexCredentials $credentials Holds API credentials (key, secret, and optional token).
-     * @param Client $client Instance of GuzzleHttp client for executing HTTP requests.
+     * @param  RequestBuilder  $requestBuilder  Instance of the request builder to manage request settings.
+     * @param  BitfinexCredentials  $credentials  Holds API credentials (key, secret, and optional token).
+     * @param  Client  $client  Instance of GuzzleHttp client for executing HTTP requests.
      */
     public function __construct(
         private readonly RequestBuilder $requestBuilder,
         private readonly BitfinexCredentials $credentials,
         private readonly Client $client
-    ) {
-    }
+    ) {}
 
     /**
      * Executes a POST request to the specified API path.
      * If a token is present in the credentials, it is used for authentication; otherwise, a signature is generated.
      *
-     * @param string $apiPath The API endpoint to which the request is sent.
+     * @param  string  $apiPath  The API endpoint to which the request is sent.
      * @return BitfinexResponse The response returned by the Bitfinex API.
      *
      * @throws GuzzleException Thrown if an error occurs during the HTTP request.
      */
     final public function execute(string $apiPath): BitfinexResponse
     {
-        dump($this->requestBuilder->getOptions());
-        if (isset($this->credentials->token)) {
-            $this->requestBuilder->setHeaders(['bfx-token' => $this->credentials->token]);
+        if ($this->credentials->hasToken()) {
+            $this->requestBuilder->setHeaders(['bfx-token' => $this->credentials->getToken()]);
             $request = $this->client->post($apiPath, $this->requestBuilder->getOptions());
         } else {
             $this->setCredentials($apiPath);
@@ -61,7 +59,7 @@ class BitfinexRequest
     /**
      * Sets the necessary credentials for the API request by generating a signature.
      *
-     * @param string $apiPath The API endpoint for which the signature is generated.
+     * @param  string  $apiPath  The API endpoint for which the signature is generated.
      */
     private function setCredentials(string $apiPath): void
     {
@@ -70,7 +68,7 @@ class BitfinexRequest
             signature: new BitfinexSignature(
                 apiPath: $apiPath,
                 body: $this->requestBuilder->body->__toString(),
-                apiSecret: $this->credentials->apiSecret
+                apiSecret: $this->credentials->getApiSecret()
             )
         );
     }
