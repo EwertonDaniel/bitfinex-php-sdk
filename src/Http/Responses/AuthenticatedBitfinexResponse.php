@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
+use EwertonDaniel\Bitfinex\Entities\Alert;
 use EwertonDaniel\Bitfinex\Entities\ChangeLogItem;
+use EwertonDaniel\Bitfinex\Entities\DepositAddress;
 use EwertonDaniel\Bitfinex\Entities\KeyPermission;
 use EwertonDaniel\Bitfinex\Entities\LoginInfo;
 use EwertonDaniel\Bitfinex\Entities\Movement;
@@ -12,6 +14,7 @@ use EwertonDaniel\Bitfinex\Entities\Order;
 use EwertonDaniel\Bitfinex\Entities\Summary;
 use EwertonDaniel\Bitfinex\Entities\User;
 use EwertonDaniel\Bitfinex\Entities\Wallet;
+use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
 /**
@@ -20,104 +23,131 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * Handles transformations of responses for authenticated endpoints.
  * Converts raw API response content into structured entities for easier handling.
  *
- * @author  Ewerton
+ * Key Features:
+ * - Provides utility methods for transforming raw API responses into strongly-typed entities.
+ * - Ensures consistency in handling different authenticated endpoint responses.
  *
+ * @author Ewerton
  * @contact contact@ewertondaniel.work
  */
 class AuthenticatedBitfinexResponse extends BitfinexResponse
 {
-    /**
-     * Transforms the response content for a generated token.
-     *
-     * @return BitfinexResponse Contains the token as an associative array ['token' => string].
-     */
-    final public function generateToken(): BitfinexResponse
+    final public function generateToken(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['token' => GetThis::ifTrueOrFallback(isset($content[0]), fn () => $content[0])]);
     }
 
-    /**
-     * Transforms the response content into a User entity.
-     *
-     * @return BitfinexResponse Contains the user information as a structured User entity.
-     */
-    final public function userInfo(): BitfinexResponse
+    final public function userInfo(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['user' => new User($content)]);
     }
 
-    /**
-     * Transforms the response content into a Summary entity.
-     *
-     * @return BitfinexResponse Contains the summary data as a structured Summary entity.
-     */
-    final public function summary(): BitfinexResponse
+    final public function summary(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['summary' => new Summary($content)]);
     }
 
-    /**
-     * Transforms the response content into an array of LoginInfo entities.
-     *
-     * @return BitfinexResponse Contains login history as an array of LoginInfo entities.
-     */
-    final public function loginHistory(): BitfinexResponse
+    final public function loginHistory(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['history' => array_map(fn ($data) => new LoginInfo($data), $content)]);
     }
 
-    /**
-     * Transforms the response content into an array of KeyPermission entities.
-     *
-     * @return BitfinexResponse Contains key permissions as an array of KeyPermission entities.
-     */
-    final public function keyPermissions(): BitfinexResponse
+    final public function keyPermissions(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['permissions' => array_map(fn ($data) => new KeyPermission($data), $content)]);
     }
 
-    final public function changelog(): BitfinexResponse
+    final public function changelog(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['changelog' => array_map(fn ($data) => new ChangeLogItem($data), $content)]);
     }
 
-    /**
-     * Transforms the response content into an array of Wallet entities.
-     *
-     * @return BitfinexResponse Contains wallets as an array of Wallet entities.
-     */
-    final public function wallets(): BitfinexResponse
+    final public function depositAddress(BitfinexWalletType $walletType): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['address' => new DepositAddress($walletType, $content)]);
+    }
+
+    final public function depositAddressList(string $method): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => [
+            'addresses' => [
+                'method' => $method,
+                'items' => array_map(fn ($data) => [
+                    'address' => new DepositAddress(
+                        BitfinexWalletType::tryFrom($data[1]),
+                        [
+                            null,
+                            null,
+                            null,
+                            null,
+                            [
+                                null,
+                                $method,
+                                null,
+                                null,
+                                $data[0],
+                                null,
+                            ],
+                            null,
+                            null,
+                            null,
+                        ]
+                    ),
+                ], $content),
+            ],
+        ]);
+    }
+
+    final public function wallets(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['wallets' => array_map(fn ($data) => new Wallet($data), $content)]);
     }
 
-    /**
-     * Transforms the response content into an array of Order entities.
-     *
-     * @return BitfinexResponse Contains orders as an array of Order entities.
-     */
-    final public function retrieveOrders(): BitfinexResponse
+    final public function retrieveOrders(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['orders' => array_map(fn ($data) => new Order($data), $content)]);
     }
 
-    /**
-     * Transforms the response content into a single Order entity.
-     *
-     * @return BitfinexResponse Contains a submitted order as a structured Order entity.
-     */
-    final public function submitOrder(): BitfinexResponse
+    final public function balanceAvailableForOrdersOffers(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['order' => new Order($content)]);
+        return $this->transformContent(fn ($content) => ['available' => $content[0]]);
     }
 
-    final public function movements(): BitfinexResponse
+    final public function submitOrder(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'order' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($content[4]),
+                    callback: fn () => array_map(fn ($data) => new Order($data), $content[4]),
+                    fallback: fn () => new Order($content)
+                ),
+            ]
+        );
+    }
+
+    final public function movements(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['movements' => array_map(fn ($data) => new Movement($data), $content)]);
     }
 
-    final public function movementInfo(): BitfinexResponse
+    final public function movementInfo(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['movement' => new Movement($content)]);
+    }
+
+    final public function alertSet(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['alert' => new Alert($content)]);
+    }
+
+    final public function alertDelete(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['deleted' => $content[0]]);
+    }
+
+    final public function alertList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['alerts' => array_map(fn ($data) => new Alert($data), $content)]);
     }
 }

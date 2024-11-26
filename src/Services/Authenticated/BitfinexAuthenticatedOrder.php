@@ -5,10 +5,12 @@ namespace EwertonDaniel\Bitfinex\Services\Authenticated;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
+use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\OrderType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
+use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use GuzzleHttp\Client;
@@ -20,8 +22,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * Handles authenticated order operations for the Bitfinex API, including retrieving and submitting orders.
  * Provides flexibility in specifying order parameters and supports dynamic paths for API interactions.
  *
- * @author  Ewerton
- *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class BitfinexAuthenticatedOrder
@@ -30,12 +31,12 @@ class BitfinexAuthenticatedOrder
     private readonly string $basePath;
 
     /**
-     * BitfinexAuthenticatedOrder constructor.
+     * Constructor initializes the Bitfinex order service with necessary dependencies.
      *
-     * @param  UrlBuilder  $url  URL builder for constructing API paths.
-     * @param  BitfinexCredentials  $credentials  API credentials for authentication.
-     * @param  RequestBuilder  $request  Builder for HTTP requests.
-     * @param  Client  $client  HTTP client for executing requests.
+     * @param UrlBuilder $url URL builder for constructing API paths.
+     * @param BitfinexCredentials $credentials API credentials for authentication.
+     * @param RequestBuilder $request Builder for HTTP requests.
+     * @param Client $client HTTP client for executing requests.
      */
     public function __construct(
         private readonly UrlBuilder $url,
@@ -47,73 +48,60 @@ class BitfinexAuthenticatedOrder
     }
 
     /**
+     * Retrieve existing orders based on filters such as symbol, ID, group ID, and client order ID.
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      */
     final public function retrieve(
-        ?string $symbol = null,
+        ?string $pair = null,
         ?array $id = null,
         ?int $gid = null,
         ?string $cid = null,
         ?string $cidDate = null
     ): BitfinexResponse {
-        $params = [
-            'id' => $id,
-            'gid' => $gid,
-            'cid' => $cid,
-            'cid_date' => $cidDate,
-        ];
+        $params = ['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate];
+        array_walk($params, fn($value, $key) => $this->request->addBody($key, $value, true));
 
-        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
-
-        $request = (new BitfinexRequest($this->request, $this->credentials, $this->client));
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $response = GetThis::ifTrueOrFallback(
-            boolean: $symbol,
-            callback: fn () => $request->execute(
-                apiPath: $this->url->setPath("$this->basePath.retrieve_orders_by_symbol", ['symbol' => "t$symbol"])->getPath()
+            boolean: $pair,
+            callback: fn() => $request->execute(
+                $this->url->setPath("$this->basePath.retrieve_orders_by_symbol", ['symbol' => BitfinexType::TRADING->symbol($pair)])->getPath()
             ),
-            fallback: fn () => $request->execute(
-                apiPath: $this->url->setPath("$this->basePath.retrieve_orders")->getPath()
-            )
+            fallback: fn() => $request->execute($this->url->setPath("$this->basePath.retrieve_orders")->getPath())
         );
 
         return $response->retrieveOrders();
     }
 
     /**
-     * Submit a new order with specified parameters.
+     * Submit a new order to the Bitfinex API with flexible parameters.
      *
-     * @param  OrderType  $type  Type of the order (e.g., LIMIT, MARKET).
-     * @param  BitfinexAction  $action  Action for the order (e.g., BUY, SELL).
-     * @param  string  $symbol  Symbol for the order (e.g., BTCUSD).
-     * @param  float  $amount  Amount for the order.
-     * @param  int  $price  Price for the order.
-     * @param  int|null  $leverage  Leverage for margin trading.
-     * @param  string|null  $priceTrailing  Trailing price for trailing stop orders.
-     * @param  string|null  $priceAuxLimit  Auxiliary limit price for stop-limit orders.
-     * @param  string|null  $priceOcoStop  Price for one-cancels-other (OCO) stop orders.
-     * @param  int|null  $gid  Group ID for the order.
-     * @param  int|null  $cid  Client ID for the order.
-     * @param  int|null  $flags  Flags indicating additional functionalities for the order.
-     *                           - **Hidden (64)**: Ensures the order does not appear in the order book and does not influence other market participants.
-     *                           - To toggle 'visible on hit', add a meta object to your order with `{make_visible: 1}`.
-     *                           - **Close (512)**: Closes the position if one is present.
-     *                           - **Reduce Only (1024)**: Ensures that the executed order does not flip the opened position.
-     *                           - **Post Only (4096)**: Ensures the limit order is added to the order book and does not match with a pre-existing order unless it is hidden.
-     *                           - **OCO (16384)**: One Cancels Other – Allows placing a pair of orders where if one is executed fully or partially, the other is automatically canceled.
-     *                           - **No Var Rates (524288)**: Excludes variable rate funding offers from matching against this order (for margin).
-     * @param  string|null  $tif  Time in force for the order.
-     * @param  array|null  $meta  Metadata for the order.
-     * @return BitfinexResponse Parsed response containing the order details.
+     * @param OrderType $type Type of the order (e.g., LIMIT, MARKET).
+     * @param BitfinexAction $action Action for the order (e.g., BUY, SELL).
+     * @param string $pair
+     * @param float $amount Amount for the order.
+     * @param int $price Price for the order.
+     * @param int|null $leverage Leverage for margin trading.
+     * @param string|null $priceTrailing Trailing price for trailing stop orders.
+     * @param string|null $priceAuxLimit Auxiliary limit price for stop-limit orders.
+     * @param string|null $priceOcoStop Price for one-cancels-other (OCO) stop orders.
+     * @param int|null $gid Group ID for the order.
+     * @param int|null $cid Client ID for the order.
+     * @param int|null $flags Flags indicating additional functionalities for the order.
+     * @param string|null $tif Time in force for the order.
+     * @param array|null $meta Metadata for the order.
+     * @return AuthenticatedBitfinexResponse The parsed response containing order details.
      *
-     * @throws GuzzleException If the HTTP request fails.
-     * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
      */
     final public function submit(
         OrderType $type,
         BitfinexAction $action,
-        string $symbol,
+        string $pair,
         float $amount,
         int $price,
         ?int $leverage = null,
@@ -125,13 +113,12 @@ class BitfinexAuthenticatedOrder
         ?int $flags = null,
         ?string $tif = null,
         ?array $meta = null
-    ): BitfinexResponse {
-
+    ): AuthenticatedBitfinexResponse {
         $this->request->setBody([
             'type' => $type->value,
-            'symbol' => "t$symbol",
-            'amount' => (string) GetThis::ifTrueOrFallback($action->isSell(), fn () => $amount * -1, $amount),
-            'price' => (string) $price,
+            'symbol' => BitfinexType::TRADING->symbol($pair),
+            'amount' => (string)GetThis::ifTrueOrFallback($action->isSell(), fn() => $amount * -1, $amount),
+            'price' => (string)$price,
         ]);
 
         $optionalParams = [
@@ -146,10 +133,9 @@ class BitfinexAuthenticatedOrder
             'meta' => $meta,
         ];
 
-        array_walk($optionalParams, fn ($value, $key) => $this->request->addBody($key, $value, true));
+        array_walk($optionalParams, fn($value, $key) => $this->request->addBody($key, $value, true));
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
-
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.submit_order")->getPath());
 
         return $response->submitOrder();

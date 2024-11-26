@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Helpers;
 
 use Closure;
-use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
-use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class GetThis
@@ -15,8 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Provides helper methods to determine values based on conditions or defaults,
  * and includes specific logic for Bitfinex-related operations.
  *
- * @author  Ewerton
- *
+ * @author  Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class GetThis
@@ -48,26 +45,6 @@ class GetThis
     private static function resolveValue(mixed $value): mixed
     {
         return is_a($value, Closure::class) ? $value() : $value;
-    }
-
-    /**
-     * Determines the ticker type ('trading' or 'funding') based on the given input.
-     *
-     * Converts common variations of the ticker type to their standard representations.
-     * Throws an exception for invalid input.
-     *
-     * @param  string  $type  The input type to evaluate (e.g., 'trading', 'funding', 't', 'f').
-     * @return string The standard ticker type ('t' or 'f').
-     *
-     * @throws BitfinexException If the provided type is invalid.
-     */
-    public static function type(string $type): string
-    {
-        return match ($type) {
-            'trading', 't' => 't',
-            'funding', 'f' => 'f',
-            default => throw new BitfinexException('Invalid ticker type', Response::HTTP_INTERNAL_SERVER_ERROR)
-        };
     }
 
     /**

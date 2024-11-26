@@ -7,13 +7,12 @@ namespace EwertonDaniel\Bitfinex\Services;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
-use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedAccountAction;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedWallet;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
-use EwertonDaniel\Bitfinex\ValueObjects\BitfinexSignature;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,39 +20,36 @@ use GuzzleHttp\Exception\GuzzleException;
 /**
  * Class BitfinexAuthenticated
  *
- * Handles authentication for accessing private endpoints in the Bitfinex API.
- * This class is responsible for generating tokens and ensuring secure interactions
- * with private endpoints through appropriate request builders and credentials.
+ * Handles authentication and interaction with Bitfinex's private API endpoints.
+ * Provides methods for managing wallets, orders, and account actions securely.
  *
  * @author  Ewerton Daniel
- *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexAuthenticated
 {
     /**
-     * Holds the Bitfinex API credentials.
+     * @var BitfinexCredentials API credentials for authenticated requests.
      */
     protected readonly BitfinexCredentials $credentials;
 
     /**
-     * Builder for constructing HTTP requests.
+     * @var RequestBuilder Builder for constructing HTTP requests.
      */
     protected readonly RequestBuilder $request;
 
     /**
-     * HTTP client for sending requests to the Bitfinex API.
+     * @var Client HTTP client for making API requests.
      */
     private Client $client;
 
     /**
-     * Constructor initializes the URL builder and ensures credentials are set.
-     * If no credentials are provided, a default instance is created.
+     * Constructor for initializing the authenticated Bitfinex service.
      *
-     * @param  UrlBuilder  $url  Builder for constructing API endpoint URLs.
+     * @param  UrlBuilder  $url  URL builder for constructing API paths.
      * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
      *
-     * @throws Exception If an error occurs during credential fallback or setup.
+     * @throws Exception If credentials cannot be initialized.
      */
     public function __construct(private readonly UrlBuilder $url, ?BitfinexCredentials $credentials = null)
     {
@@ -64,72 +60,71 @@ class BitfinexAuthenticated
         );
 
         $this->request = (new RequestBuilder)->setMethod('POST');
-
         $this->url->setBaseUrl('private');
 
-        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 3.0]);
+        $this->client = new Client([
+            'base_uri' => $this->url->getBaseUrl(),
+            'timeout' => 3.0,
+        ]);
     }
 
     /**
-     * Generates a token for authenticated requests to private endpoints.
+     * Generates an authentication token for private API endpoints.
      *
-     * This method constructs the request body, sets the required credentials, and sends
-     * the request to the Bitfinex API. The token is generated for a specific scope,
-     * with an optional time-to-live (TTL) and write permissions.
+     * @param  string  $scope  Token scope (e.g., 'api') (default: 'api').
+     * @param  int  $ttl  Time-to-live for the token in seconds (default: 120).
+     * @param  bool  $writePermission  Whether the token allows write operations (default: false).
+     * @param  array|null  $caps  Additional capabilities for the token (optional).
+     * @return $this Authenticated Bitfinex service instance with the token set.
      *
-     * @param  string  $scope  The scope of the token (default: 'api').
-     * @param  int  $ttl  The token's time-to-live in seconds (default: 120).
-     * @param  bool  $writePermission  Whether the token has write permissions (default: false).
-     * @return BitfinexAuthenticated The generated token.
-     *
-     * @throws BitfinexPathNotFoundException If the API path for token generation is not found.
-     * @throws GuzzleException If the HTTP request to the API fails.
+     * @throws BitfinexPathNotFoundException If the API path for token generation is invalid.
+     * @throws GuzzleException If the HTTP request fails.
+     * @throws BitfinexUrlNotFoundException If the URL for token generation is invalid.
      */
     final public function generateToken(string $scope = 'api', int $ttl = 120, bool $writePermission = false, ?array $caps = null): static
     {
-        $apiPath = $this->url->setPath('private.account_actions.generate_token')->getPath();
-
-        $this->request->setBody([
-            'scope' => $scope,
-            'ttl' => $ttl,
-            'writePermission' => $writePermission,
-            'caps' => $caps,
-            '_cust_ip' => GetThis::userIp(),
-        ]);
-
-        $this->request->setCredentials(
-            credentials: $this->credentials,
-            signature: new BitfinexSignature(
-                apiPath: $apiPath,
-                body: $this->request->body->__toString(),
-                apiSecret: $this->credentials->getApiSecret()
-            )
-        );
-
-        $response = new AuthenticatedBitfinexResponse($this->client->post($apiPath, $this->request->getOptions()));
-
-        $response->generateToken();
+        $response = (new Authenticate($this->credentials, $scope, $ttl, $writePermission, $caps))->authenticate();
 
         $this->credentials->setToken($response->content['token']);
 
         return $this;
     }
 
-    final public function getToken()
+    /**
+     * Retrieves the current authentication token.
+     *
+     * @return string|null The authentication token, or null if not set.
+     */
+    final public function getToken(): ?string
     {
         return $this->credentials->getToken();
     }
 
+    /**
+     * Access account actions related to Bitfinex.
+     *
+     * @return BitfinexAuthenticatedAccountAction Instance for account actions.
+     */
     final public function accountAction(): BitfinexAuthenticatedAccountAction
     {
         return new BitfinexAuthenticatedAccountAction($this->url, $this->credentials, $this->request, $this->client);
     }
 
+    /**
+     * Access wallet-related actions in Bitfinex.
+     *
+     * @return BitfinexAuthenticatedWallet Instance for wallet actions.
+     */
     final public function wallets(): BitfinexAuthenticatedWallet
     {
         return new BitfinexAuthenticatedWallet($this->url, $this->credentials, $this->request, $this->client);
     }
 
+    /**
+     * Access order-related actions in Bitfinex.
+     *
+     * @return BitfinexAuthenticatedOrder Instance for order actions.
+     */
     final public function orders(): BitfinexAuthenticatedOrder
     {
         return new BitfinexAuthenticatedOrder($this->url, $this->credentials, $this->request, $this->client);

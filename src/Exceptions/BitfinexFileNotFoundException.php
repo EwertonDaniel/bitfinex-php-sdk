@@ -10,8 +10,7 @@ namespace EwertonDaniel\Bitfinex\Exceptions;
  * Exception thrown when a required file is not found in the specified path.
  * This exception provides additional context about the missing file.
  *
- * @author  Ewerton Daniel
- *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class BitfinexFileNotFoundException extends BitfinexException

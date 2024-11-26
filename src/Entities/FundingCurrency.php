@@ -8,67 +8,102 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
+/**
+ * Class FundingCurrency
+ *
+ * Represents funding currency data on the Bitfinex platform, providing details about
+ * currency metrics such as bids, asks, daily changes, and trading volumes.
+ *
+ * Key Features:
+ * - Handles flash return rate (FRR) data.
+ * - Tracks bid and ask sizes, prices, and periods.
+ * - Provides daily trading statistics such as volume, high, low, and price changes.
+ * - Includes functionality to convert the entity to an array or JSON string.
+ *
+ * @author Ewerton Daniel
+ * @contact contact@ewertondaniel.work
+ */
 class FundingCurrency
 {
-    /** @note Currency ex.:USD,EUR,BTC,ETH */
-    public readonly string $currency;
-
-    /** @note Currency platform symbol ex.:fUSD,fEUR,fBTC,fETH */
+    /** Currency platform symbol (e.g., fUSD, fEUR, fBTC, fETH). */
     public readonly string $symbol;
 
-    /** @note Flash Return Rate - average of all fixed rate funding over the last hour */
+    /** Currency code (e.g., USD, EUR, BTC, ETH). */
+    public readonly string $currency;
+
+    /** Flash Return Rate - average of all fixed-rate funding over the last hour. */
     public readonly ?float $frr;
 
-    /** @note Price of last highest bid */
+    /** Price of the last highest bid. */
     public readonly ?float $bid;
 
-    /** @note Bid period covered in days */
+    /** Bid period covered in days. */
     public readonly ?float $bidPeriod;
 
-    /** @note Sum of the 25 highest bid sizes */
+    /** Sum of the 25 highest bid sizes. */
     public readonly ?float $bidSize;
 
-    /** @note Price of last lowest ask */
+    /** Price of the last lowest ask. */
     public readonly ?float $ask;
 
-    /** @note Ask period covered in days */
+    /** Ask period covered in days. */
     public readonly ?float $askPeriod;
 
-    /** @note Sum of the 25 lowest ask sizes */
+    /** Sum of the 25 lowest ask sizes. */
     public readonly ?float $askSize;
 
-    /** @note Amount that the last price has changed since yesterday */
+    /** Amount the last price has changed since yesterday. */
     public readonly ?float $dailyChange;
 
-    /** @note Relative price change since yesterday (*100 for percentage change) */
+    /** Relative price change since yesterday (multiplied by 100 for percentage). */
     public readonly ?float $dailyChangePercentage;
 
-    /** @note Price of the last trade */
+    /** Price of the last trade. */
     public readonly ?float $lastPrice;
 
-    /** @note Daily volume */
+    /** Daily trading volume. */
     public readonly ?float $volume;
 
-    /** @note Daily high */
+    /** Daily high price. */
     public readonly ?float $high;
 
-    /** @note Daily low */
+    /** Daily low price. */
     public readonly ?float $low;
 
-    /**@note The amount of funding that is available at the Flash Return Rate */
+    /** Amount of funding available at the Flash Return Rate. */
     private float $freeAmount;
 
+    /**
+     * Constructs a FundingCurrency entity using the provided symbol and data.
+     *
+     * @param  string  $symbol  The platform symbol (e.g., fUSD).
+     * @param  array  $data  Array containing funding currency details:
+     *                       - [0]: Flash Return Rate (float).
+     *                       - [1]: Bid price (float).
+     *                       - [2]: Bid period in days (float).
+     *                       - [3]: Sum of 25 highest bid sizes (float).
+     *                       - [4]: Ask price (float).
+     *                       - [5]: Ask period in days (float).
+     *                       - [6]: Sum of 25 lowest ask sizes (float).
+     *                       - [7]: Daily change (float).
+     *                       - [8]: Daily change percentage (float).
+     *                       - [9]: Last trade price (float).
+     *                       - [10]: Daily volume (float).
+     *                       - [11]: Daily high price (float).
+     *                       - [12]: Daily low price (float).
+     *                       - [15]: Free amount available at FRR (float).
+     */
     public function __construct(string $symbol, array $data)
     {
         $this->currency = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 'f'),
-            callback: fn () => substr($symbol, 1),
+            callback: fn() => substr($symbol, 1),
             fallback: $symbol
         );
         $this->symbol = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 'f'),
             callback: $symbol,
-            fallback: fn () => "f$symbol"
+            fallback: fn() => "f$symbol"
         );
         $this->frr = Arr::get($data, 0);
         $this->bid = Arr::get($data, 1);
@@ -86,11 +121,21 @@ class FundingCurrency
         $this->freeAmount = Arr::get($data, 15);
     }
 
+    /**
+     * Converts the FundingCurrency entity to a JSON string.
+     *
+     * @return string JSON representation of the entity.
+     */
     public function __toString(): string
     {
         return Utils::jsonEncode($this->toArray());
     }
 
+    /**
+     * Converts the FundingCurrency entity to an associative array.
+     *
+     * @return array Associative array representation of the entity.
+     */
     final public function toArray(): array
     {
         return get_object_vars($this);

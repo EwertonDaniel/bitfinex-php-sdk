@@ -4,29 +4,57 @@ namespace EwertonDaniel\Bitfinex\Entities;
 
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
+/**
+ * Class Wallet
+ *
+ * Represents a wallet on the Bitfinex platform, encapsulating details such as:
+ * - Wallet type (e.g., exchange, margin, funding).
+ * - Currency and balance information.
+ * - Details about unsettled interest and the available balance.
+ * - Metadata about the last ledger entry for the wallet.
+ *
+ * Key Features:
+ * - Tracks balances and wallet-specific details for various wallet types.
+ * - Handles optional metadata about the last ledger changes.
+ *
+ * @author Ewert
+ * @contact contact@ewertondaniel.work
+ */
 class Wallet
 {
-    /** @note Wallet type (e.g., exchange, margin, funding) */
+    /** Wallet type (e.g., exchange, margin, funding). */
     public readonly string $type;
 
-    /** @note Currency of the wallet (e.g., USD, BTC, ETH) */
+    /** Currency of the wallet (e.g., USD, BTC, ETH). */
     public readonly string $currency;
 
-    /** @note Current balance of the wallet */
+    /** Current balance of the wallet. */
     public readonly float $balance;
 
-    /** @note Unsettled interest in the wallet */
+    /** Unsettled interest in the wallet. */
     public readonly float $unsettledInterest;
 
-    /** @note Available balance for orders, withdrawal, or transfer */
+    /** Available balance for orders, withdrawal, or transfer. */
     public readonly float $availableBalance;
 
-    /** @note Description of the last ledger entry */
+    /** Description of the last ledger entry. */
     public readonly ?string $lastChange;
 
-    /** @note Optional object with details of the last change */
+    /** Optional object with details of the last change. */
     public readonly ?array $lastChangeMetadata;
 
+    /**
+     * Constructs a Wallet entity using provided data.
+     *
+     * @param  array  $data  Array containing wallet details:
+     *                       - [0]: Wallet type (string).
+     *                       - [1]: Currency (string).
+     *                       - [2]: Balance (float).
+     *                       - [3]: Unsettled interest (float).
+     *                       - [4]: Available balance (float).
+     *                       - [5]: Last change description (string, optional).
+     *                       - [6]: Last change metadata (array, optional).
+     */
     public function __construct(array $data)
     {
         $this->type = GetThis::ifTrueOrFallback(isset($data[0]), fn () => $data[0]);

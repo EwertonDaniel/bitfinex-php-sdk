@@ -7,104 +7,126 @@ namespace EwertonDaniel\Bitfinex\Entities;
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
+/**
+ * Class User
+ *
+ * Represents a user account on the Bitfinex platform. Provides detailed information about:
+ * - Account properties like email, username, and verification status.
+ * - Advanced account features such as securities, merchant, and competition functionalities.
+ * - Two-Factor Authentication (2FA) settings.
+ * - Account group and master account relationships.
+ *
+ * Key Features:
+ * - Handles account verification and functionality flags.
+ * - Tracks timestamps for account creation and login activity.
+ * - Supports locale, timezone, and residency information.
+ *
+ * @author Ewerton Daniel
+ * @contact contact@ewertondaniel.work
+ */
 class User
 {
-    /** @note Unique Account ID */
+    /** Unique Account ID. */
     public readonly int $id;
 
-    /** @note Account Email Address */
+    /** Account Email Address. */
     public readonly string $email;
 
-    /** @note Username associated with the account */
+    /** Username associated with the account. */
     public readonly string $username;
 
-    /** @note Millisecond timestamp of account creation */
+    /** Millisecond timestamp of account creation. */
     public readonly int $mtsAccountCreate;
 
-    /** @note Indicates if the user is KYC verified (1 = true, 0 = false) */
+    /** Indicates if the user is KYC verified (true = verified, false = not verified). */
     public readonly bool $verified;
 
-    /** @note Verification level of the account */
+    /** Verification level of the account. */
     public readonly int $verificationLevel;
 
-    /** @note Account's timezone setting (e.g., UTC) */
+    /** Account's timezone setting (e.g., UTC). */
     public readonly ?string $timezone;
 
-    /** @note Account's locale setting (e.g., en_US) */
+    /** Account's locale setting (e.g., en_US). */
     public readonly ?string $locale;
 
-    /** @note Company where the account is registered (e.g., 'bitfinex', 'eosfinex') */
+    /** Company where the account is registered (e.g., 'bitfinex', 'eosfinex'). */
     public readonly ?string $company;
 
-    /** @note Indicates if the email is verified (1 = true, 0 = false) */
+    /** Indicates if the email is verified (true = verified, false = not verified). */
     public readonly bool $emailVerified;
 
-    /** @note Millisecond timestamp of the master account creation */
+    /** Millisecond timestamp of the master account creation. */
     public readonly ?int $mtsMasterAccountCreate;
 
-    /** @note Account group ID */
+    /** Account group ID. */
     public readonly ?int $groupId;
 
-    /** @note Master account ID, if the account is a sub-account */
+    /** Master account ID, if the account is a sub-account. */
     public readonly ?int $masterAccountId;
 
-    /** @note Indicates if the account inherits verification from the master account (1 = true, 0 = false) */
+    /** Indicates if the account inherits verification from the master account. */
     public readonly ?bool $inheritMasterAccountVerification;
 
-    /** @note Indicates if the account is a group master account (1 = true, 0 = false) */
+    /** Indicates if the account is a group master account. */
     public readonly ?bool $isGroupMaster;
 
-    /** @note Indicates if group withdrawal is enabled (1 = true, 0 = false) */
+    /** Indicates if group withdrawal is enabled. */
     public readonly ?bool $groupWithdrawEnabled;
 
-    /** @note Indicates if paper trading is enabled (1 = true, 0 = false) */
+    /** Indicates if paper trading is enabled. */
     public readonly ?bool $pptEnabled;
 
-    /** @note Indicates if merchant functionality is enabled (1 = true, 0 = false) */
+    /** Indicates if merchant functionality is enabled. */
     public readonly ?bool $merchantEnabled;
 
-    /** @note Indicates if competition functionality is enabled (1 = true, 0 = false) */
+    /** Indicates if competition functionality is enabled. */
     public readonly ?bool $competitionEnabled;
 
-    /** @note Enabled two-factor authentication modes (e.g., 'u2f', 'otp') */
+    /** Enabled two-factor authentication modes (e.g., 'u2f', 'otp'). */
     public readonly ?TwoFactorAuthModes $twoFactorAuthModes;
 
-    /** @note Indicates if the account has a securities sub-account (1 = true, 0 = false) */
+    /** Indicates if the account has a securities sub-account. */
     public readonly ?bool $isSecuritiesMaster;
 
-    /** @note Indicates if securities functionality is enabled (1 = true, 0 = false) */
+    /** Indicates if securities functionality is enabled. */
     public readonly ?bool $securitiesEnabled;
 
-    /** @note Indicates if the account is accredited as an investor (1 = true, 0 = false) */
+    /** Indicates if the account is accredited as an investor. */
     public readonly ?bool $isSecuritiesInvestorAccredited;
 
-    /** @note Indicates if the account is verified for El Salvador securities (1 = true, 0 = false) */
+    /** Indicates if the account is verified for El Salvador securities. */
     public readonly ?bool $isSecuritiesElSalvador;
 
-    /** @note Indicates if the account can disable context switching (1 = true, 0 = false) */
+    /** Indicates if the account can disable context switching. */
     public readonly ?bool $allowDisableCtxSwitch;
 
-    /** @note Indicates if the master account cannot switch context to this account (1 = true, 0 = false) */
+    /** Indicates if the master account cannot switch context to this account. */
     public readonly ?bool $ctxSwitchDisabled;
 
-    /** @note Date and time of the last login in UTC (ISO 8601 format) */
+    /** Date and time of the last login in UTC (ISO 8601 format). */
     public readonly ?Carbon $timeLastLogin;
 
-    /** @note Highest verification level submitted by the account */
+    /** Highest verification level submitted by the account. */
     public readonly ?int $verificationLevelSubmitted;
 
-    /** @note Country and region based on verification data (residence and nationality) */
+    /** Country and region based on verification data (residence and nationality). */
     public readonly ?CountryAndRegion $compCountries;
 
-    /** @note Country and region based on residence verification data only */
+    /** Country and region based on residence verification data only. */
     public readonly ?CountryAndRegion $compCountriesResid;
 
-    /** @note Type of verification applied to the account ('individual' or 'corporate') */
+    /** Type of verification applied to the account ('individual' or 'corporate'). */
     public readonly ?string $complAccountType;
 
-    /** @note Indicates if the account is an enterprise merchant (1 = true, 0 = false) */
+    /** Indicates if the account is an enterprise merchant. */
     public readonly ?bool $isMerchantEnterprise;
 
+    /**
+     * Constructs a User entity using data from the Bitfinex API.
+     *
+     * @param  array  $data  Array containing user account details.
+     */
     public function __construct(array $data)
     {
         $this->id = $data[0];

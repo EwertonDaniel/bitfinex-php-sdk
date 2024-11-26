@@ -12,15 +12,14 @@ use Illuminate\Support\Facades\Facade;
  * This class serves as a Laravel Facade for the Bitfinex service, providing a static interface
  * to interact with the `bitfinex` binding in the Laravel service container.
  *
- * Facades in Laravel simplify the access to underlying classes that are bound in the container,
+ * Facades in Laravel simplify access to underlying classes that are bound in the container,
  * offering a cleaner and more readable syntax for common operations.
  *
- * @author  Ewerton Daniel
- *
- * @email contact@ewertondaniel.work
+ * @author Ewerton Daniel
+ * @contact contact@ewertondaniel.work
  *
  * @since 2024-10-22
- * @see https://laravel.com/docs/facades for more about Laravel Facades.
+ * @see https://laravel.com/docs/facades For more about Laravel Facades.
  */
 class Bitfinex extends Facade
 {

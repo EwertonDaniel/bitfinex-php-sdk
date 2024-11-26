@@ -8,46 +8,78 @@ use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
+/**
+ * Class Trade
+ *
+ * Represents a trade on the Bitfinex platform, encapsulating details about executed orders,
+ * including timestamps, prices, amounts, fees, and trade types.
+ *
+ * Key Features:
+ * - Tracks both execution and order-level details.
+ * - Derives the trade type (buy or sell) based on the execution amount.
+ * - Handles historical and current trade data with optional order types.
+ *
+ * @author Ewerton Daniel
+ * @contact contact@ewertondaniel.work
+ */
 class Trade
 {
-    /** @note Trade database id */
+    /** Trade database ID. */
     public readonly int $id;
 
-    /** @note Symbol (e.g., BTCUSD) */
+    /** Symbol (e.g., BTCUSD). */
     public readonly string $symbol;
 
-    /** @note Execution timestamp */
+    /** Execution timestamp. */
     public readonly Carbon $mts;
 
-    /** @note Order id */
+    /** Order ID. */
     public readonly int $orderId;
 
-    /** @note Positive means buy, negative means sell */
+    /** Positive means buy, negative means sell. */
     public readonly float $execAmount;
 
-    public BitfinexAction $tradeType;
+    /** Trade type (buy or sell). */
+    public readonly BitfinexAction $tradeType;
 
-    /** @note Execution price */
+    /** Execution price. */
     public readonly float $execPrice;
 
-    /** @note Order type (null for trades older than March 2020) */
+    /** Order type (null for trades older than March 2020). */
     public readonly ?string $orderType;
 
-    /** @note Order price */
+    /** Order price. */
     public readonly float $orderPrice;
 
-    /** @note maker */
+    /** Indicates whether the trade was made as a maker. */
     public readonly bool $maker;
 
-    /** @note Fee */
+    /** Trade fee. */
     public readonly float $fee;
 
-    /** @note Fee currency */
+    /** Fee currency. */
     public readonly string $feeCurrency;
 
-    /** @note Client Order ID */
+    /** Client Order ID. */
     public readonly int $cid;
 
+    /**
+     * Constructs a Trade entity using data from the Bitfinex API.
+     *
+     * @param  array  $data  Array containing trade details:
+     *                       - [0]: Trade database ID (int).
+     *                       - [1]: Symbol (string).
+     *                       - [2]: Execution timestamp in milliseconds (int).
+     *                       - [3]: Order ID (int).
+     *                       - [4]: Execution amount (float, positive for buy, negative for sell).
+     *                       - [5]: Execution price (float).
+     *                       - [6]: Order type (string, optional for trades older than March 2020).
+     *                       - [7]: Order price (float).
+     *                       - [8]: Maker flag (int, > 0 if maker, else taker).
+     *                       - [9]: Fee (float).
+     *                       - [10]: Fee currency (string).
+     *                       - [11]: Client Order ID (int).
+     */
     public function __construct(array $data)
     {
         $this->id = (int) $data[0];
@@ -55,7 +87,7 @@ class Trade
         $this->mts = Carbon::createFromTimestampMs($data[2]);
         $this->orderId = (int) $data[3];
         $this->execAmount = (float) $data[4];
-        $this->tradeType = BitfinexAction::fromValue($this->execAmount);
+        $this->tradeType = BitfinexAction::fromAmount($this->execAmount);
         $this->execPrice = (float) $data[5];
         $this->orderPrice = (float) $data[7];
         $this->maker = $data[8] > 0;

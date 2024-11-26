@@ -16,7 +16,6 @@ use GuzzleHttp\Exception\GuzzleException;
  * Handles authenticated HTTP requests to the Bitfinex API.
  *
  * @author  Ewerton Daniel
- *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexRequest
@@ -47,11 +46,11 @@ class BitfinexRequest
     {
         if ($this->credentials->hasToken()) {
             $this->requestBuilder->setHeaders(['bfx-token' => $this->credentials->getToken()]);
-            $request = $this->client->post($apiPath, $this->requestBuilder->getOptions());
         } else {
             $this->setCredentials($apiPath);
-            $request = $this->client->post($apiPath, $this->requestBuilder->getOptions());
         }
+
+        $request = $this->client->post($apiPath, $this->requestBuilder->getOptions());
 
         return new AuthenticatedBitfinexResponse($request);
     }

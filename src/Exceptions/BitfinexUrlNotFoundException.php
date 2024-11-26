@@ -10,8 +10,7 @@ namespace EwertonDaniel\Bitfinex\Exceptions;
  * Exception thrown when a requested URL type is not found in the configuration.
  * Extends the base BitfinexException class.
  *
- * @author  Ewerton Daniel
- *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class BitfinexUrlNotFoundException extends BitfinexException
@@ -55,5 +54,24 @@ class BitfinexUrlNotFoundException extends BitfinexException
         $array['urlType'] = $this->urlType;
 
         return $array;
+    }
+
+    /**
+     * Converts the exception to a readable string for debugging.
+     *
+     * @return string The exception details as a string.
+     */
+    public function __toString(): string
+    {
+        return sprintf(
+            "%s: [%d]: %s\nURL Type: %s\nIn %s on line %d\nTrace: %s",
+            __CLASS__,
+            $this->code,
+            $this->message,
+            $this->urlType,
+            $this->file,
+            $this->line,
+            $this->getTraceAsString()
+        );
     }
 }

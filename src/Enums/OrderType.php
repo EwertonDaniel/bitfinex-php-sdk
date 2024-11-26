@@ -8,9 +8,14 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * Enum OrderType
  *
  * Represents the types of orders available in the Bitfinex platform.
+ * Provides descriptions and a title method for each order type.
  *
- * @author  Ewerton Daniel
+ * Key Features:
+ * - Enumerates common order types, including limit, market, stop, and their variations.
+ * - Supports exchange-specific orders that bypass margin funding.
+ * - Includes utility methods for human-readable descriptions and formatted titles.
  *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 enum OrderType: string
@@ -32,6 +37,8 @@ enum OrderType: string
 
     /**
      * Returns a human-readable description of the order type.
+     *
+     * @return string A detailed description of the order type.
      */
     final public function description(): string
     {
@@ -53,6 +60,11 @@ enum OrderType: string
         };
     }
 
+    /**
+     * Returns the title of the order type in lowercase.
+     *
+     * @return string The lowercase title of the order type.
+     */
     final public function title(): string
     {
         return strtolower($this->value);

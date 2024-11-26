@@ -18,8 +18,7 @@ use Illuminate\Support\Arr;
  * and paths defined by adapters. It supports dynamic URL and path management with parameter
  * replacement and error handling using custom exceptions.
  *
- * @author  Ewerton
- *
+ * @author  Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class UrlBuilder

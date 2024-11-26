@@ -1,11 +1,12 @@
 {
   "public": {
     "status": "v2/platform/status",
-    "ticker": "v2/ticker/{type}{symbol}",
+    "ticker": "v2/ticker/{symbol}",
     "tickers": "v2/tickers",
     "ticker_history": "v2/tickers/hist",
-    "trades": "v2/trades/{type}{symbol}/hist",
-    "book": "v2/book/{type}{symbol}/precision",
+    "trades": "v2/trades/{symbol}/hist",
+    "book": "v2/book/{symbol}/{precision}",
+    "stats_one": "v2/stats1/{key}:{size}:{sym_platform}:{side_pair}/{section}",
     "market_average_price": "v2/calc/trade/avg",
     "foreign_exchange_rate": "v2/calc/fx"
   },
@@ -61,6 +62,7 @@
       "changelog": "v2/auth/r/audit/hist",
       "transfer_between_wallets": "v2/auth/w/transfer",
       "deposit_address": "v2/auth/w/deposit/address",
+      "deposit_addresses": "v2/auth/r/deposit/address/all",
       "generate_invoice": "v2/auth/w/deposit/invoice",
       "withdrawal": "v2/auth/w/withdraw",
       "movement_info": "v2/auth/r/movements/info",

@@ -14,8 +14,11 @@ use Throwable;
  * Base exception class for Bitfinex-related errors.
  * Implements PSR-18's `ClientExceptionInterface` for HTTP client compatibility.
  *
- * @author  Ewerton Daniel
+ * Key Features:
+ * - Extends the standard Exception class to include Bitfinex-specific error handling.
+ * - Implements methods for structured debugging and logging.
  *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class BitfinexException extends Exception implements ClientExceptionInterface

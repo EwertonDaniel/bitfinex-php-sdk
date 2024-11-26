@@ -10,8 +10,7 @@ namespace EwertonDaniel\Bitfinex\Exceptions;
  * Exception thrown when a requested API path is not found in the configuration.
  * Extends the base BitfinexException class.
  *
- * @author  Ewerton Daniel
- *
+ * @author Ewerton Daniel
  * @contact contact@ewertondaniel.work
  */
 class BitfinexPathNotFoundException extends BitfinexException
@@ -78,5 +77,25 @@ class BitfinexPathNotFoundException extends BitfinexException
         $array['debugData'] = $this->debugData;
 
         return $array;
+    }
+
+    /**
+     * Converts the exception to a readable string for debugging.
+     *
+     * @return string The exception details as a string.
+     */
+    public function __toString(): string
+    {
+        return sprintf(
+            "%s: [%d]: %s\nPath: %s\nDebug Data: %s\nIn %s on line %d\nTrace: %s",
+            __CLASS__,
+            $this->code,
+            $this->message,
+            $this->path,
+            $this->debugData ? json_encode($this->debugData) : 'None',
+            $this->file,
+            $this->line,
+            $this->getTraceAsString()
+        );
     }
 }

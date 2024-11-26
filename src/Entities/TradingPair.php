@@ -8,44 +8,74 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
+/**
+ * Class TradingPair
+ *
+ * Represents data for a trading pair on the Bitfinex platform, encapsulating key metrics such as bid, ask, daily changes, and volumes.
+ *
+ * Key Features:
+ * - Tracks the symbol and pair information (e.g., tBTCUSD -> BTCUSD).
+ * - Provides daily statistics including price changes, high, low, and volume.
+ * - Handles bid and ask prices and their respective sizes.
+ * - Converts the entity to JSON or an array for easy integration.
+ *
+ * @author Ewerton Daniel
+ * @contact contact@ewertondaniel.work
+ */
 class TradingPair
 {
-    /**@note Pair, ex.: EURUSD, BTCUSD, ETHUSD */
-    public readonly string $pair;
-
-    /**@note Symbol, ex.: tEURUSD, tBTCUSD, tETHUSD */
+    /** Symbol, e.g., tEURUSD, tBTCUSD, tETHUSD. */
     public readonly string $symbol;
 
-    /**@note Price of last highest bid */
+    /** Pair, e.g., EURUSD, BTCUSD, ETHUSD. */
+    public readonly string $pair;
+
+    /** Price of the last highest bid. */
     public readonly ?float $bid;
 
-    /**@note Sum of the 25 highest bid sizes */
+    /** Sum of the 25 highest bid sizes. */
     public readonly ?float $bidSize;
 
-    /**@note Price of last lowest ask */
+    /** Price of the last lowest ask. */
     public readonly ?float $ask;
 
-    /**@note Sum of the 25 lowest ask sizes */
+    /** Sum of the 25 lowest ask sizes. */
     public readonly ?float $askSize;
 
-    /**@note Amount that the last price has changed since yesterday */
+    /** Amount that the last price has changed since yesterday. */
     public readonly ?float $dailyChange;
 
-    /**@note Relative price change since yesterday (*100 for percentage change) */
+    /** Relative price change since yesterday (*100 for percentage change). */
     public readonly ?float $dailyChangePercentage;
 
-    /**@note Price of the last trade */
+    /** Price of the last trade. */
     public readonly ?float $lastPrice;
 
-    /**@note Daily volume */
+    /** Daily trading volume. */
     public readonly ?float $volume;
 
-    /**@note Daily high */
+    /** Daily high price. */
     public readonly ?float $high;
 
-    /**@note Daily low */
+    /** Daily low price. */
     public readonly ?float $low;
 
+    /**
+     * Constructs a TradingPair entity using provided data.
+     *
+     * @param  string  $symbol  The trading pair symbol (e.g., tBTCUSD).
+     * @param  array  $data  Array containing trading pair details:
+     *                       - [0]: Bid price (float).
+     *                       - [1]: Sum of the 25 highest bid sizes (float).
+     *                       - [2]: Ask price (float).
+     *                       - [3]: Sum of the 25 lowest ask sizes (float).
+     *                       - [4]: Daily change amount (float).
+     *                       - [5]: Daily change percentage (float).
+     *                       - [6]: Last trade price (float).
+     *                       - [7]: Daily volume (float).
+     *                       - [8]: Daily high price (float).
+     *                       - [9]: Daily low price (float).
+     */
     public function __construct(string $symbol, array $data)
     {
         $this->pair = GetThis::ifTrueOrFallback(
@@ -70,11 +100,21 @@ class TradingPair
         $this->low = Arr::get($data, 9);
     }
 
+    /**
+     * Converts the TradingPair entity to a JSON string.
+     *
+     * @return string JSON representation of the entity.
+     */
     public function __toString(): string
     {
         return Utils::jsonEncode($this->toArray());
     }
 
+    /**
+     * Converts the TradingPair entity to an associative array.
+     *
+     * @return array Associative array representation of the entity.
+     */
     final public function toArray(): array
     {
         return get_object_vars($this);

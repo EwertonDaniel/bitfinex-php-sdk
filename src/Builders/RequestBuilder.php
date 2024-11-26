@@ -11,13 +11,17 @@ use InvalidArgumentException;
 /**
  * Class RequestBuilder
  *
- * Builds a HTTP request for the Bitfinex API, including headers, query parameters, and body.
- * Provides methods to set HTTP method, headers, query parameters, and body with flexible options
- * for resetting and retrieving the built components. Ensures that HTTP methods and required
- * headers adhere to API specifications.
+ * Provides a robust mechanism for constructing HTTP requests tailored for the Bitfinex API.
+ * This class enables flexible configuration of HTTP methods, headers, and request bodies.
+ * It ensures compatibility with Bitfinex API requirements, including authentication headers.
+ *
+ * Key Features:
+ * - Dynamic HTTP method validation and setting.
+ * - Header and body parameter management with options to add, update, and reset components.
+ * - Integration of authentication credentials and signatures for secure API communication.
+ * - Retrieval of request components and options as associative arrays for easy use with HTTP clients.
  *
  * @author  Ewerton Daniel
- *
  * @contact contact@ewertondaniel.work
  */
 class RequestBuilder
@@ -42,9 +46,10 @@ class RequestBuilder
     /**
      * Sets the HTTP method for the request.
      *
-     * @param  string  $method  HTTP method (GET, POST, etc.)
+     * @param  string  $method  The HTTP method (e.g., GET, POST).
+     * @return static This instance for method chaining.
      *
-     * @throws InvalidArgumentException If the method is not valid.
+     * @throws InvalidArgumentException If the provided method is not valid.
      */
     final public function setMethod(string $method): static
     {
@@ -63,6 +68,7 @@ class RequestBuilder
      * Sets multiple headers for the request.
      *
      * @param  array  $headers  Associative array of headers.
+     * @return static This instance for method chaining.
      */
     final public function setHeaders(array $headers): static
     {
@@ -73,10 +79,11 @@ class RequestBuilder
 
     /**
      * Configures authentication credentials for the request.
-     * Adds necessary Bitfinex-specific headers such as nonce, API key, and signature.
      *
-     * @param  BitfinexCredentials  $credentials  API credentials.
-     * @param  BitfinexSignature  $signature  API signature.
+     * Adds the required Bitfinex-specific headers such as nonce, API key, and signature.
+     *
+     * @param  BitfinexCredentials  $credentials  The API credentials.
+     * @param  BitfinexSignature  $signature  The API signature.
      */
     final public function setCredentials(BitfinexCredentials $credentials, BitfinexSignature $signature): void
     {
@@ -86,9 +93,10 @@ class RequestBuilder
     }
 
     /**
-     * Sets the request body.
+     * Sets the request body with multiple parameters.
      *
      * @param  array  $body  Associative array of body parameters.
+     * @return static This instance for method chaining.
      */
     final public function setBody(array $body): static
     {
@@ -100,8 +108,9 @@ class RequestBuilder
     /**
      * Adds a single header to the request.
      *
-     * @param  string  $name  Header name.
-     * @param  mixed  $value  Header value.
+     * @param  string  $name  The header name.
+     * @param  mixed  $value  The header value.
+     * @return static This instance for method chaining.
      */
     final public function addHeader(string $name, mixed $value): static
     {
@@ -111,10 +120,12 @@ class RequestBuilder
     }
 
     /**
-     * Adds a single body parameter to the request.
+     * Adds a single parameter to the request body.
      *
-     * @param  string  $name  Body parameter name.
-     * @param  mixed  $value  Body parameter value.
+     * @param  string  $name  The parameter name.
+     * @param  mixed  $value  The parameter value.
+     * @param  bool  $skipEmpty  Whether to skip adding empty values (default: false).
+     * @return static This instance for method chaining.
      */
     final public function addBody(string $name, mixed $value, bool $skipEmpty = false): static
     {
@@ -128,7 +139,7 @@ class RequestBuilder
     /**
      * Retrieves the HTTP method of the request.
      *
-     * @return string HTTP method.
+     * @return string The HTTP method.
      */
     final public function getMethod(): string
     {
@@ -156,7 +167,9 @@ class RequestBuilder
     }
 
     /**
-     * Resets all components (headers, query parameters, body) to their initial state.
+     * Resets all components (headers, body) to their initial state.
+     *
+     * @return static This instance for method chaining.
      */
     final public function reset(): static
     {
@@ -167,9 +180,9 @@ class RequestBuilder
     }
 
     /**
-     * Builds the request as an associative array.
+     * Builds the request as an associative array for HTTP client usage.
      *
-     * @return array Associative array with method, headers, query parameters, and body.
+     * @return array Associative array containing headers and body.
      */
     final public function getOptions(): array
     {
