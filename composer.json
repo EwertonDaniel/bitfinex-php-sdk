@@ -18,10 +18,7 @@
   "autoload": {
     "psr-4": {
       "EwertonDaniel\\Bitfinex\\": "src/"
-    },
-    "classmap": [
-      "src/"
-    ]
+    }
   },
   "autoload-dev": {
     "psr-4": {
@@ -29,10 +26,7 @@
       "Workbench\\App\\": "workbench/app/",
       "Workbench\\Database\\Factories\\": "workbench/database/factories/",
       "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
-    },
-    "classmap": [
-      "tests/"
-    ]
+    }
   },
   "authors": [
     {
@@ -44,14 +38,15 @@
   "require": {
     "php": "^8.1",
     "guzzlehttp/guzzle": "^7.9",
-    "illuminate/console": "^9.0|^10|^11.0",
-    "illuminate/support": "^9.0|^10|^11.0",
-    "illuminate/contracts": "^10.0||^11.0"
+    "illuminate/console": "^9.0|^10.0|^11.0",
+    "illuminate/contracts": "^9.0|^10.0|^11.0",
+    "illuminate/support": "^9.0|^10.0|^11.0",
+    "whichbrowser/parser": "^2.1"
   },
   "require-dev": {
     "larastan/larastan": "^2.9",
     "laravel/pint": "^1.14",
-    "nunomaduro/collision": "^8.1.1||^7.10.0",
+    "nunomaduro/collision": "^8.1.1|^7.10.0",
     "orchestra/testbench": "^8.27",
     "pestphp/pest": "^2.34",
     "pestphp/pest-plugin-arch": "^2.7",
@@ -76,15 +71,15 @@
     ],
     "start": [
       "Composer\\Config::disableProcessTimeout",
-      "@composer run build",
-      "@php vendor/bin/testbench serve"
+      "composer run build",
+      "php vendor/bin/testbench serve"
     ],
-    "analyse": "vendor/bin/phpstan analyse ./src",
-    "test": "vendor/bin/pest",
-    "format": "vendor/bin/pint",
+    "analyse": "phpstan analyse ./src",
+    "test": "pest",
+    "format": "pint",
     "lint": [
-      "@php vendor/bin/pint --ansi",
-      "@php vendor/bin/phpstan analyse --verbose --ansi ./src"
+      "pint --ansi",
+      "phpstan analyse --verbose --ansi ./src"
     ]
   },
   "extra": {

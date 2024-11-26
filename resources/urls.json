@@ -1,4 +1,4 @@
 {
-  "public": "https://api-pub.bitfinex.com/v2",
-  "private": "https://api.bitfinex.com/v2"
+  "public": "https://api-pub.bitfinex.com",
+  "private": "https://api.bitfinex.com"
 }
