@@ -57,13 +57,13 @@ Currently, the following public REST endpoints are available for use:
 - **Tickers History** (GET)
 - **Trades** (GET)
 - **Foreign Exchange Rate** (POST)
-
+- **Book** (GET)
+- **Stats** (GET)
+- 
 ### Upcoming Endpoints
 
 In a future development stage, the following additional public REST endpoints and calculation endpoints will be implemented:
 
-- **Book** (GET)
-- **Stats** (GET)
 - **Candles** (GET)
 - **Derivatives Status** (GET)
 - **Derivatives Status History** (GET)
