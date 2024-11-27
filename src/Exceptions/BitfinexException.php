@@ -19,6 +19,7 @@ use Throwable;
  * - Implements methods for structured debugging and logging.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexException extends Exception implements ClientExceptionInterface

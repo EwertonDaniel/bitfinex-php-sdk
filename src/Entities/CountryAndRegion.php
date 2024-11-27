@@ -16,6 +16,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * This entity simplifies parsing and usage of geographical information in the Bitfinex platform.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class CountryAndRegion
@@ -29,7 +30,7 @@ class CountryAndRegion
     /**
      * Constructs a CountryAndRegion entity with data from the Bitfinex API.
      *
-     * @param array $data Array containing:
+     * @param  array  $data  Array containing:
      *                       - [0] => countryCode (string|null): The country code.
      *                       - [1] => region (string|null): The region string, possibly containing an underscore.
      */
@@ -37,15 +38,15 @@ class CountryAndRegion
     {
         $this->countryCode = GetThis::ifTrueOrFallback(
             boolean: isset($data[0]),
-            fallback: fn() => $data[0]
+            fallback: fn () => $data[0]
         );
 
         $this->region = GetThis::ifTrueOrFallback(
             boolean: isset($data[1]),
-            callback: fn() => GetThis::ifTrueOrFallback(
+            callback: fn () => GetThis::ifTrueOrFallback(
                 boolean: str_contains($data[1], '_'),
-                callback: fn() => explode('_', $data[1])[1],
-                fallback: fn() => $data[1]
+                callback: fn () => explode('_', $data[1])[1],
+                fallback: fn () => $data[1]
             ),
         );
     }

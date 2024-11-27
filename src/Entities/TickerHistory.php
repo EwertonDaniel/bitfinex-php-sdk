@@ -18,6 +18,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Simplifies data handling for ticker-related operations.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class TickerHistory

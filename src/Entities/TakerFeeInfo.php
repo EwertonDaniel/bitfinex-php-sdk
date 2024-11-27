@@ -17,6 +17,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Provides structured data for fee analysis and optimization.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class TakerFeeInfo

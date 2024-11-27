@@ -14,6 +14,7 @@ use Illuminate\Support\ServiceProvider;
  * in the Laravel service container and publishes the configuration file for customization.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexServiceProvider extends ServiceProvider
@@ -27,12 +28,12 @@ class BitfinexServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/bitfinex.php',
+            __DIR__.'/../config/bitfinex.php',
             'bitfinex'
         );
 
         $this->app->singleton('bitfinex', function ($app) {
-            return new Bitfinex();
+            return new Bitfinex;
         });
     }
 
@@ -45,7 +46,7 @@ class BitfinexServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/bitfinex.php' => config_path('bitfinex.php'),
+            __DIR__.'/../config/bitfinex.php' => config_path('bitfinex.php'),
         ], 'config');
     }
 }

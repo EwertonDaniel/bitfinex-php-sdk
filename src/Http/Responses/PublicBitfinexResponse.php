@@ -28,18 +28,17 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexType;
  * - Leverages Laravel's collections for advanced data transformations where applicable.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class PublicBitfinexResponse extends BitfinexResponse
 {
     /**
      * Transforms response content into a `PlatformStatus` entity.
-     *
-     * @return PublicBitfinexResponse
      */
     final public function platformStatus(): PublicBitfinexResponse
     {
-        return $this->transformContent(fn($content) => new PlatformStatus($content));
+        return $this->transformContent(fn ($content) => new PlatformStatus($content));
     }
 
     /**
@@ -47,16 +46,15 @@ class PublicBitfinexResponse extends BitfinexResponse
      *
      * @param  string  $symbol  The symbol of the ticker.
      * @param  BitfinexType  $type  The type of the ticker (TRADING or FUNDING).
-     * @return PublicBitfinexResponse
      */
     final public function ticker(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($ticker) => [
+            fn ($ticker) => [
                 'ticker' => match ($type) {
                     BitfinexType::TRADING => new TradingPair($symbol, $ticker),
                     BitfinexType::FUNDING => new FundingCurrency($symbol, $ticker),
-                }
+                },
             ]
         );
     }
@@ -65,12 +63,11 @@ class PublicBitfinexResponse extends BitfinexResponse
      * Transforms a list of tickers into entities grouped by type.
      *
      * @param  BitfinexType  $type  The type of tickers (TRADING or FUNDING).
-     * @return PublicBitfinexResponse
      */
     final public function tickers(BitfinexType $type): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($tickers) => [
+            fn ($tickers) => [
                 'tickers' => array_map(
                     function ($ticker) use ($type) {
                         $symbol = $ticker[0];
@@ -89,14 +86,12 @@ class PublicBitfinexResponse extends BitfinexResponse
 
     /**
      * Transforms ticker history into grouped collections of `TickerHistory` entities.
-     *
-     * @return PublicBitfinexResponse
      */
     final public function tickerHistory(): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($tickerHistories) => collect($tickerHistories)
-                ->map(fn($history) => new TickerHistory($history))
+            fn ($tickerHistories) => collect($tickerHistories)
+                ->map(fn ($history) => new TickerHistory($history))
                 ->groupBy('pair')
                 ->toArray()
         );
@@ -107,11 +102,10 @@ class PublicBitfinexResponse extends BitfinexResponse
      *
      * @param  string  $in  Base currency.
      * @param  string  $out  Quote currency.
-     * @return PublicBitfinexResponse
      */
     public function foreignExchangeRate(string $in, string $out): PublicBitfinexResponse
     {
-        return $this->transformContent(fn($rate) => new ForeignExchangeRate($in, $out, $rate));
+        return $this->transformContent(fn ($rate) => new ForeignExchangeRate($in, $out, $rate));
     }
 
     /**
@@ -119,15 +113,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      *
      * @param  string  $symbol  The symbol of the trades.
      * @param  BitfinexType  $type  The type of trades (TRADING or FUNDING).
-     * @return PublicBitfinexResponse
      */
     final public function trades(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($content) => [
+            fn ($content) => [
                 'symbol' => $symbol,
                 'trades' => array_map(
-                    fn($trade) => match ($type) {
+                    fn ($trade) => match ($type) {
                         BitfinexType::TRADING => new PairTrade($symbol, $trade),
                         BitfinexType::FUNDING => new CurrencyTrade($symbol, $trade),
                     },
@@ -142,15 +135,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      *
      * @param  string  $symbol  The symbol of the book data.
      * @param  BitfinexType  $type  The type of book data (TRADING or FUNDING).
-     * @return PublicBitfinexResponse
      */
     final public function book(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($content) => [
+            fn ($content) => [
                 'symbol' => $symbol,
                 'books' => array_map(
-                    fn($book) => match ($type) {
+                    fn ($book) => match ($type) {
                         BitfinexType::TRADING => new BookTrading($symbol, $book),
                         BitfinexType::FUNDING => new BookFunding($symbol, $book),
                     },
@@ -168,18 +160,17 @@ class PublicBitfinexResponse extends BitfinexResponse
      * @param  string  $symPlatform  The symbol platform.
      * @param  string  $sidePair  The side pair.
      * @param  string  $section  The section.
-     * @return PublicBitfinexResponse
      */
     final public function stats(string $key, string $size, string $symPlatform, string $sidePair, string $section): PublicBitfinexResponse
     {
         return $this->transformContent(
-            fn($content) => [
+            fn ($content) => [
                 'key' => $key,
                 'size' => $size,
                 'symPlatform' => $symPlatform,
                 'sidePair' => $sidePair,
                 'section' => $section,
-                'stats' => array_map(fn($data) => new Stat($data), $content),
+                'stats' => array_map(fn ($data) => new Stat($data), $content),
             ]
         );
     }

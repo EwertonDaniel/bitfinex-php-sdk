@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Exceptions;
  * Extends the base BitfinexException class.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexUrlNotFoundException extends BitfinexException

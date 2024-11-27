@@ -28,6 +28,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Ensures consistency in handling different authenticated endpoint responses.
  *
  * @author Ewerton
+ *
  * @contact contact@ewertondaniel.work
  */
 class AuthenticatedBitfinexResponse extends BitfinexResponse

@@ -17,6 +17,7 @@ use GuzzleHttp\Utils;
  * Concrete implementations must define the `getFilePath` method to specify the location of the JSON file.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 abstract class JsonAdapter
@@ -44,9 +45,9 @@ abstract class JsonAdapter
      * Ensures the file exists, reads its contents, and decodes the JSON into a PHP array.
      * Throws an exception if the file does not exist.
      *
-     * @throws BitfinexFileNotFoundException If the file is not found at the specified path.
-     *
      * @return array The associative array representation of the JSON file contents.
+     *
+     * @throws BitfinexFileNotFoundException If the file is not found at the specified path.
      */
     public function transform(): array
     {
@@ -59,4 +60,3 @@ abstract class JsonAdapter
         return Utils::jsonDecode($contents, true);
     }
 }
-

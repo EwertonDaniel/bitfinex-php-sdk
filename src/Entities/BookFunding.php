@@ -12,6 +12,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * rate level. This entity is commonly used to analyze funding rates and availability.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BookFunding

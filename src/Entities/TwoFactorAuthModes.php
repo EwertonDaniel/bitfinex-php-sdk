@@ -17,6 +17,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Defaults to `false` if the mode is not present.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class TwoFactorAuthModes

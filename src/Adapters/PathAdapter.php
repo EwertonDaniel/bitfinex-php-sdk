@@ -14,6 +14,7 @@ namespace EwertonDaniel\Bitfinex\Adapters;
  * reads its contents, and decodes it into a PHP array for further use in the application.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class PathAdapter extends JsonAdapter
@@ -28,7 +29,6 @@ class PathAdapter extends JsonAdapter
      */
     protected function getFilePath(): string
     {
-        return __DIR__ . '/../../resources/paths.json';
+        return __DIR__.'/../../resources/paths.json';
     }
 }
-

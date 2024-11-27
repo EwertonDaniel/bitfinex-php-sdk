@@ -22,6 +22,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Supports locale, timezone, and residency information.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class User

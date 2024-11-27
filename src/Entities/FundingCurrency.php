@@ -21,6 +21,7 @@ use Illuminate\Support\Arr;
  * - Includes functionality to convert the entity to an array or JSON string.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class FundingCurrency
@@ -97,13 +98,13 @@ class FundingCurrency
     {
         $this->currency = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 'f'),
-            callback: fn() => substr($symbol, 1),
+            callback: fn () => substr($symbol, 1),
             fallback: $symbol
         );
         $this->symbol = GetThis::ifTrueOrFallback(
             boolean: str_starts_with($symbol, 'f'),
             callback: $symbol,
-            fallback: fn() => "f$symbol"
+            fallback: fn () => "f$symbol"
         );
         $this->frr = Arr::get($data, 0);
         $this->bid = Arr::get($data, 1);

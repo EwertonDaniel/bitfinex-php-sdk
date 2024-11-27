@@ -26,6 +26,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * Additionally, methods for managing alerts, balances, and user settings are provided.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexAuthenticatedAccountAction
@@ -38,10 +39,10 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Constructor for initializing dependencies required for API interactions.
      *
-     * @param UrlBuilder $url The URL builder for constructing API paths.
-     * @param BitfinexCredentials $credentials The API credentials for authentication.
-     * @param RequestBuilder $request The request builder for configuring HTTP requests.
-     * @param Client $client The HTTP client for sending requests.
+     * @param  UrlBuilder  $url  The URL builder for constructing API paths.
+     * @param  BitfinexCredentials  $credentials  The API credentials for authentication.
+     * @param  RequestBuilder  $request  The request builder for configuring HTTP requests.
+     * @param  Client  $client  The HTTP client for sending requests.
      */
     public function __construct(
         private readonly UrlBuilder $url,
@@ -59,6 +60,8 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-info-user
      */
     final public function userInfo(): AuthenticatedBitfinexResponse
     {
@@ -79,6 +82,8 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-summary
      */
     final public function summary(): AuthenticatedBitfinexResponse
     {
@@ -95,6 +100,8 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-logins-hist
      */
     final public function loginHistory(): AuthenticatedBitfinexResponse
     {
@@ -111,6 +118,8 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/key-permissions
      */
     final public function keyPermissions(): AuthenticatedBitfinexResponse
     {
@@ -123,19 +132,6 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Retrieves the changelog for account actions.
      *
-     * @return AuthenticatedBitfinexResponse The response containing the changelog.
-     *
-     * @throws GuzzleException If an HTTP request error occurs.
-     * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
-     */
-    final public function generateToken(): AuthenticatedBitfinexResponse
-    {
-        /** @todo */
-    }
-
-    /**
-     * Retrieves the changelog for account actions.
-     *
      * This method fetches the history of changes related to the account, providing
      * detailed information about updates or modifications performed on the account.
      *
@@ -143,6 +139,8 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-audit-hist
      */
     final public function changelog(): AuthenticatedBitfinexResponse
     {
@@ -156,6 +154,8 @@ class BitfinexAuthenticatedAccountAction
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
+     * @link https://docs.bitfinex.com/reference/rest-auth-transfer
+     *
      * @todo Implement method for transferring between wallets.
      */
     final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
@@ -166,10 +166,10 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Fetches a deposit address for the specified wallet and method.
      *
-     * @param BitfinexWalletType $walletType Type of the wallet (e.g., exchange, margin, funding).
-     * @param string $method Deposit method (e.g., crypto, bank wire).
-     * @param int $opRenew Optional flag to renew the deposit address (default: 0).
-     * @return AuthenticatedBitfinexResponse  Response containing the deposit address details.
+     * @param  BitfinexWalletType  $walletType  Type of the wallet (e.g., exchange, margin, funding).
+     * @param  string  $method  Deposit method (e.g., crypto, bank wire).
+     * @param  int  $opRenew  Optional flag to renew the deposit address (default: 0).
+     * @return AuthenticatedBitfinexResponse Response containing the deposit address details.
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
@@ -196,10 +196,10 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Retrieves a paginated list of all deposit addresses for the given method.
      *
-     * @param string $method Deposit method (e.g., crypto, bank wire).
-     * @param int $page Page number for paginated results (default: 1).
-     * @param int $pageSize Number of results per page (default: 20).
-     * @return AuthenticatedBitfinexResponse  Response containing the list of deposit addresses.
+     * @param  string  $method  Deposit method (e.g., crypto, bank wire).
+     * @param  int  $page  Page number for paginated results (default: 1).
+     * @param  int  $pageSize  Number of results per page (default: 20).
+     * @return AuthenticatedBitfinexResponse Response containing the list of deposit addresses.
      *
      * @throws BitfinexPathNotFoundException
      * @throws GuzzleException
@@ -223,10 +223,11 @@ class BitfinexAuthenticatedAccountAction
         return $response->depositAddressList($method);
     }
 
-
     /**
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-deposit-invoice
      *
      * @todo Implement method for generating invoices.
      */
@@ -239,6 +240,8 @@ class BitfinexAuthenticatedAccountAction
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
+     * @link https://docs.bitfinex.com/reference/rest-auth-withdraw
+     *
      * @todo Implement method for processing withdrawals.
      */
     final public function withdrawal(): AuthenticatedBitfinexResponse
@@ -249,11 +252,13 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Retrieves wallet movements for a given currency.
      *
-     * @param string $currency The currency to filter movements.
+     * @param  string  $currency  The currency to filter movements.
      * @return AuthenticatedBitfinexResponse The response containing wallet movements.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-movements
      */
     final public function movements(string $currency): AuthenticatedBitfinexResponse
     {
@@ -269,11 +274,13 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Retrieves detailed information about a specific wallet movement.
      *
-     * @param string|int $id The unique identifier of the movement.
+     * @param  string|int  $id  The unique identifier of the movement.
      * @return BitfinexResponse The response containing detailed movement information.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/movement-info
      */
     final public function movementInfo(string|int $id): BitfinexResponse
     {
@@ -289,11 +296,13 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Retrieves a list of active alerts for the account.
      *
-     * @param string $type The type of alerts to retrieve.
+     * @param  string  $type  The type of alerts to retrieve.
      * @return AuthenticatedBitfinexResponse The response containing the list of alerts.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-alerts
      */
     final public function alertList(string $type): AuthenticatedBitfinexResponse
     {
@@ -304,20 +313,22 @@ class BitfinexAuthenticatedAccountAction
     }
 
     /**
-     * Sets a new alert for a given symbol and price.
+     * Sets a new alert for a given pair and price.
      *
-     * @param string $symbol The trading pair symbol.
-     * @param int $price The target price for the alert.
-     * @param string $type The type of alert (default: 'price').
-     * @param int $count The count of alerts (default: 100).
+     * @param  string  $pair  The trading pair.
+     * @param  int  $price  The target price for the alert.
+     * @param  string  $type  The type of alert (default: 'price').
+     * @param  int  $count  The count of alerts (default: 100).
      * @return AuthenticatedBitfinexResponse The response confirming the alert creation.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-alert-set
      */
-    final public function alertSet(string $symbol, int $price, string $type = 'price', int $count = 100): AuthenticatedBitfinexResponse
+    final public function alertSet(string $pair, int $price, string $type = 'price', int $count = 100): AuthenticatedBitfinexResponse
     {
-        $this->request->setBody(['type' => $type, 'symbol' => "t$symbol", 'price' => $price, 'count' => $count]);
+        $this->request->setBody(['type' => $type, 'symbol' => BitfinexType::TRADING->symbol($pair), 'price' => $price, 'count' => $count]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.alert_set")->getPath());
 
@@ -328,20 +339,23 @@ class BitfinexAuthenticatedAccountAction
      * Deletes an active alert for a given symbol and price.
      *
      * This method allows the deletion of a price-based alert associated with a specific
-     * trading pair symbol. The alert is identified by the symbol and target price.
+     * trading pair pair. The alert is identified by the ṕair and target price.
      *
-     * @param string $symbol The trading pair symbol (e.g., BTCUSD).
-     * @param int $price The target price of the alert to be deleted.
+     * @param  string  $pair  The trading pair (e.g., BTCUSD).
+     * @param  int  $price  The target price of the alert to be deleted.
      * @return AuthenticatedBitfinexResponse The response confirming the alert deletion.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-alert-del
      */
-    final public function alertDelete(string $symbol, int $price): AuthenticatedBitfinexResponse
+    final public function alertDelete(string $pair, int $price): AuthenticatedBitfinexResponse
     {
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(
-            apiPath: $this->url->setPath("$this->basePath.alert_delete", ['symbol' => "t$symbol", 'price' => $price])->getPath()
+            apiPath: $this->url->setPath("$this->basePath.alert_delete", ['pair' => BitfinexType::TRADING->symbol($pair), 'price' => $price]
+            )->getPath()
         );
 
         return $response->alertDelete();
@@ -354,16 +368,18 @@ class BitfinexAuthenticatedAccountAction
      * trading pair or funding currency. It considers the direction (buy/sell), type
      * of action, and other parameters like rate and leverage.
      *
-     * @param BitfinexType $type The type of market (e.g., trading or funding).
-     * @param string $pairOrCurrency The trading pair or funding currency (e.g., BTCUSD or USD).
-     * @param BitfinexAction $action The action type (e.g., buy/sell).
-     * @param OrderOfferType $orderOfferType The type of order or offer.
-     * @param string|null $rate [Optional] The rate for funding or trading.
-     * @param string|null $lev [Optional] The leverage to be applied.
+     * @param  BitfinexType  $type  The type of market (e.g., trading or funding).
+     * @param  string  $pairOrCurrency  The trading pair or funding currency (e.g., BTCUSD or USD).
+     * @param  BitfinexAction  $action  The action type (e.g., buy/sell).
+     * @param  OrderOfferType  $orderOfferType  The type of order or offer.
+     * @param  string|null  $rate  [Optional] The rate for funding or trading.
+     * @param  string|null  $lev  [Optional] The leverage to be applied.
      * @return AuthenticatedBitfinexResponse The response containing the available balance data.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-calc-order-avail
      */
     final public function balanceAvailableForOrdersOffers(
         BitfinexType $type,
@@ -381,7 +397,7 @@ class BitfinexAuthenticatedAccountAction
             'lev' => $lev,
         ];
 
-        array_walk($params, fn($value, $key) => $this->request->addBody($key, $value, true));
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.balance_available_for_orders_offers")->getPath());
 
@@ -391,6 +407,8 @@ class BitfinexAuthenticatedAccountAction
     /**
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-settings-set
      *
      * @todo Implement method for writing user settings.
      */
@@ -403,6 +421,8 @@ class BitfinexAuthenticatedAccountAction
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
+     * @link https://api.bitfinex.com/v2/auth/r/settings
+     *
      * @todo Implement method for reading user settings.
      */
     final public function userSettingsRead(): AuthenticatedBitfinexResponse
@@ -413,6 +433,8 @@ class BitfinexAuthenticatedAccountAction
     /**
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-settings-del
      *
      * @todo Implement method for deleting user settings.
      */

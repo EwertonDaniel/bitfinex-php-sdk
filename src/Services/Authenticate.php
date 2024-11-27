@@ -23,6 +23,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * the private API endpoint `/private/account_actions.generate_token`.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Authenticate

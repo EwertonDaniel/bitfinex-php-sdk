@@ -16,6 +16,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Facilitates tracking and analysis of trading performance and expenses.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class TradingVolumeAndFee

@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Maker rebate for derivative trades.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class MakerFeeInfo
@@ -30,7 +31,7 @@ class MakerFeeInfo
     /**
      * Constructs a MakerFeeInfo entity using provided data.
      *
-     * @param array $data Array containing:
+     * @param  array  $data  Array containing:
      *                       - [0]: Maker fee rate for crypto.
      *                       - [1]: Maker fee rate for stablecoins.
      *                       - [2]: Maker fee rate for fiat.

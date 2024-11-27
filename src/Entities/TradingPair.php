@@ -20,6 +20,7 @@ use Illuminate\Support\Arr;
  * - Converts the entity to JSON or an array for easy integration.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class TradingPair

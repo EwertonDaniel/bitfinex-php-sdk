@@ -22,6 +22,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * historical ticker data, trades, order book details, and more.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexPublic
@@ -36,8 +37,14 @@ class BitfinexPublic
     /**
      * Retrieves the current operational status of the Bitfinex platform.
      *
+     * This method checks whether the platform is operational or under maintenance.
+     * It provides a quick way to verify the platform's availability.
+     *
+     * @return PublicBitfinexResponse Contains the status of the platform (e.g., operational or maintenance).
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-platform-status
      */
     final public function platformStatus(): PublicBitfinexResponse
     {
@@ -54,12 +61,12 @@ class BitfinexPublic
     /**
      * Retrieves the latest state of multiple markets (tickers) based on provided symbols.
      *
-     * @param array $pairs
-     * @param BitfinexType $type The type of market (e.g., trading or funding).
+     * @param  BitfinexType  $type  The type of market (e.g., trading or funding).
      *
-     * @return PublicBitfinexResponse
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
      * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-tickers
      */
     final public function tickers(array $pairs, BitfinexType $type): PublicBitfinexResponse
     {
@@ -83,15 +90,17 @@ class BitfinexPublic
     /**
      * Retrieves market data for a specific trading pair or funding currency.
      *
-     * @param  string  $pair  The trading pair (e.g., tBTCUSD) or funding currency (e.g., fUSD).
+     * @param  string  $pairOrCurrency  The trading pair (e.g., tBTCUSD) or funding currency (e.g., fUSD).
      * @param  BitfinexType|string  $type  The type of market (trading or funding).
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-ticker
      */
-    final public function ticker(string $pair, BitfinexType|string $type): PublicBitfinexResponse
+    final public function ticker(string $pairOrCurrency, BitfinexType|string $type): PublicBitfinexResponse
     {
         try {
-            $symbol = $type->symbol($pair);
+            $symbol = $type->symbol($pairOrCurrency);
 
             $bitfinexType = GetThis::ifTrueOrFallback(is_string($type), fn () => BitfinexType::from($type), $type);
 
@@ -108,21 +117,27 @@ class BitfinexPublic
     /**
      * Retrieves historical ticker data for a list of trading pairs.
      *
-     * @param  array  $pairs  List of trading pairs.
+     * @param  array  $pairsOrCurrencies  List of trading pairs.
      * @param  int  $limit  Maximum number of records to fetch (default: 100).
      * @param  string|null  $start  Start timestamp in milliseconds.
      * @param  string|null  $end  End timestamp in milliseconds.
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-ticker-history
      */
-    final public function tickerHistory(array $pairs, int $limit = 100, ?string $start = null, ?string $end = null): PublicBitfinexResponse
-    {
+    final public function tickerHistory(
+        array $pairsOrCurrencies,
+        int $limit = 100,
+        ?string $start = null,
+        ?string $end = null
+    ): PublicBitfinexResponse {
         try {
             $apiPath = $this->url->setPath(path: 'public.ticker_history')->getPath();
 
             $apiResponse = $this->client->get($apiPath, [
                 'query' => [
-                    'symbols' => implode(',', array_map(fn ($pair) => BitfinexType::TRADING->symbol($pair), $pairs)),
+                    'symbols' => implode(',', array_map(fn ($pair) => BitfinexType::TRADING->symbol($pair), $pairsOrCurrencies)),
                     'limit' => $limit,
                     'start' => $start,
                     'end' => $end,
@@ -138,10 +153,24 @@ class BitfinexPublic
     /**
      * Retrieves historical trade data for a given symbol.
      *
-     * @throws BitfinexException
+     * This method fetches public trade data for a specified trading pair or currency.
+     * It supports pagination and sorting by specifying start and end timestamps,
+     * as well as the number of results to return.
+     *
+     * @param  string  $pairOrCurrency  Trading pair or currency symbol (e.g., BTCUSD, USD).
+     * @param  string|BitfinexType  $type  The type of trade data (e.g., trading or funding).
+     * @param  int  $limit  Number of records to retrieve (default: 125).
+     * @param  int  $sort  Sort order: +1 (ascending), -1 (descending).
+     * @param  ?int  $start  Start timestamp in milliseconds (optional).
+     * @param  ?int  $end  End timestamp in milliseconds (optional).
+     * @return PublicBitfinexResponse Contains the trade data in a structured format.
+     *
+     * @throws BitfinexException If the request fails or an error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-trades
      */
     final public function trades(
-        string $pair,
+        string $pairOrCurrency,
         string|BitfinexType $type,
         int $limit = 125,
         int $sort = -1,
@@ -150,7 +179,7 @@ class BitfinexPublic
     ): PublicBitfinexResponse {
         try {
             $bitfinexType = GetThis::ifTrueOrFallback(is_string($type), fn () => BitfinexType::from($type), $type);
-            $symbol = $bitfinexType->symbol($pair);
+            $symbol = $bitfinexType->symbol($pairOrCurrency);
 
             $apiPath = $this->url->setPath(path: 'public.trades', params: ['symbol' => $symbol])->getPath();
 
@@ -168,18 +197,20 @@ class BitfinexPublic
      * This method fetches real-time order book data for a given symbol and precision level.
      * It allows specifying the maximum number of price levels to retrieve.
      *
-     * @param  string  $pair  The trading pair (e.g., tBTCUSD) or funding currency (e.g., fUSD).
+     * @param  string  $pairOrCurrency  The trading pair (e.g., BTCUSD) or funding currency (e.g., USD).
      * @param  BitfinexType  $type  The type of market (trading or funding).
      * @param  BookPrecision  $precision  The precision level for the order book data (e.g., P0, P1).
      * @param  int  $length  The maximum number of price levels to retrieve (default: 25).
      * @return PublicBitfinexResponse Returns a response object containing the requested order book data.
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-books
      */
-    final public function book(string $pair, BitfinexType $type, BookPrecision $precision, int $length = 25): PublicBitfinexResponse
+    final public function book(string $pairOrCurrency, BitfinexType $type, BookPrecision $precision, int $length = 25): PublicBitfinexResponse
     {
         try {
-            $symbol = $type->symbol($pair);
+            $symbol = $type->symbol($pairOrCurrency);
 
             $apiPath = $this->url->setPath(path: 'public.book', params: ['symbol' => $symbol, 'precision' => $precision->name])->getPath();
 
@@ -211,6 +242,8 @@ class BitfinexPublic
      * @return PublicBitfinexResponse Returns a response object containing the requested stats.
      *
      * @throws BitfinexException If the API request fails or an error occurs during processing.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-stats
      */
     final public function stats(
         BitfinexType $type,
@@ -253,6 +286,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-candles
+     *
      * @todo Implement method for GET Candles
      */
     final public function candles(): PublicBitfinexResponse
@@ -261,6 +297,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-conf
+     *
      * @todo Implement method for GET Configs
      */
     final public function configs(): PublicBitfinexResponse
@@ -269,6 +308,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status
+     *
      * @todo Implement method for GET Derivatives Status
      */
     final public function derivativesStatus(): PublicBitfinexResponse
@@ -277,6 +319,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status-history
+     *
      * @todo Implement method for GET Derivatives Status History
      */
     final public function derivativesStatusHistory(): PublicBitfinexResponse
@@ -285,6 +330,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-liquidations
+     *
      * @todo Implement method for GET Liquidations
      */
     final public function liquidations(): PublicBitfinexResponse
@@ -293,6 +341,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-rankings
+     *
      * @todo Implement method for GET Leaderboards
      */
     final public function leaderboards(): PublicBitfinexResponse
@@ -301,6 +352,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-funding-stats
+     *
      * @todo Implement method for GET Funding Stats
      */
     final public function fundingStats(): PublicBitfinexResponse
@@ -321,6 +375,8 @@ class BitfinexPublic
      * @return PublicBitfinexResponse Returns a response object containing the exchange rate data.
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-foreign-exchange-rate
      */
     final public function foreignExchangeRate(string $baseCurrency, string $quoteCurrency): PublicBitfinexResponse
     {
@@ -336,6 +392,9 @@ class BitfinexPublic
     }
 
     /** @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-market-average-price
+     *
      * @todo Implement method for POST Market Average Price
      */
     final public function marketAveragePrice(): PublicBitfinexResponse

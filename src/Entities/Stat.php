@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * - Converts the entity to an array for easy integration with other systems.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Stat implements Arrayable

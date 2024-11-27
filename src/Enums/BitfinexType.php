@@ -9,6 +9,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * Provides methods to handle symbols associated with each type.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 enum BitfinexType: string

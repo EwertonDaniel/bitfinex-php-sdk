@@ -22,6 +22,7 @@ use InvalidArgumentException;
  * - Retrieval of request components and options as associative arrays for easy use with HTTP clients.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class RequestBuilder

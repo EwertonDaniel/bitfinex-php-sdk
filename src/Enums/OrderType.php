@@ -16,6 +16,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * - Includes utility methods for human-readable descriptions and formatted titles.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 enum OrderType: string

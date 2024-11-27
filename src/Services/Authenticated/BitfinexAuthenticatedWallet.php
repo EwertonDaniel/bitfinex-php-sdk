@@ -18,6 +18,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * This class handles retrieving wallet information under the `private.wallets` endpoint.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexAuthenticatedWallet
@@ -50,12 +51,12 @@ class BitfinexAuthenticatedWallet
      * This method sends a request to the `private.wallets` endpoint to fetch
      * details about the user's wallets, including balances and currency information.
      *
-     * @link https://docs.bitfinex.com/reference/rest-auth-wallets
-     *
      * @return AuthenticatedBitfinexResponse The response containing wallet information.
      *
      * @throws GuzzleException If an HTTP request error occurs.
      * @throws BitfinexPathNotFoundException If the API path cannot be resolved.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-wallets
      */
     final public function get(): AuthenticatedBitfinexResponse
     {

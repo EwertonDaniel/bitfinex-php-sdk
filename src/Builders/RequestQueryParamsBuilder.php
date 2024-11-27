@@ -12,6 +12,7 @@ namespace EwertonDaniel\Bitfinex\Builders;
  * building requests.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class RequestQueryParamsBuilder

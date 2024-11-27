@@ -21,6 +21,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * - Defines constants for each precision level used in the Bitfinex API.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  *
  * @link https://docs.bitfinex.com/reference/rest-public-book

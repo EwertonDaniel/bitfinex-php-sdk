@@ -18,6 +18,7 @@ use GuzzleHttp\Utils;
  * - Supports transformation of response content using a custom closure.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 abstract class BitfinexResponse

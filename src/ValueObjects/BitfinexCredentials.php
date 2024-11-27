@@ -13,6 +13,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * It handles the API Key, API Secret, and optional token used for authentication.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexCredentials

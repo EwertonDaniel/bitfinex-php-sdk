@@ -16,6 +16,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * Handles authenticated HTTP requests to the Bitfinex API.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexRequest

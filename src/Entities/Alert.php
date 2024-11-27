@@ -21,6 +21,7 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexType;
  * - Managing price alerts for trading pairs like BTCUSD.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Alert

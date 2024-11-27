@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Exceptions;
  * This exception provides additional context about the missing file.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexFileNotFoundException extends BitfinexException

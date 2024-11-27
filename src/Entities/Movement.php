@@ -20,6 +20,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * This entity is designed for tracking and managing movement-related data in a consistent format.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Movement
@@ -84,7 +85,7 @@ class Movement
     /**
      * Constructs a Movement entity using data retrieved from the Bitfinex API.
      *
-     * @param array $data Array containing:
+     * @param  array  $data  Array containing:
      *                       - [0]: Movement ID.
      *                       - [1]: Currency symbol (e.g., "BTC").
      *                       - [2]: Currency method or "WIRE" for fiat.
@@ -107,24 +108,24 @@ class Movement
      */
     public function __construct(array $data)
     {
-        $this->id = (int)$data[0];
+        $this->id = (int) $data[0];
         $this->currency = $data[1];
         $this->currencyMethod = $data[2];
         $this->startedAt = Carbon::createFromTimestampMs($data[5]);
         $this->updatedAt = Carbon::createFromTimestampMs($data[6]);
         $this->status = $data[9];
-        $this->amount = (float)$data[12];
-        $this->fees = (float)$data[13];
-        $this->remark = GetThis::ifTrueOrFallback(isset($data[4]), fn() => $data[4]);
-        $this->destinationAddress = GetThis::ifTrueOrFallback(isset($data[16]), fn() => $data[16]);
-        $this->memo = GetThis::ifTrueOrFallback(isset($data[17]), fn() => $data[17]);
-        $this->transactionId = GetThis::ifTrueOrFallback(isset($data[20]), fn() => $data[20]);
-        $this->movementNote = GetThis::ifTrueOrFallback(isset($data[21]), fn() => $data[21]);
-        $this->bankFees = GetThis::ifTrueOrFallback(isset($data[24]), fn() => (float)$data[24]);
-        $this->bankRouterId = GetThis::ifTrueOrFallback(isset($data[25]), fn() => (int)$data[25]);
-        $this->externalBankMovId = GetThis::ifTrueOrFallback(isset($data[28]), fn() => $data[28]);
-        $this->externalBankMovStatus = GetThis::ifTrueOrFallback(isset($data[29]), fn() => $data[29]);
-        $this->externalBankMovDescription = GetThis::ifTrueOrFallback(isset($data[30]), fn() => $data[30]);
-        $this->externalBankAccInfo = GetThis::ifTrueOrFallback(isset($data[31]), fn() => $data[31]);
+        $this->amount = (float) $data[12];
+        $this->fees = (float) $data[13];
+        $this->remark = GetThis::ifTrueOrFallback(isset($data[4]), fn () => $data[4]);
+        $this->destinationAddress = GetThis::ifTrueOrFallback(isset($data[16]), fn () => $data[16]);
+        $this->memo = GetThis::ifTrueOrFallback(isset($data[17]), fn () => $data[17]);
+        $this->transactionId = GetThis::ifTrueOrFallback(isset($data[20]), fn () => $data[20]);
+        $this->movementNote = GetThis::ifTrueOrFallback(isset($data[21]), fn () => $data[21]);
+        $this->bankFees = GetThis::ifTrueOrFallback(isset($data[24]), fn () => (float) $data[24]);
+        $this->bankRouterId = GetThis::ifTrueOrFallback(isset($data[25]), fn () => (int) $data[25]);
+        $this->externalBankMovId = GetThis::ifTrueOrFallback(isset($data[28]), fn () => $data[28]);
+        $this->externalBankMovStatus = GetThis::ifTrueOrFallback(isset($data[29]), fn () => $data[29]);
+        $this->externalBankMovDescription = GetThis::ifTrueOrFallback(isset($data[30]), fn () => $data[30]);
+        $this->externalBankAccInfo = GetThis::ifTrueOrFallback(isset($data[31]), fn () => $data[31]);
     }
 }

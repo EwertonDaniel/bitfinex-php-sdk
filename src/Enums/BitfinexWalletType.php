@@ -15,6 +15,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * - `funding`: Represents the funding wallet, used for providing or receiving funding.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 enum BitfinexWalletType: string

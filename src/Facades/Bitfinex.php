@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Facade;
  * offering a cleaner and more readable syntax for common operations.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  *
  * @since 2024-10-22
