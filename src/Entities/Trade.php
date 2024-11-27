@@ -20,6 +20,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Handles historical and current trade data with optional order types.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Trade

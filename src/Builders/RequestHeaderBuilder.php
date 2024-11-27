@@ -12,6 +12,7 @@ namespace EwertonDaniel\Bitfinex\Builders;
  * merging custom headers.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class RequestHeaderBuilder

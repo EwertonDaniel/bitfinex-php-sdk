@@ -21,6 +21,7 @@ use WhichBrowser\Parser;
  * Useful for auditing account activities and tracking changes performed via the Bitfinex platform.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class ChangeLogItem
@@ -40,7 +41,7 @@ class ChangeLogItem
     /**
      * Constructs a ChangeLogItem entity from the provided data.
      *
-     * @param array $data Array containing changelog details from the Bitfinex API response:
+     * @param  array  $data  Array containing changelog details from the Bitfinex API response:
      *                       - [0] => createdAt (int): Millisecond timestamp of the change.
      *                       - [2] => log (string): Log message describing the change.
      *                       - [5] => ip (string|null): IP address associated with the change.
@@ -50,7 +51,7 @@ class ChangeLogItem
     {
         $this->createdAt = Carbon::createFromTimestampMs($data[0]);
         $this->log = $data[2];
-        $this->ip = GetThis::ifTrueOrFallback(isset($data[5]), fn() => $data[5]);
-        $this->userAgent = GetThis::ifTrueOrFallback(isset($data[6]), fn() => (new Parser($data[6]))->toArray());
+        $this->ip = GetThis::ifTrueOrFallback(isset($data[5]), fn () => $data[5]);
+        $this->userAgent = GetThis::ifTrueOrFallback(isset($data[6]), fn () => (new Parser($data[6]))->toArray());
     }
 }

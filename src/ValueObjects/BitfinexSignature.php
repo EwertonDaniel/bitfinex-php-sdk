@@ -12,6 +12,7 @@ namespace EwertonDaniel\Bitfinex\ValueObjects;
  * path, nonce, and request body.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexSignature

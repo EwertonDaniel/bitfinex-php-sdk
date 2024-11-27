@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * deposit method, currency code, address, and pool address (if applicable).
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class DepositAddress

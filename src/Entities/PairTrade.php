@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * This entity is useful for analyzing trade activity and tracking executed trades.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class PairTrade
@@ -39,8 +40,8 @@ class PairTrade
     /**
      * Constructs a PairTrade entity using data retrieved from the Bitfinex API.
      *
-     * @param string $symbol The trading symbol (e.g., tBTCUSD).
-     * @param array $data Array containing trade details:
+     * @param  string  $symbol  The trading symbol (e.g., tBTCUSD).
+     * @param  array  $data  Array containing trade details:
      *                       - [0]: Trade ID (int).
      *                       - [1]: Timestamp of the trade in milliseconds (int).
      *                       - [2]: Amount traded (float, positive for buy, negative for sell).

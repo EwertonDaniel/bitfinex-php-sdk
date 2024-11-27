@@ -15,6 +15,7 @@ namespace EwertonDaniel\Bitfinex\Adapters;
  * reads its content, and decodes it into a PHP array for use in the application.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class UrlAdapter extends JsonAdapter
@@ -29,6 +30,6 @@ class UrlAdapter extends JsonAdapter
      */
     protected function getFilePath(): string
     {
-        return __DIR__ . '/../../resources/urls.json';
+        return __DIR__.'/../../resources/urls.json';
     }
 }

@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - The total USD equivalent of all funding earnings.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class FundingEarnings

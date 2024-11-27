@@ -18,6 +18,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Handles optional metadata about the last ledger changes.
  *
  * @author Ewert
+ *
  * @contact contact@ewertondaniel.work
  */
 class Wallet

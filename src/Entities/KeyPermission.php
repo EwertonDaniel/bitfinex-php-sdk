@@ -13,6 +13,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Read and write access permissions.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class KeyPermission

@@ -18,6 +18,7 @@ use Illuminate\Support\Arr;
  * This entity is useful for converting amounts between currencies or analyzing market trends.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class ForeignExchangeRate

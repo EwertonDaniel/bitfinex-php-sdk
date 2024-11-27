@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * This enum provides a way to handle and categorize order/offer types consistently.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 enum OrderOfferType: string

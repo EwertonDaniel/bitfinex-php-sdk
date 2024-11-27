@@ -15,6 +15,7 @@ namespace EwertonDaniel\Bitfinex\Builders;
  * for API requests, ensuring flexibility and reusability in parameter management.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class RequestBodyBuilder
@@ -27,8 +28,8 @@ class RequestBodyBuilder
      * Dynamically sets a parameter in the request body. If the key already exists,
      * its value will be updated.
      *
-     * @param string $key The name of the parameter.
-     * @param mixed $value The value of the parameter.
+     * @param  string  $key  The name of the parameter.
+     * @param  mixed  $value  The value of the parameter.
      */
     final public function __set(string $key, mixed $value): void
     {
@@ -41,7 +42,7 @@ class RequestBodyBuilder
      * Combines the provided associative array with the existing body parameters,
      * allowing for batch updates or additions.
      *
-     * @param array $body An associative array of parameters to merge.
+     * @param  array  $body  An associative array of parameters to merge.
      * @return static This instance for method chaining.
      */
     final public function setBody(array $body): static

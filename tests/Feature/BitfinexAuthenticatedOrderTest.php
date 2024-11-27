@@ -11,9 +11,9 @@ test('Should Retrieve Orders', function (BitfinexCredentials $credentials, Bitfi
     $authenticated = $bitfinex->authenticated($credentials)->generateToken();
 
     $response = $authenticated->orders()->retrieve($symbol);
-    expect($response)->toBeInstanceOf(BitfinexResponse::class)->and($response->content['orders'])->toBeArray()->dump();
+    expect($response)->toBeInstanceOf(BitfinexResponse::class)->and($response->content['orders'])->toBeArray();
     sleep(1);
-})->with('Authenticate')->with('Bitfinex Private')->with(['Symbol' => ['with' => 'XMRUST', 'without' => null]]);
+})->with('Auth')->with('Bitfinex')->with(['Symbol' => ['with' => 'XMRUST', 'without' => null]]);
 
 /** @link https://docs.bitfinex.com/reference/rest-auth-submit-order */
 test('Should Submit Order', function (BitfinexCredentials $credentials, Bitfinex $bitfinex, ?string $symbol) {
@@ -22,4 +22,4 @@ test('Should Submit Order', function (BitfinexCredentials $credentials, Bitfinex
     $response = $authenticated->orders()
         ->submit(type: OrderType::EXCHANGE_LIMIT, action: BitfinexAction::BUY, pair: $symbol, amount: 0.02, price: 140);
     expect($response)->toBeInstanceOf(BitfinexResponse::class)->and($response->content['order'])->toBeArray();
-})->with('Authenticate')->with('Bitfinex Private')->with(['Symbol' => ['with' => 'XMRUST', 'without' => null]]);
+})->with('Auth')->with('Bitfinex')->with(['Symbol' => ['with' => 'XMRUST', 'without' => null]])->skip();

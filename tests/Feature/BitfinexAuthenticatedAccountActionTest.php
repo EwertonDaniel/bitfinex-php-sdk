@@ -106,7 +106,7 @@ test('Can retrieve movement info', function (BitfinexCredentials $credentials, B
 test('Can retrieve alert set', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
     $authenticated = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o', 'a']);
 
-    $response = $authenticated->accountAction()->alertSet(symbol: 'XMRUSD', price: 250);
+    $response = $authenticated->accountAction()->alertSet(pair: 'XMRUSD', price: 250);
 
     expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['alert'])->toBeInstanceOf(Alert::class);
 
@@ -117,7 +117,7 @@ test('Can retrieve alert set', function (BitfinexCredentials $credentials, Bitfi
 test('Can retrieve delete alert', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
     $authenticated = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o', 'a']);
 
-    $response = $authenticated->accountAction()->alertDelete(symbol: 'XMRUSD', price: 250);
+    $response = $authenticated->accountAction()->alertDelete(pair: 'XMRUSD', price: 250);
 
     expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['deleted'])->toBeTrue();
 

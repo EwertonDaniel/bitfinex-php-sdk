@@ -18,6 +18,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Defaults to "operative" if no valid status is provided.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class PlatformStatus
@@ -28,7 +29,7 @@ class PlatformStatus
     /**
      * Constructs a PlatformStatus entity.
      *
-     * @param array $data Array containing the platform status:
+     * @param  array  $data  Array containing the platform status:
      *                       - [0]: Platform status (string).
      */
     public function __construct(array $data)

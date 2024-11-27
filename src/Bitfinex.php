@@ -19,8 +19,11 @@ use Exception;
  * retrieving market data, managing orders, wallets, and more.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
+ *
  * @since   2024-10-22
+ *
  * @license MIT License
  *
  * @see     https://docs.bitfinex.com/ for API documentation.

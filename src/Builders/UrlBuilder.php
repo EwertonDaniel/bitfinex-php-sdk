@@ -19,6 +19,7 @@ use Illuminate\Support\Arr;
  * replacement and error handling using custom exceptions.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class UrlBuilder

@@ -16,6 +16,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * the handling of fee-related data in the Bitfinex API.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class FeeInfo
@@ -29,7 +30,7 @@ class FeeInfo
     /**
      * Constructs a FeeInfo entity using provided data.
      *
-     * @param array $data An array containing:
+     * @param  array  $data  An array containing:
      *                       - [0]: Maker fee information.
      *                       - [1]: Taker fee information.
      */

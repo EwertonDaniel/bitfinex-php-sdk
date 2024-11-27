@@ -16,6 +16,7 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
  * This entity is used to manage and analyze order book data for trading pairs.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BookTrading

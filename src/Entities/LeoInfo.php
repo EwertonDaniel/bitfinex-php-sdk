@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Average LEO amount held over the past 30 days.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class LeoInfo
@@ -24,7 +25,7 @@ class LeoInfo
     /**
      * Constructs a LeoInfo entity using provided data.
      *
-     * @param array $data Array containing:
+     * @param  array  $data  Array containing:
      *                       - ['leo_lev']: Current LEO level.
      *                       - ['leo_amount_avg']: Average LEO amount over the past 30 days.
      */

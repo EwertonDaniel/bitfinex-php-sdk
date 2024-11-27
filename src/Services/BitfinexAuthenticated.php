@@ -24,6 +24,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * Provides methods for managing wallets, orders, and account actions securely.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class BitfinexAuthenticated

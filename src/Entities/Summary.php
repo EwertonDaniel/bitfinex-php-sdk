@@ -17,6 +17,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
  * - Simplifies access to detailed account statistics and metrics.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class Summary

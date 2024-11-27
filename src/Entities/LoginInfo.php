@@ -18,6 +18,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * - Additional information associated with the login.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class LoginInfo
@@ -37,7 +38,7 @@ class LoginInfo
     /**
      * Constructs a LoginInfo entity using provided data.
      *
-     * @param array $data Array containing:
+     * @param  array  $data  Array containing:
      *                       - [0]: Login ID.
      *                       - [2]: Millisecond timestamp of login.
      *                       - [4]: IP address.
@@ -45,9 +46,9 @@ class LoginInfo
      */
     public function __construct(array $data)
     {
-        $this->id = GetThis::ifTrueOrFallback(isset($data[0]), fn() => $data[0]);
-        $this->time = GetThis::ifTrueOrFallback(isset($data[2]), fn() => Carbon::createFromTimestampMs($data[2]));
-        $this->ip = GetThis::ifTrueOrFallback(isset($data[4]), fn() => $data[4]);
-        $this->extraInfo = GetThis::ifTrueOrFallback(isset($data[7]), fn() => json_decode($data[7], true), []);
+        $this->id = GetThis::ifTrueOrFallback(isset($data[0]), fn () => $data[0]);
+        $this->time = GetThis::ifTrueOrFallback(isset($data[2]), fn () => Carbon::createFromTimestampMs($data[2]));
+        $this->ip = GetThis::ifTrueOrFallback(isset($data[4]), fn () => $data[4]);
+        $this->extraInfo = GetThis::ifTrueOrFallback(isset($data[7]), fn () => json_decode($data[7], true), []);
     }
 }

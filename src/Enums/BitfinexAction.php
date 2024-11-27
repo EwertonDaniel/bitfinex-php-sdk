@@ -14,6 +14,7 @@ namespace EwertonDaniel\Bitfinex\Enums;
  * - Simplifies bid/ask determination for trading logic.
  *
  * @author Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 enum BitfinexAction: string
@@ -25,7 +26,7 @@ enum BitfinexAction: string
      * Determines the action type based on the trade amount.
      *
      * @param  float  $amount  Trade amount (positive for buy, negative for sell).
-     * @return BitfinexAction  The corresponding action.
+     * @return BitfinexAction The corresponding action.
      */
     public static function fromAmount(float $amount): self
     {

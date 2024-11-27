@@ -14,6 +14,7 @@ use Closure;
  * and includes specific logic for Bitfinex-related operations.
  *
  * @author  Ewerton Daniel
+ *
  * @contact contact@ewertondaniel.work
  */
 class GetThis
