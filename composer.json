@@ -14,7 +14,7 @@
   "type": "library",
   "homepage": "https://github.com/EwertonDaniel/bitfinex-php-sdk",
   "license": "MIT",
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true,
   "autoload": {
     "psr-4": {
