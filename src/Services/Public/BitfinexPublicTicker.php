@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Services\Public;
 
+use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\DateToTimestamp;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -154,16 +156,21 @@ class BitfinexPublicTicker
      *
      * @param  array  $pairs  List of trading pairs (e.g., ["tBTCUSD", "tETHUSD"]).
      * @param  int  $limit  Maximum number of records to fetch (default: 100).
-     * @param  string|null  $start  Start timestamp in milliseconds (optional).
-     * @param  string|null  $end  End timestamp in milliseconds (optional).
+     * @param  string|Carbon|null  $start  Start timestamp in milliseconds (optional).
+     * @param  string|Carbon|null  $end  End timestamp in milliseconds (optional).
      * @return PublicBitfinexResponse Response containing historical ticker data.
      *
      * @throws BitfinexException If the API request fails or an unexpected error occurs.
+     * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-ticker-history
      */
-    final public function history(array $pairs, int $limit = 100, ?string $start = null, ?string $end = null): PublicBitfinexResponse
-    {
+    final public function history(
+        array $pairs,
+        int $limit = 100,
+        string|Carbon|null $start = null,
+        string|Carbon|null $end = null
+    ): PublicBitfinexResponse {
         try {
             $apiPath = $this->url->setPath(path: 'public.ticker_history')->getPath();
 
@@ -171,8 +178,8 @@ class BitfinexPublicTicker
                 'query' => [
                     'symbols' => BitfinexType::TRADING->symbols($pairs),
                     'limit' => $limit,
-                    'start' => $start,
-                    'end' => $end,
+                    'start' => DateToTimestamp::convert($start),
+                    'end' => DateToTimestamp::convert($end),
                 ],
             ]);
 
