@@ -70,4 +70,9 @@ enum BitfinexType: string
     {
         return $this === self::FUNDING;
     }
+
+    final public function symbols(array $items): string
+    {
+        return implode(',', array_map([$this, 'symbol'], $items));
+    }
 }

@@ -23,12 +23,12 @@ dataset('Movement Id', [
     'id' => '123456789',  // <= It's a fake value //
 ]);
 
-dataset('Pair and Type', [
+dataset('Pair/Currency and Type', [
     'Trading' => ['XMRUST', BitfinexType::TRADING],
     'Funding' => ['XMR', BitfinexType::FUNDING],
 ]);
 
-dataset('Pairs and Type', [
+dataset('Pairs/Currencies and Type', [
     'Trading' => [['XMRUST', 'EURUSD'], BitfinexType::TRADING],
     'Funding' => [['UST', 'USD'], BitfinexType::FUNDING],
 ]);

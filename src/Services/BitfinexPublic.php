@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Services;
 
+use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
-use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\BookPrecision;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
-use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
-use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
+use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicBook;
+use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicStats;
+use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicTicker;
+use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicTrade;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -59,230 +61,53 @@ class BitfinexPublic
     }
 
     /**
-     * Retrieves the latest state of multiple markets (tickers) based on provided symbols.
+     * Provides an instance of BitfinexPublicTicker.
      *
-     * @param  BitfinexType  $type  The type of market (e.g., trading or funding).
-     *
-     * @throws BitfinexException If the API request fails or an unexpected error occurs.
-     * @throws BitfinexPathNotFoundException
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-tickers
+     * @return BitfinexPublicTicker The ticker service for accessing public ticker data.
      */
-    final public function tickers(array $pairs, BitfinexType $type): PublicBitfinexResponse
+    final public function ticker(): BitfinexPublicTicker
     {
-        try {
-            $apiPath = $this->url->setPath(path: 'public.tickers')->getPath();
-
-            $options = [
-                'query' => [
-                    'symbols' => implode(',', array_map([$type, 'symbol'], $pairs)),
-                ],
-            ];
-
-            $apiResponse = $this->client->get($apiPath, $options);
-
-            return (new PublicBitfinexResponse($apiResponse))->tickers($type);
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
+        return new BitfinexPublicTicker($this->client, $this->url);
     }
 
     /**
-     * Retrieves market data for a specific trading pair or funding currency.
+     * Provides an instance of BitfinexPublicTrade.
      *
-     * @param  string  $pairOrCurrency  The trading pair (e.g., tBTCUSD) or funding currency (e.g., fUSD).
-     * @param  BitfinexType|string  $type  The type of market (trading or funding).
-     *
-     * @throws BitfinexException If the API request fails or an unexpected error occurs.
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-ticker
-     */
-    final public function ticker(string $pairOrCurrency, BitfinexType|string $type): PublicBitfinexResponse
-    {
-        try {
-            $symbol = $type->symbol($pairOrCurrency);
-
-            $bitfinexType = GetThis::ifTrueOrFallback(is_string($type), fn () => BitfinexType::from($type), $type);
-
-            $apiPath = $this->url->setPath(path: 'public.ticker', params: ['symbol' => $symbol])->getPath();
-
-            $apiResponse = $this->client->get($apiPath);
-
-            return (new PublicBitfinexResponse($apiResponse))->ticker($symbol, $bitfinexType);
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
-    }
-
-    /**
-     * Retrieves historical ticker data for a list of trading pairs.
-     *
-     * @param  array  $pairsOrCurrencies  List of trading pairs.
-     * @param  int  $limit  Maximum number of records to fetch (default: 100).
-     * @param  string|null  $start  Start timestamp in milliseconds.
-     * @param  string|null  $end  End timestamp in milliseconds.
-     *
-     * @throws BitfinexException If the API request fails or an unexpected error occurs.
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-ticker-history
-     */
-    final public function tickerHistory(
-        array $pairsOrCurrencies,
-        int $limit = 100,
-        ?string $start = null,
-        ?string $end = null
-    ): PublicBitfinexResponse {
-        try {
-            $apiPath = $this->url->setPath(path: 'public.ticker_history')->getPath();
-
-            $apiResponse = $this->client->get($apiPath, [
-                'query' => [
-                    'symbols' => implode(',', array_map(fn ($pair) => BitfinexType::TRADING->symbol($pair), $pairsOrCurrencies)),
-                    'limit' => $limit,
-                    'start' => $start,
-                    'end' => $end,
-                ],
-            ]);
-
-            return (new PublicBitfinexResponse($apiResponse))->tickerHistory();
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
-    }
-
-    /**
-     * Retrieves historical trade data for a given symbol.
-     *
-     * This method fetches public trade data for a specified trading pair or currency.
-     * It supports pagination and sorting by specifying start and end timestamps,
-     * as well as the number of results to return.
-     *
-     * @param  string  $pairOrCurrency  Trading pair or currency symbol (e.g., BTCUSD, USD).
-     * @param  string|BitfinexType  $type  The type of trade data (e.g., trading or funding).
-     * @param  int  $limit  Number of records to retrieve (default: 125).
+     * @param  int  $limit  Maximum number of records to retrieve (default: 125).
      * @param  int  $sort  Sort order: +1 (ascending), -1 (descending).
-     * @param  ?int  $start  Start timestamp in milliseconds (optional).
-     * @param  ?int  $end  End timestamp in milliseconds (optional).
-     * @return PublicBitfinexResponse Contains the trade data in a structured format.
-     *
-     * @throws BitfinexException If the request fails or an error occurs.
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-trades
+     * @param  Carbon|string|null  $start  Start time for filtering (optional).
+     * @param  Carbon|string|null  $end  End time for filtering (optional).
+     * @return BitfinexPublicTrade The trade service for accessing public trade data.
      */
-    final public function trades(
-        string $pairOrCurrency,
-        string|BitfinexType $type,
-        int $limit = 125,
-        int $sort = -1,
-        ?int $start = null,
-        ?int $end = null
-    ): PublicBitfinexResponse {
-        try {
-            $bitfinexType = GetThis::ifTrueOrFallback(is_string($type), fn () => BitfinexType::from($type), $type);
-            $symbol = $bitfinexType->symbol($pairOrCurrency);
-
-            $apiPath = $this->url->setPath(path: 'public.trades', params: ['symbol' => $symbol])->getPath();
-
-            $apiResponse = $this->client->get($apiPath, ['query' => ['limit' => $limit, 'sort' => $sort, 'start' => $start, 'end' => $end]]);
-
-            return (new PublicBitfinexResponse($apiResponse))->trades($symbol, $bitfinexType);
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
-    }
-
-    /**
-     * Retrieves the order book data for a specified trading pair or funding currency.
-     *
-     * This method fetches real-time order book data for a given symbol and precision level.
-     * It allows specifying the maximum number of price levels to retrieve.
-     *
-     * @param  string  $pairOrCurrency  The trading pair (e.g., BTCUSD) or funding currency (e.g., USD).
-     * @param  BitfinexType  $type  The type of market (trading or funding).
-     * @param  BookPrecision  $precision  The precision level for the order book data (e.g., P0, P1).
-     * @param  int  $length  The maximum number of price levels to retrieve (default: 25).
-     * @return PublicBitfinexResponse Returns a response object containing the requested order book data.
-     *
-     * @throws BitfinexException If the API request fails or an unexpected error occurs.
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-books
-     */
-    final public function book(string $pairOrCurrency, BitfinexType $type, BookPrecision $precision, int $length = 25): PublicBitfinexResponse
+    public function trades(int $limit = 125, int $sort = -1, Carbon|string|null $start = null, Carbon|string|null $end = null): BitfinexPublicTrade
     {
-        try {
-            $symbol = $type->symbol($pairOrCurrency);
-
-            $apiPath = $this->url->setPath(path: 'public.book', params: ['symbol' => $symbol, 'precision' => $precision->name])->getPath();
-
-            $apiResponse = $this->client->get($apiPath, ['query' => ['len' => $length]]);
-
-            return (new PublicBitfinexResponse($apiResponse))->book($symbol, $type);
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
+        return new BitfinexPublicTrade($this->client, $this->url, $limit, $sort, $start, $end);
     }
 
     /**
-     * Retrieves statistics from the platform's operational data based on specified parameters.
+     * Provides an instance of BitfinexPublicBook.
      *
-     * This method fetches statistics from the Bitfinex API by constructing the appropriate URL
-     * with the provided key, size, symPlatform, sidePair, and section. It also allows additional
-     * query parameters such as sorting and filtering by start time.
-     *
-     * @param  string  $key  The type of statistic to retrieve (e.g., "pos.size", "funding.size").
-     * @param  string  $size  The interval or granularity of the data (e.g., "1m", "30m", "1d").
-     * @param  string  $sidePair  The side of the data (e.g., "long", "short"), or a pair for credits.
-     * @param  string  $section  Specifies whether to fetch the "last" or "hist" data section.
-     * @param  string|null  $pair  The trading pair or platform to query (e.g., "tBTCUSD").
-     * @param  string|null  $currency  The trading currency or platform to query (e.g."fUSD").
-     * @param  ?int  $sort  [Optional] Sort order: +1 for ascending, -1 for descending.
-     * @param  ?int  $start  [Optional] Records with MTS >= start (milliseconds).
-     * @param  ?int  $end  [Optional] Records with MTS <= end (milliseconds).
-     * @param  ?int  $limit  [Optional] Number of records (max 10000).
-     * @return PublicBitfinexResponse Returns a response object containing the requested stats.
-     *
-     * @throws BitfinexException If the API request fails or an error occurs during processing.
-     *
-     * @link https://docs.bitfinex.com/reference/rest-public-stats
+     * @param  BookPrecision|null  $precision  The precision level for order book data (e.g., P0, P1, R0).
+     * @param  int  $length  Maximum number of price levels to retrieve (default: 25).
+     * @return BitfinexPublicBook The book service for accessing public order book data.
      */
-    final public function stats(
-        BitfinexType $type,
-        string $key,
-        string $size,
-        string $sidePair,
-        string $section,
-        ?string $pair = null,
-        ?string $currency = null,
-        ?int $sort = null,
-        ?int $start = null,
-        ?int $end = null,
-        ?int $limit = null
-    ): PublicBitfinexResponse {
-        try {
-            $symPlatform = GetThis::ifTrueOrFallback($pair, fn () => $type->symbol($pair), fn () => $type->symbol($currency));
+    final public function book(?BookPrecision $precision = null, int $length = 25): BitfinexPublicBook
+    {
+        return new BitfinexPublicBook($this->client, $this->url, $precision, $length);
+    }
 
-            $apiPath = $this->url->setPath('public.stats_one', [
-                'key' => $key,
-                'size' => $size,
-                'sym_platform' => $symPlatform,
-                'side_pair' => $sidePair,
-                'section' => $section,
-            ])->getPath();
-
-            $apiResponse = $this->client->get($apiPath, [
-                'query' => array_filter([
-                    'sort' => $sort,
-                    'start' => $start,
-                    'end' => $end,
-                    'limit' => $limit,
-                ], fn ($value) => ! is_null($value)),
-            ]);
-
-            return (new PublicBitfinexResponse($apiResponse))
-                ->stats($key, $size, $symPlatform, $sidePair, $section);
-        } catch (GuzzleException $e) {
-            throw new BitfinexException($e->getMessage(), $e->getCode());
-        }
+    /**
+     * Provides an instance of BitfinexPublicStats.
+     *
+     * @param  string  $key  The type of statistic to retrieve (e.g., 'pos.size').
+     * @param  string  $size  The interval of the data (e.g., '1m', '1d').
+     * @param  string  $sidePair  The side of the data (e.g., 'long', 'short'), or a pair for credits.
+     * @param  string  $section  Specifies whether to fetch the 'last' or 'hist' data section.
+     * @return BitfinexPublicStats The stats service for accessing public statistics data.
+     */
+    final public function stats(string $key, string $size, string $sidePair, string $section): BitfinexPublicStats
+    {
+        return new BitfinexPublicStats($this->client, $this->url, $key, $size, $sidePair, $section);
     }
 
     /** @throws BitfinexException

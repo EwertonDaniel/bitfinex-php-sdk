@@ -2,6 +2,7 @@
 
 namespace EwertonDaniel\Bitfinex\Services\Authenticated;
 
+use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
@@ -10,6 +11,7 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
 use EwertonDaniel\Bitfinex\Enums\OrderOfferType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\DateToTimestamp;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
@@ -103,9 +105,17 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-logins-hist
      */
-    final public function loginHistory(): AuthenticatedBitfinexResponse
-    {
+    final public function loginHistory(
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        int $limit = 250
+    ): AuthenticatedBitfinexResponse {
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $params = ['start' => DateToTimestamp::convert($start), 'end' => DateToTimestamp::convert($end), 'limit' => $limit];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.login_history")->getPath());
 
         return $response->loginHistory();
@@ -142,9 +152,14 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-audit-hist
      */
-    final public function changelog(): AuthenticatedBitfinexResponse
+    final public function changelog(Carbon|string|null $start = null, Carbon|string|null $end = null, int $limit = 250): AuthenticatedBitfinexResponse
     {
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $params = ['start' => DateToTimestamp::convert($start), 'end' => DateToTimestamp::convert($end), 'limit' => $limit];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.changelog")->getPath());
 
         return $response->changelog();
@@ -178,11 +193,7 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function depositAddress(BitfinexWalletType $walletType, string $method, int $opRenew = 0): AuthenticatedBitfinexResponse
     {
-        $this->request->setBody([
-            'wallet' => $walletType->value,
-            'method' => $method,
-            'op_renew' => $opRenew,
-        ]);
+        $this->request->setBody(['wallet' => $walletType->value, 'method' => $method, 'op_renew' => $opRenew]);
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 

@@ -56,7 +56,7 @@ class GetThis
      *
      * @return string The user's validated IP address or '0.0.0.0' if unavailable.
      */
-    public static function userIp(): string
+    final public static function userIp(): string
     {
         $ip = match (true) {
             ! empty($_SERVER['HTTP_CLIENT_IP']) => $_SERVER['HTTP_CLIENT_IP'],
