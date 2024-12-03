@@ -17,11 +17,13 @@ class DateToTimestamp
     final public static function convert(string|Carbon|int|null $date): ?int
     {
         if ($date instanceof Carbon) {
-            $date = $date->timestamp * 1000;
+            $ms = $date->getTimestampMs();
         } elseif (is_string($date)) {
-            $date = Carbon::parse($date)->timestamp * 1000;
+            $ms = Carbon::parse($date)->getTimestampMs();
+        } else {
+            $ms = $date;
         }
 
-        return $date;
+        return $ms;
     }
 }
