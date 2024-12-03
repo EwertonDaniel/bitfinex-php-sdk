@@ -13,7 +13,6 @@ use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedAccountAc
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedWallet;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
-use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -50,7 +49,7 @@ class BitfinexAuthenticated
      * @param  UrlBuilder  $url  URL builder for constructing API paths.
      * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
      *
-     * @throws Exception If credentials cannot be initialized.
+     * @throws BitfinexUrlNotFoundException
      */
     public function __construct(private readonly UrlBuilder $url, ?BitfinexCredentials $credentials = null)
     {

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex;
 
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Services\BitfinexAuthenticated;
 use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
-use Exception;
 
 /**
  * Class Bitfinex
@@ -37,7 +37,7 @@ class Bitfinex
      *
      * @return BitfinexPublic Instance for interacting with public endpoints.
      *
-     * @throws Exception If URL initialization fails.
+     * @throws BitfinexUrlNotFoundException If URL initialization fails.
      */
     final public function public(): BitfinexPublic
     {
@@ -57,7 +57,7 @@ class Bitfinex
      * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
      * @return BitfinexAuthenticated Instance for interacting with private endpoints.
      *
-     * @throws Exception If URL initialization or credentials setup fails.
+     * @throws BitfinexUrlNotFoundException If URL initialization or credentials setup fails.
      */
     final public function authenticated(?BitfinexCredentials $credentials = null): BitfinexAuthenticated
     {
