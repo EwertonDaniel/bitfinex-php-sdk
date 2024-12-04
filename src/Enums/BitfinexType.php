@@ -2,6 +2,8 @@
 
 namespace EwertonDaniel\Bitfinex\Enums;
 
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+
 /**
  * Enum BitfinexType
  *
@@ -29,8 +31,16 @@ enum BitfinexType: string
     final public function symbol(string $pairOrCurrency): string
     {
         return match ($this) {
-            self::TRADING => "t$pairOrCurrency",
-            self::FUNDING => "f$pairOrCurrency",
+            self::TRADING => GetThis::ifTrueOrFallback(
+                boolean: str_starts_with($pairOrCurrency, 't'),
+                callback: fn () => $pairOrCurrency,
+                fallback: fn () => "t$pairOrCurrency",
+            ),
+            self::FUNDING => GetThis::ifTrueOrFallback(
+                boolean: str_starts_with($pairOrCurrency, 'f'),
+                callback: fn () => $pairOrCurrency,
+                fallback: fn () => "f$pairOrCurrency",
+            ),
         };
     }
 
