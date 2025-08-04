@@ -5,11 +5,24 @@
 
 ## Installation
 
-To install the package using Composer, run the following command:
+Install via Composer:
 
-```
+```bash
 composer require ewertondaniel/bitfinex-php-sdk
 ```
+
+## Quick Start
+
+Fetch public data with a few lines of code:
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+$status = Bitfinex::public()->platformStatus();
+echo $status->content->status; // Operative or Maintenance
+```
+
+More examples are available in the [usage guide](docs/USAGE.md).
 
 ## Overview
 
@@ -79,6 +92,10 @@ In a future development stage, the following additional public REST endpoints an
 
 Stay tuned for updates as these endpoints become available!
 
+## Contributing
+
+Contributions are welcome. See the [contribution guide](docs/CONTRIBUTING.md) for details.
+
 ## License
 
 This package is licensed under the [MIT License](LICENSE).
@@ -86,3 +103,9 @@ This package is licensed under the [MIT License](LICENSE).
 ## Author
 
 **Ewerton Daniel** - [contact@ewertondaniel.work](mailto:github@ewertondaniel.work)
+
+## Support
+
+If this project helps you, consider sending some Monero:
+
+`89ynYeog7vt6san1FENHDQhn4RnG9sR2f2jj5DSpgY6q18sjQcyRoYYEpFEFQDaJ3ajjRXaMnikm1P2xKPK4jEwsMeK5o6Q`
