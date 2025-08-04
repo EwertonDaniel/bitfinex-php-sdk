@@ -59,7 +59,7 @@ Currently, the following public REST endpoints are available for use:
 - **Foreign Exchange Rate** (POST)
 - **Book** (GET)
 - **Stats** (GET)
-- 
+
 ### Upcoming Endpoints
 
 In a future development stage, the following additional public REST endpoints and calculation endpoints will be implemented:
