@@ -70,6 +70,7 @@
     "post-autoload-dump": [
       "@clear"
     ],
+    "clear": "@php -r \"file_exists('phpunit.result.cache') && unlink('phpunit.result.cache');\"",
     "start": [
       "Composer\\Config::disableProcessTimeout",
       "composer run build",
@@ -77,6 +78,8 @@
     ],
     "analyse": "phpstan analyse ./src",
     "test": "pest",
+    "test:feature": "pest --testsuite=Feature",
+    "test:unit": "pest --testsuite=Unit",
     "format": "pint",
     "lint": [
       "pint --ansi",
