@@ -137,6 +137,24 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
         return $this->transformContent(fn ($content) => ['movement' => new Movement($content)]);
     }
 
+    final public function depositHistory(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(function ($content) {
+            $items = array_map(fn ($data) => new Movement($data), $content);
+            $deposits = array_values(array_filter($items, fn (Movement $m) => $m->amount > 0));
+            return ['deposits' => $deposits];
+        });
+    }
+
+    final public function withdrawalHistory(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(function ($content) {
+            $items = array_map(fn ($data) => new Movement($data), $content);
+            $withdrawals = array_values(array_filter($items, fn (Movement $m) => $m->amount < 0));
+            return ['withdrawals' => $withdrawals];
+        });
+    }
+
     final public function alertSet(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['alert' => new Alert($content)]);

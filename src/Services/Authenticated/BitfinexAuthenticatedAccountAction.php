@@ -271,8 +271,22 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-movements
      */
-    final public function movements(string $currency): AuthenticatedBitfinexResponse
+    final public function movements(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse
     {
+        // Optional filters align with Bitfinex hist endpoints (start, end, limit)
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
@@ -280,6 +294,80 @@ class BitfinexAuthenticatedAccountAction
         $response = $request->execute(apiPath: $apiPath);
 
         return $response->movements();
+    }
+
+    /**
+     * Retrieves only deposit movements (amount > 0) for a given currency.
+     *
+     * @param  string  $currency  Currency code (e.g., BTC, ETH, USD).
+     * @param  Carbon|string|null  $start  Optional start time.
+     * @param  Carbon|string|null  $end  Optional end time.
+     * @param  int|null  $limit  Optional max items.
+     * @return AuthenticatedBitfinexResponse Filtered deposit history.
+     *
+     * @throws GuzzleException
+     * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-movements
+     */
+    final public function depositHistory(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse {
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
+
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->depositHistory();
+    }
+
+    /**
+     * Retrieves only withdrawal movements (amount < 0) for a given currency.
+     *
+     * @param  string  $currency  Currency code (e.g., BTC, ETH, USD).
+     * @param  Carbon|string|null  $start  Optional start time.
+     * @param  Carbon|string|null  $end  Optional end time.
+     * @param  int|null  $limit  Optional max items.
+     * @return AuthenticatedBitfinexResponse Filtered withdrawal history.
+     *
+     * @throws GuzzleException
+     * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-movements
+     */
+    final public function withdrawalHistory(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse {
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
+
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->withdrawalHistory();
     }
 
     /**

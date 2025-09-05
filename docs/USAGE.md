@@ -118,3 +118,65 @@ $response = Bitfinex::public()->foreignExchangeRate('USD', 'EUR');
 
 $response->content; // Displays the exchange rate from USD to EUR
 ```
+
+## Authenticated Endpoints
+
+Below are common authenticated flows relevant to deposits/withdrawals. Set credentials via env (`BITFINEX_API_KEY`, `BITFINEX_API_SECRET`) or pass them explicitly.
+
+### Credentials (Laravel Facade)
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+// Uses credentials from config/env
+$auth = Bitfinex::authenticated();
+```
+
+### Credentials (Vanilla PHP)
+
+```php
+use EwertonDaniel\Bitfinex\Bitfinex;
+use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
+
+$bf = new Bitfinex();
+$auth = $bf->authenticated(new BitfinexCredentials('API_KEY', 'API_SECRET'));
+```
+
+### Deposit Address and List
+
+```php
+use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
+
+// Single deposit address
+$addr = $auth->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'crypto');
+$addr->content['address'];
+
+// Paginated list of addresses (e.g., method: 'crypto')
+$list = $auth->accountAction()->depositAddressList('crypto', page: 1, pageSize: 20);
+$list->content['addresses']['items'];
+```
+
+### Movements (Deposits and Withdrawals)
+
+You can fetch movements by currency with optional filters `start`, `end` (timestamps or Carbon strings) and `limit`.
+
+```php
+// All movements for BTC (mixed deposits/withdrawals)
+$all = $auth->accountAction()->movements('BTC', start: '2024-01-01', end: '2024-12-31', limit: 200);
+$all->content['movements']; // array<Movement>
+
+// Only deposits (amount > 0)
+$deposits = $auth->accountAction()->depositHistory('BTC', limit: 100);
+$deposits->content['deposits']; // array<Movement>
+
+// Only withdrawals (amount < 0)
+$withdrawals = $auth->accountAction()->withdrawalHistory('BTC', limit: 100);
+$withdrawals->content['withdrawals']; // array<Movement>
+```
+
+### Movement Details
+
+```php
+$info = $auth->accountAction()->movementInfo(1234567890);
+$info->content['movement']; // Movement
+```
