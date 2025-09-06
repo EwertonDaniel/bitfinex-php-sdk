@@ -11,6 +11,10 @@ use EwertonDaniel\Bitfinex\Entities\KeyPermission;
 use EwertonDaniel\Bitfinex\Entities\LedgerEntry;
 use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\PairTrade;
+use EwertonDaniel\Bitfinex\Entities\FundingOffer;
+use EwertonDaniel\Bitfinex\Entities\FundingLoan;
+use EwertonDaniel\Bitfinex\Entities\FundingCredit;
+use EwertonDaniel\Bitfinex\Entities\FundingTrade;
 use EwertonDaniel\Bitfinex\Entities\LoginInfo;
 use EwertonDaniel\Bitfinex\Entities\Position;
 use EwertonDaniel\Bitfinex\Entities\Movement;
@@ -170,6 +174,62 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function orderCancelMulti(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['results' => $content]);
+    }
+
+    // Funding mappings
+    final public function fundingOffers(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['offers' => array_map(fn ($row) => new FundingOffer($row), $content)]);
+    }
+
+    final public function fundingOfferSubmitted(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['offer' => new FundingOffer($content)]);
+    }
+
+    final public function cancelFundingOffer(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['cancelled' => $content]);
+    }
+
+    final public function cancelAllFundingOffers(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['results' => $content]);
+    }
+
+    final public function fundingClose(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['closed' => $content]);
+    }
+
+    final public function fundingAutoRenew(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['autorenew' => $content]);
+    }
+
+    final public function keepFunding(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['kept' => $content]);
+    }
+
+    final public function fundingLoans(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['loans' => array_map(fn ($row) => new FundingLoan($row), $content)]);
+    }
+
+    final public function fundingCredits(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['credits' => array_map(fn ($row) => new FundingCredit($row), $content)]);
+    }
+
+    final public function fundingTrades(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['trades' => array_map(fn ($row) => new FundingTrade($row), $content)]);
+    }
+
+    final public function fundingInfo(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['info' => $content]);
     }
 
     final public function movements(): AuthenticatedBitfinexResponse
