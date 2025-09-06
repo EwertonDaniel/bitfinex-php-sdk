@@ -212,4 +212,19 @@ class PublicBitfinexResponse extends BitfinexResponse
             ]
         );
     }
+
+    /**
+     * Transforms derivatives status responses.
+     *
+     * @param  array  $keys  Keys requested from status endpoint.
+     */
+    final public function derivativesStatus(array $keys): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'keys' => $keys,
+                'items' => $content,
+            ]
+        );
+    }
 }

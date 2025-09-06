@@ -136,15 +136,16 @@ class BitfinexPublic
         return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs($this->client, $this->url);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch derivatives status (and history via params).
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
      *
      * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status
-     *
-     * @todo Implement method for GET Derivatives Status
      */
-    final public function derivativesStatus(): PublicBitfinexResponse
+    final public function derivativesStatus(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus($this->client, $this->url);
     }
 
     /** @throws BitfinexException
