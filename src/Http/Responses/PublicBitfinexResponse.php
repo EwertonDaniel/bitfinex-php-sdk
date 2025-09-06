@@ -273,4 +273,12 @@ class PublicBitfinexResponse extends BitfinexResponse
             ]
         );
     }
+
+    /**
+     * Transforms market average price calculation result.
+     */
+    final public function marketAveragePrice(): PublicBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['result' => $content]);
+    }
 }

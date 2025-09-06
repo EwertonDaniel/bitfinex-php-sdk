@@ -219,14 +219,27 @@ class BitfinexPublic
         }
     }
 
-    /** @throws BitfinexException
+    /**
+     * Calculates Market Average Price for a hypothetical order (public calc endpoint).
+     *
+     * Pass the payload according to the Bitfinex docs (e.g., symbol, amount, and other optional fields).
+     *
+     * @param  array  $payload  JSON body as defined by the API.
+     * @return PublicBitfinexResponse
+     *
+     * @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-market-average-price
-     *
-     * @todo Implement method for POST Market Average Price
      */
-    final public function marketAveragePrice(): PublicBitfinexResponse
+    final public function marketAveragePrice(array $payload): PublicBitfinexResponse
     {
-        throw new BitfinexException('Method not implemented.');
+        try {
+            $apiPath = $this->url->setPath('public.market_average_price')->getPath();
+            $apiResponse = $this->client->post($apiPath, ['json' => $payload]);
+
+            return (new PublicBitfinexResponse($apiResponse))->marketAveragePrice();
+        } catch (GuzzleException $e) {
+            throw new BitfinexException($e->getMessage(), $e->getCode());
+        }
     }
 }
