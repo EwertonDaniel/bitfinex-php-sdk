@@ -33,7 +33,7 @@ class BitfinexPublic
 
     public function __construct(private readonly UrlBuilder $url)
     {
-        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 3.0]);
+        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 10.0]);
     }
 
     /**
@@ -110,81 +110,84 @@ class BitfinexPublic
         return new BitfinexPublicStats($this->client, $this->url, $key, $size, $sidePair, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch OHLCV candles.
+     *
+     * @param  string  $timeframe  Timeframe (e.g., 1m, 5m, 15m, 1h, 1D, 1W).
+     * @param  string  $section  'hist' or 'last' (default: 'hist').
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles
      *
      * @link https://docs.bitfinex.com/reference/rest-public-candles
-     *
-     * @todo Implement method for GET Candles
      */
-    final public function candles(): PublicBitfinexResponse
+    final public function candles(string $timeframe, string $section = 'hist'): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles($this->client, $this->url, $timeframe, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch public configurations (conf).
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs
      *
      * @link https://docs.bitfinex.com/reference/rest-public-conf
-     *
-     * @todo Implement method for GET Configs
      */
-    final public function configs(): PublicBitfinexResponse
+    final public function configs(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs($this->client, $this->url);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch derivatives status (and history via params).
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
      *
      * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status
-     *
-     * @todo Implement method for GET Derivatives Status
      */
-    final public function derivativesStatus(): PublicBitfinexResponse
+    final public function derivativesStatus(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus($this->client, $this->url);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch derivatives status history (via start/end/limit/sort params).
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
      *
      * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status-history
-     *
-     * @todo Implement method for GET Derivatives Status History
      */
-    final public function derivativesStatusHistory(): PublicBitfinexResponse
+    final public function derivativesStatusHistory(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus($this->client, $this->url);
     }
 
     /** @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-liquidations
-     *
-     * @todo Implement method for GET Liquidations
      */
-    final public function liquidations(): PublicBitfinexResponse
+    final public function liquidations(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLiquidations
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLiquidations($this->client, $this->url);
     }
 
     /** @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-rankings
-     *
-     * @todo Implement method for GET Leaderboards
      */
-    final public function leaderboards(): PublicBitfinexResponse
+    final public function leaderboards(string $key, string $timeframe, string $section = 'hist'): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLeaderboards
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLeaderboards($this->client, $this->url, $key, $timeframe, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch funding statistics.
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
      *
      * @link https://docs.bitfinex.com/reference/rest-public-funding-stats
-     *
-     * @todo Implement method for GET Funding Stats
      */
-    final public function fundingStats(): PublicBitfinexResponse
+    final public function fundingStats(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats($this->client, $this->url);
     }
 
     // ** Calculation Endpoints **
@@ -216,14 +219,27 @@ class BitfinexPublic
         }
     }
 
-    /** @throws BitfinexException
+    /**
+     * Calculates Market Average Price for a hypothetical order (public calc endpoint).
+     *
+     * Pass the payload according to the Bitfinex docs (e.g., symbol, amount, and other optional fields).
+     *
+     * @param  array  $payload  JSON body as defined by the API.
+     * @return PublicBitfinexResponse
+     *
+     * @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-market-average-price
-     *
-     * @todo Implement method for POST Market Average Price
      */
-    final public function marketAveragePrice(): PublicBitfinexResponse
+    final public function marketAveragePrice(array $payload): PublicBitfinexResponse
     {
-        throw new BitfinexException('Method not implemented.');
+        try {
+            $apiPath = $this->url->setPath('public.market_average_price')->getPath();
+            $apiResponse = $this->client->post($apiPath, ['json' => $payload]);
+
+            return (new PublicBitfinexResponse($apiResponse))->marketAveragePrice();
+        } catch (GuzzleException $e) {
+            throw new BitfinexException($e->getMessage(), $e->getCode());
+        }
     }
 }

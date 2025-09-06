@@ -170,12 +170,25 @@ class BitfinexAuthenticatedAccountAction
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-transfer
-     *
-     * @todo Implement method for transferring between wallets.
      */
-    final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
-    {
-        /** @todo */
+    final public function transferBetweenWallets(
+        BitfinexWalletType $from,
+        BitfinexWalletType $to,
+        string $currency,
+        float $amount
+    ): AuthenticatedBitfinexResponse {
+        $this->request->setBody([
+            'from' => $from->value,
+            'to' => $to->value,
+            'currency' => $currency,
+            'amount' => (string) $amount,
+        ]);
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $apiPath = $this->url->setPath("$this->basePath.transfer_between_wallets")->getPath();
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->transferBetweenWallets();
     }
 
     /**
@@ -235,29 +248,65 @@ class BitfinexAuthenticatedAccountAction
     }
 
     /**
+     * Generates a deposit invoice.
+     *
+     * @param  BitfinexWalletType  $walletType  Wallet type (e.g., exchange, margin, funding).
+     * @param  string  $currency  Currency code.
+     * @param  float  $amount  Amount to invoice.
+     * @param  array  $options  Additional invoice fields (e.g., label, webhook, payerInfo, payCurrencies, notes).
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-deposit-invoice
-     *
-     * @todo Implement method for generating invoices.
      */
-    final public function generateInvoice(): AuthenticatedBitfinexResponse
+    final public function generateInvoice(BitfinexWalletType $walletType, string $currency, float $amount, array $options = []): AuthenticatedBitfinexResponse
     {
-        /** @todo */
+        $body = array_merge([
+            'wallet' => $walletType->value,
+            'currency' => $currency,
+            'amount' => (string) $amount,
+        ], $options);
+
+        $this->request->setBody($body);
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $apiPath = $this->url->setPath("$this->basePath.generate_invoice")->getPath();
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->generateInvoice();
     }
 
     /**
+     * Processes a withdrawal request.
+     *
+     * @param  BitfinexWalletType  $walletType  Wallet type (exchange/margin/funding).
+     * @param  string  $method  Withdrawal method (e.g., crypto network name, 'wire').
+     * @param  string  $currency  Currency code.
+     * @param  float  $amount  Amount to withdraw.
+     * @param  array  $options  Additional method-specific options (e.g., address, payment_id, bank fields).
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-withdraw
-     *
-     * @todo Implement method for processing withdrawals.
      */
-    final public function withdrawal(): AuthenticatedBitfinexResponse
+    final public function withdrawal(BitfinexWalletType $walletType, string $method, string $currency, float $amount, array $options = []): AuthenticatedBitfinexResponse
     {
-        /** @todo */
+        $body = array_merge([
+            'wallet' => $walletType->value,
+            'method' => $method,
+            'currency' => $currency,
+            'amount' => (string) $amount,
+        ], $options);
+
+        $this->request->setBody($body);
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $apiPath = $this->url->setPath("$this->basePath.withdrawal")->getPath();
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->withdrawal();
     }
 
     /**
@@ -271,8 +320,21 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-movements
      */
-    final public function movements(string $currency): AuthenticatedBitfinexResponse
+    final public function movements(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse
     {
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
@@ -280,6 +342,80 @@ class BitfinexAuthenticatedAccountAction
         $response = $request->execute(apiPath: $apiPath);
 
         return $response->movements();
+    }
+
+    /**
+     * Retrieves only deposit movements (amount > 0) for a given currency.
+     *
+     * @param  string  $currency  Currency code (e.g., BTC, ETH, USD).
+     * @param  Carbon|string|null  $start  Optional start time.
+     * @param  Carbon|string|null  $end  Optional end time.
+     * @param  int|null  $limit  Optional max items.
+     * @return AuthenticatedBitfinexResponse Filtered deposit history.
+     *
+     * @throws GuzzleException
+     * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-movements
+     */
+    final public function depositHistory(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse {
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
+
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->depositHistory();
+    }
+
+    /**
+     * Retrieves only withdrawal movements (amount < 0) for a given currency.
+     *
+     * @param  string  $currency  Currency code (e.g., BTC, ETH, USD).
+     * @param  Carbon|string|null  $start  Optional start time.
+     * @param  Carbon|string|null  $end  Optional end time.
+     * @param  int|null  $limit  Optional max items.
+     * @return AuthenticatedBitfinexResponse Filtered withdrawal history.
+     *
+     * @throws GuzzleException
+     * @throws BitfinexPathNotFoundException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-movements
+     */
+    final public function withdrawalHistory(
+        string $currency,
+        Carbon|string|null $start = null,
+        Carbon|string|null $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse {
+        $params = [
+            'start' => DateToTimestamp::convert($start),
+            'end' => DateToTimestamp::convert($end),
+            'limit' => $limit,
+        ];
+
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+
+        $apiPath = $this->url->setPath("$this->basePath.movements", ['currency' => $currency])->getPath();
+
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->withdrawalHistory();
     }
 
     /**
@@ -416,41 +552,60 @@ class BitfinexAuthenticatedAccountAction
     }
 
     /**
+     * Writes user settings.
+     *
+     * @param  array  $settings  Key-value pairs of settings to write.
+     * @return AuthenticatedBitfinexResponse
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-settings-set
-     *
-     * @todo Implement method for writing user settings.
      */
-    final public function userSettingsWrite(): AuthenticatedBitfinexResponse
+    final public function userSettingsWrite(array $settings): AuthenticatedBitfinexResponse
     {
-        /** @todo */
+        $this->request->setBody($settings);
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute($this->url->setPath("$this->basePath.user_settings_write")->getPath());
+
+        return $response->userSettingsWrite();
     }
 
     /**
+     * Reads user settings.
+     *
+     * @return AuthenticatedBitfinexResponse
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
-     * @link https://api.bitfinex.com/v2/auth/r/settings
-     *
-     * @todo Implement method for reading user settings.
+     * @link https://docs.bitfinex.com/reference/rest-auth-settings-get
      */
     final public function userSettingsRead(): AuthenticatedBitfinexResponse
     {
-        /** @todo */
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute($this->url->setPath("$this->basePath.user_settings_read")->getPath());
+
+        return $response->userSettingsRead();
     }
 
     /**
+     * Deletes user settings.
+     *
+     * @param  array  $keys  Keys to delete.
+     * @return AuthenticatedBitfinexResponse
+     *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-settings-del
-     *
-     * @todo Implement method for deleting user settings.
      */
-    final public function userSettingsDelete(): AuthenticatedBitfinexResponse
+    final public function userSettingsDelete(array $keys): AuthenticatedBitfinexResponse
     {
-        /** @todo */
+        $this->request->setBody($keys);
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute($this->url->setPath("$this->basePath.user_settings_delete")->getPath());
+
+        return $response->userSettingsDelete();
     }
 }

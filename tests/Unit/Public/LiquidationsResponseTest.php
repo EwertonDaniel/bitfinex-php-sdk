@@ -1,0 +1,22 @@
+<?php
+
+use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
+use GuzzleHttp\Psr7\Response;
+
+test('maps liquidations to Liquidation entities', function () {
+    $payload = [
+        [123, 1700000000000, -0.5, 35000.0],
+        [[ 'pos', 124, 1700000300000, null, 'tETHF0:USD', -10.0, 2000.0 ]],
+    ];
+
+    $resp = (new PublicBitfinexResponse(new Response(200, [], json_encode($payload))))
+        ->liquidations();
+
+    expect($resp->content['liquidations'])
+        ->toBeArray()
+        ->toHaveCount(2)
+        ->and($resp->content['liquidations'][0]->amount)->toBe(-0.5)
+        ->and($resp->content['liquidations'][0]->basePrice)->toBe(35000.0)
+        ->and($resp->content['liquidations'][1]->symbol)->toBe('tETHF0:USD')
+        ->and($resp->content['liquidations'][1]->priceAcquired)->toBeNull();
+});

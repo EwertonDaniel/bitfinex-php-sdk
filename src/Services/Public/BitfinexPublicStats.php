@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
@@ -77,14 +78,13 @@ class BitfinexPublicStats
                 'section' => $this->section,
             ])->getPath();
 
-            $apiResponse = $this->client->get($apiPath, [
-                'query' => array_filter([
-                    'sort' => $sort,
-                    'start' => $start,
-                    'end' => $end,
-                    'limit' => $limit,
-                ], fn ($value) => ! is_null($value)),
-            ]);
+            $options = (new RequestBuilder())->setMethod('GET')->setQuery(array_filter([
+                'sort' => $sort,
+                'start' => $start,
+                'end' => $end,
+                'limit' => $limit,
+            ], fn ($value) => ! is_null($value)))->getOptions();
+            $apiResponse = $this->client->get($apiPath, $options);
 
             return (new PublicBitfinexResponse($apiResponse))->stats($this->key, $this->size, $symPlatform, $this->sidePair, $this->section);
         } catch (GuzzleException $e) {

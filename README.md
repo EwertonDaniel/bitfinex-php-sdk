@@ -13,16 +13,28 @@ composer require ewertondaniel/bitfinex-php-sdk
 
 ## Quick Start
 
-Fetch public data with a few lines of code:
+Public example:
 
 ```php
 use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 
 $status = Bitfinex::public()->platformStatus();
-echo $status->content->status; // Operative or Maintenance
+echo $status->content->status; // "operative" or "maintenance"
 ```
 
-More examples are available in the [usage guide](docs/USAGE.md).
+Authenticated example (Laravel, via config/env):
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+$auth = Bitfinex::authenticated()->generateToken();
+$wallets = $auth->wallets()->get();
+foreach ($wallets->content['wallets'] as $wallet) {
+    // ...
+}
+```
+
+More examples in the [usage guide](docs/USAGE.md).
 
 ## Overview
 
@@ -30,12 +42,10 @@ The **Bitfinex PHP SDK** is a lightweight PHP library designed to simplify inter
 
 ## Features
 
-- Retrieve real-time market data.
-- Access historical ticker data.
-- Place orders, manage trades, and handle trading operations.
-- Perform both public and authenticated API calls.
-- Full support for Laravel 9, 10, and 11.
-- Utilizes Guzzle for HTTP requests.
+- Comprehensive public endpoints: status, tickers (incl. history), trades, book, candles, stats, leaderboards, derivatives status (+history), liquidations, configs, funding stats; calc endpoints: market average price, FX rate.
+- Authenticated endpoints: wallets, orders, positions, funding, account actions, merchants (Bitfinex Pay).
+- Laravel integration (10–12): ServiceProvider, Facade and DI/container.
+- HTTP via Guzzle with builders for headers/query/body.
 
 ## API Documentation
 
@@ -60,41 +70,108 @@ For detailed information on endpoints, methods, and usage guidelines, refer to t
 
 Any use of the Bitfinex API is subject to the [API Terms of Service](https://www.bitfinex.com/legal/api). All API keys and interactions are at your own risk and expense. iFinex Inc. is not responsible for any losses or damages resulting from the use of this SDK or the Bitfinex API.
 
-## Available Endpoints
+## Available Endpoints (Public)
 
-Currently, the following public REST endpoints are available for use:
+### Market Data
+- Tickers (GET) — https://docs.bitfinex.com/reference/rest-public-tickers
+- Ticker (GET) — https://docs.bitfinex.com/reference/rest-public-ticker
+- Ticker History (GET) — https://docs.bitfinex.com/reference/rest-public-ticker-history
+- Trades (GET) — https://docs.bitfinex.com/reference/rest-public-trades
+- Book (GET) — https://docs.bitfinex.com/reference/rest-public-order-books
+- Candles (GET) — https://docs.bitfinex.com/reference/rest-public-candles
+- Stats (GET) — https://docs.bitfinex.com/reference/rest-public-stats
 
-- **Platform Status** (GET)
-- **Ticker** (GET)
-- **Tickers** (GET)
-- **Tickers History** (GET)
-- **Trades** (GET)
-- **Foreign Exchange Rate** (POST)
-- **Book** (GET)
-- **Stats** (GET)
+### Reference / Meta
+- Platform Status (GET) — https://docs.bitfinex.com/reference/rest-public-platform-status
+- Configs (GET) — https://docs.bitfinex.com/reference/rest-public-conf
 
-### Upcoming Endpoints
+### Risk / Monitoring
+- Liquidations (GET) — https://docs.bitfinex.com/reference/rest-public-liquidations
+- Leaderboards (GET) — https://docs.bitfinex.com/reference/rest-public-rankings
+- Derivatives Status (GET) — https://docs.bitfinex.com/reference/rest-public-derivatives-status
+- Derivatives Status History (GET) — https://docs.bitfinex.com/reference/rest-public-derivatives-status-history
+- Funding Statistics (GET) — https://docs.bitfinex.com/reference/rest-public-funding-stats
 
-In a future development stage, the following additional public REST endpoints and calculation endpoints will be implemented:
+### Calculations
+- Market Average Price (POST) — https://docs.bitfinex.com/reference/rest-public-market-average-price
+- Foreign Exchange Rate (POST) — https://docs.bitfinex.com/reference/rest-public-foreign-exchange-rate
+## Available Endpoints (Authenticated)
 
-- **Candles** (GET)
-- **Derivatives Status** (GET)
-- **Derivatives Status History** (GET)
-- **Liquidations** (GET)
-- **Leaderboards** (GET)
-- **Funding Statistics** (GET)
-- **Configs** (GET)
-- **Virtual Asset Service Providers** (GET)
 
-#### Calculation Endpoints
 
-- **Market Average Price** (POST)
+- Wallets — https://docs.bitfinex.com/reference/rest-auth-wallets
+  - Wallets (GET)
 
-Stay tuned for updates as these endpoints become available!
+- Orders — https://docs.bitfinex.com/reference/rest-auth-retrieve-orders
+  - Retrieve Orders / Retrieve Orders by Symbol (POST)
+  - Submit Order / Update Order / Cancel Order (POST)
+  - Order Multi Op / Cancel Multiple (POST)
+  - Orders History (POST)
+  - Order Trades / Trades History (POST)
+  - Ledgers (POST)
+
+- Positions — https://docs.bitfinex.com/reference/rest-auth-positions
+  - Margin Info / Retrieve Positions (POST)
+  - Claim Position / Increase Position / Increase Position Info (POST)
+  - Positions History / Snapshot / Audit (POST)
+  - Derivative Position Collateral / Collateral Limits (POST)
+
+- Funding — https://docs.bitfinex.com/reference/rest-auth-funding-offers
+  - Active Funding Offers (POST)
+  - Submit / Cancel / Cancel All Funding Offers (POST)
+  - Funding Close / Auto Renew / Keep (POST)
+  - Funding Offers / Loans / Credits / Trades (history) (POST)
+  - Funding Info (POST)
+
+- Account Actions — https://docs.bitfinex.com/reference/rest-auth-info-user
+  - User Info / Summary / Login History / Key Permissions (POST)
+  - Generate Token / Changelog / Transfer Between Wallets (POST)
+  - Deposit Address / Deposit Addresses / Generate Invoice (POST)
+  - Withdrawal / Movement Info / Movements (POST)
+  - Alert List / Set / Delete (POST)
+  - Balance Available for Orders/Offers (POST)
+  - User Settings Write / Read / Delete (POST)
+
+- Merchants (Bitfinex Pay) — https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-create
+  - Submit Invoice / Submit POS Invoice (POST)
+  - Invoice List (+ paginated) (POST)
+  - Invoice Count Stats / Earnings Stats (POST)
+  - Complete / Expire Invoice (POST)
+  - Currency Conversion: List / Add / Remove (POST)
+  - Merchant Limit (POST)
+  - Merchant Settings: Write / Write Batch / Read / List (POST)
+  - Deposits List / Unlinked Deposits List (POST)
+
+
+## Architecture (High‑Level)
+
+- Transformers (Strategy + Factory):
+  - `PublicBitfinexResponse` delegates mappings to classes in `Http/Responses/Public/Transformers` via `TransformerFactory`.
+- Configs (Strategy):
+  - The `conf` endpoint uses `ConfigsTransformer` with strategies by mode (map/list/info:*).
+- Builders:
+  - `RequestBuilder` offers a fluent API for headers/query/body; for GET methods, body is not sent.
+- Adapters (Template Method):
+  - `JsonAdapter::transform()` is final; `UrlAdapter`/`PathAdapter` only define `getFilePath()`.
+
+These patterns keep low coupling, testability, and safe SDK evolution.
 
 ## Contributing
 
 Contributions are welcome. See the [contribution guide](docs/CONTRIBUTING.md) for details.
+
+## Testing & Tooling
+
+- Run unit tests (Pest):
+  - `vendor/bin/pest`
+  - Public subset: `vendor/bin/pest tests/Unit/Public`
+
+- Lint & static analysis:
+  - `composer lint` (Pint + PHPStan)
+
+- Format:
+  - `composer format` (Pint)
+
 
 ## License
 
@@ -102,7 +179,7 @@ This package is licensed under the [MIT License](LICENSE).
 
 ## Author
 
-**Ewerton Daniel** - [contact@ewertondaniel.work](mailto:github@ewertondaniel.work)
+**Ewerton Daniel** - [contact@ewertondaniel.work](mailto:contact@ewertondaniel.work)
 
 ## Support
 
