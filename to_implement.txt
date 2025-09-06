@@ -35,16 +35,16 @@ Private.orders
 - ledgers: ok - https://docs.bitfinex.com/reference/rest-auth-ledgers
 
 Private.positions
-- margin_info: to implement - https://docs.bitfinex.com/reference/rest-auth-margin-info
-- retrieve_positions: to implement - https://docs.bitfinex.com/reference/rest-auth-positions
-- claim_position: to implement - https://docs.bitfinex.com/reference/rest-auth-position-claim
-- increase_position: to implement - https://docs.bitfinex.com/reference/rest-auth-increase-position
-- increase_position_info: to implement - https://docs.bitfinex.com/reference/rest-auth-increase-position-info
-- positions_history: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-history
-- positions_snapshot: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-snapshot
-- positions_audit: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-audit
-- derivative_position_collateral: to implement - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-set
-- derivative_position_collateral_limits: to implement - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-limits
+- margin_info: ok - https://docs.bitfinex.com/reference/rest-auth-margin-info
+- retrieve_positions: ok - https://docs.bitfinex.com/reference/rest-auth-positions
+- claim_position: ok - https://docs.bitfinex.com/reference/rest-auth-position-claim
+- increase_position: ok - https://docs.bitfinex.com/reference/rest-auth-increase-position
+- increase_position_info: ok - https://docs.bitfinex.com/reference/rest-auth-increase-position-info
+- positions_history: ok - https://docs.bitfinex.com/reference/rest-auth-positions-history
+- positions_snapshot: ok - https://docs.bitfinex.com/reference/rest-auth-positions-snapshot
+- positions_audit: ok - https://docs.bitfinex.com/reference/rest-auth-positions-audit
+- derivative_position_collateral: ok - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-set
+- derivative_position_collateral_limits: ok - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-limits
 
 Private.funding
 - active_funding_offers: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-offers

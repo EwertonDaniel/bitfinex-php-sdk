@@ -119,6 +119,113 @@ $response = Bitfinex::public()->foreignExchangeRate('USD', 'EUR');
 $response->content; // Displays the exchange rate from USD to EUR
 ```
 
+### Candles (OHLCV)
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+// 1-minute candles for BTCUSD (hist)
+$candles = Bitfinex::public()->candles('1m')->byPair('BTCUSD', start: '2024-01-01', limit: 100, sort: -1);
+$candles->content['candles']; // array<Candle>
+```
+
+### Configs (Conf)
+
+```php
+// Multiple keys at once; returns array<ConfigEntry>
+$conf = Bitfinex::public()->configs()->get(['pub:map:currency:sym', 'pub:list:pair:exchange']);
+$conf->content['configs'];
+```
+
+Notes:
+- Keys are documented by Bitfinex (examples: `pub:map:currency:sym`, `pub:list:pair:exchange`).
+- Unknown keys are ignored (only returned when present).
+
+- `pub:info:pair` / `pub:info:pair:futures` (Pair info)
+  - Returns `array<PairInfo>` where each item is `[PAIR, block1, block2]`.
+  - `PairInfoBlock` exposes: `minOrderSize` [3], `maxOrderSize` [4], `initialMargin` [8], `minMargin` [9].
+  - Example:
+    ```php
+    $pairs = Bitfinex::public()->configs()->get('pub:info:pair');
+    $items = $pairs->content['configs'][0]->value; // array<PairInfo>
+    $items[0]->pair; $items[0]->block1->minOrderSize;
+    ```
+
+- `pub:info:tx:status` (Deposit/withdraw status per method)
+  - Returns `array<TxStatus>` where each row maps: `method`, `depositStatus` [1], `withdrawStatus` [2], `paymentIdDeposit` [7], `paymentIdWithdraw` [8], `depositConfirmationsRequired` [11].
+  - Example:
+    ```php
+    $tx = Bitfinex::public()->configs()->get('pub:info:tx:status');
+    $items = $tx->content['configs'][0]->value; // array<TxStatus>
+    $items[0]->method; $items[0]->depositStatus;
+    ```
+
+### Derivatives Status & History
+
+```php
+// Current snapshot
+$ds = Bitfinex::public()->derivativesStatus()->get(['tBTCF0:USD']);
+$ds->content['items']; // array<DerivativeStatus>
+
+// History window (use derivativesStatusHistory entry)
+$dsHist = Bitfinex::public()->derivativesStatusHistory()->get('tBTCF0:USD', start: 1700000000000, end: 1700100000000, limit: 100, sort: -1);
+$dsHist->content['items'];
+```
+
+Notes:
+- `keys`: list of derivative symbols (e.g., `tBTCF0:USD`).
+- History is controlled via `start`, `end`, `limit`, `sort`.
+
+### Liquidations
+
+```php
+$liq = Bitfinex::public()->liquidations()->get(start: 1700000000000, end: 1700100000000, limit: 100, sort: -1);
+$liq->content['liquidations']; // array<Liquidation>
+```
+
+Notes:
+- Field mapping in `Liquidation` (indexes per API):
+  - [1] `posId` (int): Position ID
+  - [2] `mts` (int): Millisecond epoch timestamp
+  - [4] `symbol` (string): Trading pair (e.g., tBTCUSD)
+  - [5] `amount` (float): Position size (>0 long, <0 short)
+  - [6] `basePrice` (float): Entry price of position
+  - [8] `isMatch` (int): 0 initial trigger, 1 market execution
+  - [9] `isMarketSold` (int): 0 acquired by system, 1 sold on market
+  - [11] `priceAcquired` (float): Price at which the position has been acquired
+
+### Leaderboards (Rankings)
+
+```php
+// Example: key/timeframe depend on Bitfinex docs
+$rank = Bitfinex::public()->leaderboards('pnl', '1D')->byPair('BTCUSD', limit: 50, sort: -1);
+$rank->content['items']; // array<LeaderboardEntry>
+```
+
+Notes:
+- `key`: ranking metric (consult Bitfinex docs; e.g., `pnl`, `vol`).
+- `timeframe`: period (e.g., `1D`, `7D`).
+- `section`: `hist` (history) or `last` (latest), default `hist`.
+
+### Funding Statistics
+
+```php
+$stats = Bitfinex::public()->fundingStats()->byCurrency('USD', start: '2024-01-01', limit: 100, sort: -1);
+$stats->content['items']; // array<FundingStat>
+```
+
+Notes:
+- Currency is a funding code (e.g., `USD`, `BTC`), not prefixed.
+- Filters: `start`, `end`, `limit`, `sort`.
+
+### Market Average Price (Calc)
+
+```php
+// Payload shape per Bitfinex docs
+$map = Bitfinex::public()->marketAveragePrice(['symbol' => 'tBTCUSD', 'amount' => '0.5']);
+$map->content['result']; // MarketAveragePriceResult
+```
+
 ## Authenticated Endpoints
 
 Below are common authenticated flows relevant to deposits/withdrawals. Set credentials via env (`BITFINEX_API_KEY`, `BITFINEX_API_SECRET`) or pass them explicitly.
@@ -179,4 +286,37 @@ $withdrawals->content['withdrawals']; // array<Movement>
 ```php
 $info = $auth->accountAction()->movementInfo(1234567890);
 $info->content['movement']; // Movement
+```
+
+### Positions (Authenticated)
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+$auth = Bitfinex::authenticated();
+
+// Margin info (e.g., 'base' or specific key)
+$margin = $auth->positions()->marginInfo('base');
+$margin->content['margin'];
+
+// Open positions
+$open = $auth->positions()->retrieve();
+$open->content['positions']; // array<Position>
+
+// Claim or increase position
+$claim = $auth->positions()->claim('BTCUSD', 0.1);
+$inc   = $auth->positions()->increase('BTCUSD', 0.05, price: 35000);
+
+// Increase info (what-if)
+$info = $auth->positions()->increaseInfo('BTCUSD', 0.05);
+$info->content['info'];
+
+// History / Snapshot / Audit
+$hist = $auth->positions()->history(start: 1700000000000, end: 1700100000000, limit: 50, sort: -1);
+$snap = $auth->positions()->snapshot();
+$audit = $auth->positions()->audit();
+
+// Derivative collateral
+$setColl = $auth->positions()->setDerivativeCollateral('BTCUSD', 100.0);
+$limits = $auth->positions()->derivativeCollateralLimits('BTCUSD');
 ```
