@@ -244,4 +244,20 @@ class PublicBitfinexResponse extends BitfinexResponse
             fn ($content) => ['liquidations' => array_map(fn ($row) => new Liquidation($row), $content)]
         );
     }
+
+    /**
+     * Transforms leaderboards response.
+     */
+    final public function leaderboards(string $key, string $timeframe, string $symbol, string $section): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'key' => $key,
+                'timeframe' => $timeframe,
+                'symbol' => $symbol,
+                'section' => $section,
+                'items' => $content,
+            ]
+        );
+    }
 }

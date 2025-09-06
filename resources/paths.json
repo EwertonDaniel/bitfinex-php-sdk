@@ -11,6 +11,7 @@
     "configs": "v2/conf/{keys}",
     "derivatives_status": "v2/status/deriv",
     "liquidations": "v2/liquidations/hist",
+    "leaderboards": "v2/rankings/{key}:{timeframe}:{symbol}/{section}",
     "market_average_price": "v2/calc/trade/avg",
     "foreign_exchange_rate": "v2/calc/fx"
   },

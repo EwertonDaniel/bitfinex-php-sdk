@@ -172,12 +172,10 @@ class BitfinexPublic
     /** @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-rankings
-     *
-     * @todo Implement method for GET Leaderboards
      */
-    final public function leaderboards(): PublicBitfinexResponse
+    final public function leaderboards(string $key, string $timeframe, string $section = 'hist'): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLeaderboards
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLeaderboards($this->client, $this->url, $key, $timeframe, $section);
     }
 
     /** @throws BitfinexException
