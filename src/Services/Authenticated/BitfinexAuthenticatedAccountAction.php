@@ -327,7 +327,6 @@ class BitfinexAuthenticatedAccountAction
         ?int $limit = null
     ): AuthenticatedBitfinexResponse
     {
-        // Optional filters align with Bitfinex hist endpoints (start, end, limit)
         $params = [
             'start' => DateToTimestamp::convert($start),
             'end' => DateToTimestamp::convert($end),

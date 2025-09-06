@@ -172,19 +172,16 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
 
     final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
     {
-        // API returns an array with status/notification; expose as 'transferred'
         return $this->transformContent(fn ($content) => ['transferred' => $content[0] ?? $content]);
     }
 
     final public function generateInvoice(): AuthenticatedBitfinexResponse
     {
-        // Return raw invoice payload under 'invoice'
         return $this->transformContent(fn ($content) => ['invoice' => $content]);
     }
 
     final public function withdrawal(): AuthenticatedBitfinexResponse
     {
-        // Return raw withdrawal payload under 'withdrawal'
         return $this->transformContent(fn ($content) => ['withdrawal' => $content]);
     }
 
