@@ -1,0 +1,109 @@
+Endpoints status (based on resources/paths.json)
+
+Public
+- status: ok - https://docs.bitfinex.com/reference/rest-public-platform-status
+- ticker: ok - https://docs.bitfinex.com/reference/rest-public-ticker
+- tickers: ok - https://docs.bitfinex.com/reference/rest-public-tickers
+- ticker_history: ok - https://docs.bitfinex.com/reference/rest-public-ticker-history
+- trades: ok - https://docs.bitfinex.com/reference/rest-public-trades
+- book: ok - https://docs.bitfinex.com/reference/rest-public-order-books
+- stats_one: ok - https://docs.bitfinex.com/reference/rest-public-stats
+- market_average_price: ok - https://docs.bitfinex.com/reference/rest-public-market-average-price
+- foreign_exchange_rate: ok - https://docs.bitfinex.com/reference/rest-public-foreign-exchange-rate
+- candles: ok - https://docs.bitfinex.com/reference/rest-public-candles
+- configs: ok - https://docs.bitfinex.com/reference/rest-public-conf
+- derivatives_status: ok - https://docs.bitfinex.com/reference/rest-public-derivatives-status
+- derivatives_status_history: ok - https://docs.bitfinex.com/reference/rest-public-derivatives-status-history
+- liquidations: ok - https://docs.bitfinex.com/reference/rest-public-liquidations
+- leaderboards: ok - https://docs.bitfinex.com/reference/rest-public-rankings
+- funding_stats: ok - https://docs.bitfinex.com/reference/rest-public-funding-stats
+
+Private.wallets
+- wallets: ok - https://docs.bitfinex.com/reference/rest-auth-wallets
+
+Private.orders
+- retrieve_orders: ok - https://docs.bitfinex.com/reference/rest-auth-retrieve-orders
+- retrieve_orders_by_symbol: ok - https://docs.bitfinex.com/reference/rest-auth-retrieve-orders-by-symbol
+- submit_order: ok - https://docs.bitfinex.com/reference/rest-auth-submit-order
+- order_update: ok - https://docs.bitfinex.com/reference/rest-auth-update-order
+- cancel_order: ok - https://docs.bitfinex.com/reference/rest-auth-cancel-order
+- order_multi_op: ok - https://docs.bitfinex.com/reference/rest-auth-order-multi
+- cancel_order_multi: ok - https://docs.bitfinex.com/reference/rest-auth-cancel-multiple-orders
+- orders_history: ok - https://docs.bitfinex.com/reference/rest-auth-orders-history
+- order_trades: ok - https://docs.bitfinex.com/reference/rest-auth-order-trades
+- trades: ok - https://docs.bitfinex.com/reference/rest-auth-trades-history
+- ledgers: ok - https://docs.bitfinex.com/reference/rest-auth-ledgers
+
+Private.positions
+- margin_info: to implement - https://docs.bitfinex.com/reference/rest-auth-margin-info
+- retrieve_positions: to implement - https://docs.bitfinex.com/reference/rest-auth-positions
+- claim_position: to implement - https://docs.bitfinex.com/reference/rest-auth-position-claim
+- increase_position: to implement - https://docs.bitfinex.com/reference/rest-auth-increase-position
+- increase_position_info: to implement - https://docs.bitfinex.com/reference/rest-auth-increase-position-info
+- positions_history: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-history
+- positions_snapshot: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-snapshot
+- positions_audit: to implement - https://docs.bitfinex.com/reference/rest-auth-positions-audit
+- derivative_position_collateral: to implement - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-set
+- derivative_position_collateral_limits: to implement - https://docs.bitfinex.com/reference/rest-auth-derivative-position-collateral-limits
+
+Private.funding
+- active_funding_offers: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-offers
+- submit_funding_offer: to implement - https://docs.bitfinex.com/reference/rest-auth-submit-funding-offer
+- cancel_funding_offer: to implement - https://docs.bitfinex.com/reference/rest-auth-cancel-funding-offer
+- cancel_all_funding_offers: to implement - https://docs.bitfinex.com/reference/rest-auth-cancel-all-funding-offers
+- funding_close: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-close
+- funding_auto_renew: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-auto-renew
+- keep_funding: to implement - https://docs.bitfinex.com/reference/rest-auth-keep-funding
+- funding_offers_history: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-offers-history
+- funding_loans: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-loans
+- funding_loans_history: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-loans-history
+- funding_credits: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-credits
+- funding_credits_history: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-credits-history
+- funding_trades: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-trades
+- funding_info: to implement - https://docs.bitfinex.com/reference/rest-auth-funding-info
+
+Private.account_actions
+- user_info: ok - https://docs.bitfinex.com/reference/rest-auth-info-user
+- summary: ok - https://docs.bitfinex.com/reference/rest-auth-summary
+- login_history: ok - https://docs.bitfinex.com/reference/rest-auth-logins-hist
+- key_permissions: ok - https://docs.bitfinex.com/reference/key-permissions
+- generate_token: ok - https://docs.bitfinex.com/reference/rest-auth-w-token
+- changelog: ok - https://docs.bitfinex.com/reference/rest-auth-audit-hist
+- transfer_between_wallets: ok - https://docs.bitfinex.com/reference/rest-auth-transfer
+- deposit_address: ok - https://docs.bitfinex.com/reference/rest-auth-deposit-address
+- deposit_addresses: ok - https://docs.bitfinex.com/reference/deposit-address-all
+- generate_invoice: ok - https://docs.bitfinex.com/reference/rest-auth-deposit-invoice
+- withdrawal: ok - https://docs.bitfinex.com/reference/rest-auth-withdraw
+- movement_info: ok - https://docs.bitfinex.com/reference/movement-info
+- movements: ok - https://docs.bitfinex.com/reference/rest-auth-movements
+- alert_list: ok - https://docs.bitfinex.com/reference/rest-auth-alerts
+- alert_set: ok - https://docs.bitfinex.com/reference/rest-auth-alert-set
+- alert_delete: ok - https://docs.bitfinex.com/reference/rest-auth-alert-del
+- balance_available_for_orders_offers: ok - https://docs.bitfinex.com/reference/rest-auth-calc-order-avail
+- user_settings_write: ok - https://docs.bitfinex.com/reference/rest-auth-settings-set
+- user_settings_read: ok - https://docs.bitfinex.com/reference/rest-auth-settings-get
+- user_settings_delete: ok - https://docs.bitfinex.com/reference/rest-auth-settings-del
+
+Merchants
+- submit_invoice: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-create
+- submit_post_invoice: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-create-pos
+- invoice_list: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoices
+- invoice_list_paginated: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoices-paginated
+- invoice_count_stats: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-stats-count
+- invoice_earnings_stats: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-stats-earning
+- complete_invoice: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-complete
+- expire_invoice: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-invoice-expire
+- currency_Conversion_list: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-convert-list
+- add_currency_conversion: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-convert-create
+- remove_currency_conversion: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-convert-remove
+- merchant_limit: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-daily-limit
+- merchant_settings_write: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-set
+- merchant_settings_write_batch: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-set-batch
+- merchant_settings_read: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-get
+- merchant_settings_list: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-settings-list
+- deposits_list: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-deposits
+- unlinked_deposits_list: to implement - https://docs.bitfinex.com/reference/rest-auth-ext-pay-deposits-unlinked
+
+Helpers (non-API)
+- depositHistory: ok
+- withdrawalHistory: ok
