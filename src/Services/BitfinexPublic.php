@@ -110,15 +110,18 @@ class BitfinexPublic
         return new BitfinexPublicStats($this->client, $this->url, $key, $size, $sidePair, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch OHLCV candles.
+     *
+     * @param  string  $timeframe  Timeframe (e.g., 1m, 5m, 15m, 1h, 1D, 1W).
+     * @param  string  $section  'hist' or 'last' (default: 'hist').
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles
      *
      * @link https://docs.bitfinex.com/reference/rest-public-candles
-     *
-     * @todo Implement method for GET Candles
      */
-    final public function candles(): PublicBitfinexResponse
+    final public function candles(string $timeframe, string $section = 'hist'): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles($this->client, $this->url, $timeframe, $section);
     }
 
     /** @throws BitfinexException

@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use EwertonDaniel\Bitfinex\Entities\BookFunding;
 use EwertonDaniel\Bitfinex\Entities\BookTrading;
+use EwertonDaniel\Bitfinex\Entities\Candle;
 use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\ForeignExchangeRate;
 use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
@@ -171,6 +172,27 @@ class PublicBitfinexResponse extends BitfinexResponse
                 'sidePair' => $sidePair,
                 'section' => $section,
                 'stats' => array_map(fn ($data) => new Stat($data), $content),
+            ]
+        );
+    }
+
+    /**
+     * Transforms candles into Candle entities with metadata.
+     *
+     * @param  string  $symbol  Trading pair (e.g., tBTCUSD) or funding currency (e.g., fUSD).
+     * @param  string  $timeframe  Timeframe (e.g., 1m, 5m, 1h, 1D).
+     * @param  string  $section  'hist' or 'last'.
+     */
+    final public function candles(string $symbol, string $timeframe, string $section): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'symbol' => $symbol,
+                'timeframe' => $timeframe,
+                'section' => $section,
+                'candles' => is_array($content) && isset($content[0]) && is_array($content[0])
+                    ? array_map(fn ($row) => new Candle($row), $content)
+                    : [new Candle($content)],
             ]
         );
     }

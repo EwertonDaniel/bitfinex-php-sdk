@@ -4,6 +4,7 @@
     "ticker": "v2/ticker/{symbol}",
     "tickers": "v2/tickers",
     "ticker_history": "v2/tickers/hist",
+    "candles": "v2/candles/trade:{timeframe}:{symbol}/{section}",
     "trades": "v2/trades/{symbol}/hist",
     "book": "v2/book/{symbol}/{precision}",
     "stats_one": "v2/stats1/{key}:{size}:{sym_platform}:{side_pair}/{section}",
