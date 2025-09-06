@@ -10,11 +10,11 @@ use GuzzleHttp\Utils;
 /**
  * Class JsonAdapter
  *
- * Provides a base class for JSON file adapters, enabling structured transformation of JSON files into PHP arrays.
+ * Base adapter for JSON files, enabling structured transformation of JSON documents into PHP arrays.
  * This class includes functionality to retrieve the file path and ensure the existence of the JSON file.
  *
- * The `transform` method decodes the JSON file content into an associative array for further processing.
- * Concrete implementations must define the `getFilePath` method to specify the location of the JSON file.
+ * The `transform()` method (final) validates file existence/readability and decodes JSON into an array.
+ * Concrete implementations must define `getFilePath()` with the resource location.
  *
  * @author  Ewerton Daniel
  *
@@ -22,7 +22,10 @@ use GuzzleHttp\Utils;
  */
 abstract class JsonAdapter
 {
-    protected string $file;
+    /**
+     * Resolved JSON file path.
+     */
+    private readonly string $file;
 
     public function __construct()
     {
@@ -49,13 +52,16 @@ abstract class JsonAdapter
      *
      * @throws BitfinexFileNotFoundException If the file is not found at the specified path.
      */
-    public function transform(): array
+    final public function transform(): array
     {
         if (! file_exists($this->file)) {
             throw new BitfinexFileNotFoundException($this->file);
         }
 
         $contents = file_get_contents($this->file);
+        if ($contents === false) {
+            throw new \EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException($this->file);
+        }
 
         return Utils::jsonDecode($contents, true);
     }

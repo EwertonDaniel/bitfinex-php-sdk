@@ -11,7 +11,10 @@ use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedAccountAction;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedPositions;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedWallet;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedFunding;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedMerchants;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -128,5 +131,29 @@ class BitfinexAuthenticated
     final public function orders(): BitfinexAuthenticatedOrder
     {
         return new BitfinexAuthenticatedOrder($this->url, $this->credentials, $this->request, $this->client);
+    }
+
+    /**
+     * Access positions-related actions in Bitfinex.
+     */
+    final public function positions(): BitfinexAuthenticatedPositions
+    {
+        return new BitfinexAuthenticatedPositions($this->url, $this->credentials, $this->request, $this->client);
+    }
+
+    /**
+     * Access funding-related actions in Bitfinex.
+     */
+    final public function funding(): BitfinexAuthenticatedFunding
+    {
+        return new BitfinexAuthenticatedFunding($this->url, $this->credentials, $this->request, $this->client);
+    }
+
+    /**
+     * Access merchants (Bitfinex Pay) related actions.
+     */
+    final public function merchants(): BitfinexAuthenticatedMerchants
+    {
+        return new BitfinexAuthenticatedMerchants($this->url, $this->credentials, $this->request, $this->client);
     }
 }

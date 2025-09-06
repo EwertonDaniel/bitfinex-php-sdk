@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Exceptions;
 
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+
 /**
  * Class BitfinexPathNotFoundException
  *
@@ -93,7 +95,7 @@ class BitfinexPathNotFoundException extends BitfinexException
             $this->code,
             $this->message,
             $this->path,
-            $this->debugData ? json_encode($this->debugData) : 'None',
+            GetThis::ifTrueOrFallback(boolean: (bool) $this->debugData, callback: fn () => json_encode($this->debugData), fallback: 'None'),
             $this->file,
             $this->line,
             $this->getTraceAsString()
