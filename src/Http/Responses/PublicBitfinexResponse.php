@@ -8,6 +8,9 @@ use EwertonDaniel\Bitfinex\Entities\BookFunding;
 use EwertonDaniel\Bitfinex\Entities\BookTrading;
 use EwertonDaniel\Bitfinex\Entities\Candle;
 use EwertonDaniel\Bitfinex\Entities\Liquidation;
+use EwertonDaniel\Bitfinex\Entities\FundingStat;
+use EwertonDaniel\Bitfinex\Entities\LeaderboardEntry;
+use EwertonDaniel\Bitfinex\Entities\MarketAveragePriceResult;
 use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\ForeignExchangeRate;
 use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
@@ -256,7 +259,7 @@ class PublicBitfinexResponse extends BitfinexResponse
                 'timeframe' => $timeframe,
                 'symbol' => $symbol,
                 'section' => $section,
-                'items' => $content,
+                'items' => array_map(fn ($row) => new LeaderboardEntry($row), $content),
             ]
         );
     }
@@ -269,7 +272,7 @@ class PublicBitfinexResponse extends BitfinexResponse
         return $this->transformContent(
             fn ($content) => [
                 'symbol' => $symbol,
-                'items' => $content,
+                'items' => array_map(fn ($row) => new FundingStat($row), $content),
             ]
         );
     }
@@ -279,6 +282,6 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function marketAveragePrice(): PublicBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['result' => $content]);
+        return $this->transformContent(fn ($content) => ['result' => new MarketAveragePriceResult($content)]);
     }
 }
