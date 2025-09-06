@@ -16,6 +16,7 @@ use EwertonDaniel\Bitfinex\Entities\Stat;
 use EwertonDaniel\Bitfinex\Entities\TickerHistory;
 use EwertonDaniel\Bitfinex\Entities\TradingPair;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use Illuminate\Support\Arr;
 
 /**
  * Class PublicBitfinexResponse
@@ -172,6 +173,21 @@ class PublicBitfinexResponse extends BitfinexResponse
                 'sidePair' => $sidePair,
                 'section' => $section,
                 'stats' => array_map(fn ($data) => new Stat($data), $content),
+            ]
+        );
+    }
+
+    /**
+     * Transforms configuration responses.
+     *
+     * @param  array  $keys  Keys requested from conf endpoint.
+     */
+    final public function configs(array $keys): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'keys' => $keys,
+                'configs' => $content,
             ]
         );
     }

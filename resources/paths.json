@@ -8,6 +8,7 @@
     "trades": "v2/trades/{symbol}/hist",
     "book": "v2/book/{symbol}/{precision}",
     "stats_one": "v2/stats1/{key}:{size}:{sym_platform}:{side_pair}/{section}",
+    "configs": "v2/conf/{keys}",
     "market_average_price": "v2/calc/trade/avg",
     "foreign_exchange_rate": "v2/calc/fx"
   },

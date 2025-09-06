@@ -124,15 +124,16 @@ class BitfinexPublic
         return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles($this->client, $this->url, $timeframe, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch public configurations (conf).
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs
      *
      * @link https://docs.bitfinex.com/reference/rest-public-conf
-     *
-     * @todo Implement method for GET Configs
      */
-    final public function configs(): PublicBitfinexResponse
+    final public function configs(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs($this->client, $this->url);
     }
 
     /** @throws BitfinexException
