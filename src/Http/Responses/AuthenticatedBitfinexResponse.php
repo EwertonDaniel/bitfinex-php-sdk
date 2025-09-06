@@ -12,6 +12,7 @@ use EwertonDaniel\Bitfinex\Entities\LedgerEntry;
 use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\PairTrade;
 use EwertonDaniel\Bitfinex\Entities\LoginInfo;
+use EwertonDaniel\Bitfinex\Entities\Position;
 use EwertonDaniel\Bitfinex\Entities\Movement;
 use EwertonDaniel\Bitfinex\Entities\Order;
 use EwertonDaniel\Bitfinex\Entities\Summary;
@@ -212,6 +213,57 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function alertList(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['alerts' => array_map(fn ($data) => new Alert($data), $content)]);
+    }
+
+    // Positions related mappings
+    final public function positions(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['positions' => array_map(fn ($data) => new Position($data), $content)]);
+    }
+
+    final public function positionsHistory(): AuthenticatedBitfinexResponse
+    {
+        return $this->positions();
+    }
+
+    final public function positionsSnapshot(): AuthenticatedBitfinexResponse
+    {
+        return $this->positions();
+    }
+
+    final public function positionsAudit(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['audit' => $content]);
+    }
+
+    final public function marginInfo(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['margin' => $content]);
+    }
+
+    final public function positionsClaim(): AuthenticatedBitfinexResponse
+    {
+        return $this->positions();
+    }
+
+    final public function positionsIncrease(): AuthenticatedBitfinexResponse
+    {
+        return $this->positions();
+    }
+
+    final public function positionIncreaseInfo(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['info' => $content]);
+    }
+
+    final public function derivativePositionCollateral(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['result' => $content]);
+    }
+
+    final public function derivativePositionCollateralLimits(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['limits' => $content]);
     }
 
     final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
