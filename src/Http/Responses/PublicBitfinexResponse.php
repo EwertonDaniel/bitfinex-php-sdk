@@ -17,6 +17,8 @@ use EwertonDaniel\Bitfinex\Entities\TickerHistory;
 use EwertonDaniel\Bitfinex\Entities\TradingPair;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use Illuminate\Support\Arr;
+use EwertonDaniel\Bitfinex\Entities\ConfigEntry;
+use EwertonDaniel\Bitfinex\Entities\DerivativeStatus;
 
 /**
  * Class PublicBitfinexResponse
@@ -184,12 +186,16 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function configs(array $keys): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'keys' => $keys,
-                'configs' => $content,
-            ]
-        );
+        return $this->transformContent(function ($content) use ($keys) {
+            $entries = [];
+            foreach ($keys as $i => $key) {
+                if (array_key_exists($i, $content) && $content[$i] !== null) {
+                    $entries[] = new ConfigEntry($key, $content[$i]);
+                }
+            }
+
+            return ['configs' => $entries];
+        });
     }
 
     /**
@@ -223,7 +229,7 @@ class PublicBitfinexResponse extends BitfinexResponse
         return $this->transformContent(
             fn ($content) => [
                 'keys' => $keys,
-                'items' => $content,
+                'items' => array_map(fn ($row) => new DerivativeStatus($row), $content),
             ]
         );
     }
