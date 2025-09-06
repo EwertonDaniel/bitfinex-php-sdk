@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
@@ -67,14 +68,13 @@ class BitfinexPublicLeaderboards
                 'section' => $this->section,
             ])->getPath();
 
-            $apiResponse = $this->client->get($apiPath, [
-                'query' => array_filter([
+            $options = (new RequestBuilder())->setMethod('GET')->setQuery(array_filter([
                     'start' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($start),
                     'end' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($end),
                     'limit' => $limit,
                     'sort' => $sort,
-                ], fn ($v) => ! is_null($v)),
-            ]);
+                ], fn ($v) => ! is_null($v)))->getOptions();
+            $apiResponse = $this->client->get($apiPath, $options);
 
             return (new PublicBitfinexResponse($apiResponse))->leaderboards($this->key, $this->timeframe, $symbol, $this->section);
         } catch (GuzzleException $e) {

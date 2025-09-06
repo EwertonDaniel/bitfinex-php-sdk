@@ -10,8 +10,8 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  * Class PlatformStatus
  *
  * Represents the operational status of the Bitfinex platform.
- * Provides structured access to the platform's current state, which can be
- * either "operative" or "maintenance."
+ * API returns an array like [1] (operative) or [0] (maintenance).
+ * This entity maps the numeric flag to a readable string: "operative" or "maintenance".
  *
  * Key Features:
  * - Encapsulates the status of the platform.
@@ -29,13 +29,14 @@ class PlatformStatus
     /**
      * Constructs a PlatformStatus entity.
      *
-     * @param  array  $data  Array containing the platform status:
-     *                       - [0]: Platform status (string).
+     * @param  array  $data  Array containing the platform status flag:
+     *                       - [0]: int 1 (operative) or 0 (maintenance).
      */
     public function __construct(array $data)
     {
+        $flag = (int) ($data[0] ?? 0);
         $this->status = GetThis::ifTrueOrFallback(
-            boolean: $data[0],
+            boolean: $flag === 1,
             callback: 'operative',
             fallback: 'maintenance'
         );

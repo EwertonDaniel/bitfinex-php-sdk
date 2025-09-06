@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;

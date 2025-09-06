@@ -22,7 +22,7 @@ class BitfinexPublicConfigs
     /**
      * Fetch configuration sections by keys, as defined by the Bitfinex API.
      *
-     * @param  string|array  $keys  Single key or list of keys, joined by comma.
+     * @param  string|array  $keys  Single key (string), list of keys (array), or structured by mode (e.g., ['map' => [...], 'list' => [...], 'info' => [...]]).
      * @param  array  $query  Optional query params (e.g., flags).
      * @return PublicBitfinexResponse
      *

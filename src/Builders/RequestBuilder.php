@@ -17,9 +17,9 @@ use InvalidArgumentException;
  *
  * Key Features:
  * - Dynamic HTTP method validation and setting.
- * - Header and body parameter management with options to add, update, and reset components.
+ * - Header, query, and body builders with options to add, update and reset.
  * - Integration of authentication credentials and signatures for secure API communication.
- * - Retrieval of request components and options as associative arrays for easy use with HTTP clients.
+ * - getOptions() assembles headers, query and (for non-GET methods) body for HTTP clients.
  *
  * @author  Ewerton Daniel
  *
@@ -33,6 +33,8 @@ class RequestBuilder
 
     public readonly RequestBodyBuilder $body;
 
+    public readonly RequestQueryParamsBuilder $query;
+
     private const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'];
 
     /**
@@ -42,6 +44,7 @@ class RequestBuilder
     {
         $this->headers = new RequestHeaderBuilder;
         $this->body = new RequestBodyBuilder;
+        $this->query = new RequestQueryParamsBuilder;
     }
 
     /**
@@ -130,7 +133,7 @@ class RequestBuilder
      */
     final public function addBody(string $name, mixed $value, bool $skipEmpty = false): static
     {
-        if (! $skipEmpty || ! empty($value)) {
+        if (! $skipEmpty || ! is_null($value)) {
             $this->body->__set($name, $value);
         }
 
@@ -168,6 +171,43 @@ class RequestBuilder
     }
 
     /**
+     * Sets multiple query parameters.
+     *
+     * @param array $query Associative array of query parameters.
+     * @return static
+     */
+    final public function setQuery(array $query): static
+    {
+        $this->query->setQueryParams($query);
+
+        return $this;
+    }
+
+    /**
+     * Adds a single query parameter.
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return static
+     */
+    final public function addQuery(string $name, mixed $value): static
+    {
+        $this->query->__set($name, $value);
+
+        return $this;
+    }
+
+    /**
+     * Retrieves the query parameters.
+     *
+     * @return array
+     */
+    final public function getQuery(): array
+    {
+        return $this->query->get();
+    }
+
+    /**
      * Resets all components (headers, body) to their initial state.
      *
      * @return static This instance for method chaining.
@@ -176,6 +216,7 @@ class RequestBuilder
     {
         $this->headers->reset();
         $this->body->reset();
+        $this->query->reset();
 
         return $this;
     }
@@ -189,8 +230,16 @@ class RequestBuilder
     {
         $options = [
             'headers' => $this->headers->get(),
-            'body' => $this->body->__toString(),
         ];
+
+        if (strtoupper($this->method) !== 'GET') {
+            $options['body'] = $this->body->__toString();
+        }
+
+        $query = $this->query->get();
+        if (!empty($query)) {
+            $options['query'] = $query;
+        }
 
         $this->reset();
 

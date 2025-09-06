@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
@@ -84,14 +85,13 @@ class BitfinexPublicCandles
                 'section' => $this->section,
             ])->getPath();
 
-            $apiResponse = $this->client->get($apiPath, [
-                'query' => array_filter([
+            $options = (new RequestBuilder())->setMethod('GET')->setQuery(array_filter([
                     'start' => DateToTimestamp::convert($start),
                     'end' => DateToTimestamp::convert($end),
                     'limit' => $limit,
                     'sort' => $sort,
-                ], fn ($v) => ! is_null($v)),
-            ]);
+                ], fn ($v) => ! is_null($v)))->getOptions();
+            $apiResponse = $this->client->get($apiPath, $options);
 
             return (new PublicBitfinexResponse($apiResponse))->candles($symbol, $this->timeframe, $this->section);
         } catch (GuzzleException $e) {
