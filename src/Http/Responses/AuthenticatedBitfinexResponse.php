@@ -169,4 +169,37 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['alerts' => array_map(fn ($data) => new Alert($data), $content)]);
     }
+
+    final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
+    {
+        // API returns an array with status/notification; expose as 'transferred'
+        return $this->transformContent(fn ($content) => ['transferred' => $content[0] ?? $content]);
+    }
+
+    final public function generateInvoice(): AuthenticatedBitfinexResponse
+    {
+        // Return raw invoice payload under 'invoice'
+        return $this->transformContent(fn ($content) => ['invoice' => $content]);
+    }
+
+    final public function withdrawal(): AuthenticatedBitfinexResponse
+    {
+        // Return raw withdrawal payload under 'withdrawal'
+        return $this->transformContent(fn ($content) => ['withdrawal' => $content]);
+    }
+
+    final public function userSettingsWrite(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function userSettingsRead(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function userSettingsDelete(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['deleted' => $content]);
+    }
 }

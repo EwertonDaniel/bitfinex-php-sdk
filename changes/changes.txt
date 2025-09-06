@@ -26,7 +26,18 @@ Resumo das modificações recentes
   - clear: remove phpunit.result.cache
   - test:feature e test:unit
 
-5) Itens revertidos/removidos
+5) Endpoints de Account Actions adicionados
+- src/Services/Authenticated/BitfinexAuthenticatedAccountAction.php:
+  - transferBetweenWallets(from, to, currency, amount)
+  - generateInvoice(walletType, currency, amount, array $options = [])
+  - withdrawal(walletType, method, currency, amount, array $options = [])
+  - userSettingsWrite(array $settings)
+  - userSettingsRead()
+  - userSettingsDelete(array $keys)
+- src/Http/Responses/AuthenticatedBitfinexResponse.php:
+  - Novos transformadores: transferBetweenWallets(), generateInvoice(), withdrawal(), userSettingsWrite(), userSettingsRead(), userSettingsDelete()
+
+6) Itens revertidos/removidos
 - Removido AGENTS.md a pedido do usuário.
 
 Observações/sugestões
