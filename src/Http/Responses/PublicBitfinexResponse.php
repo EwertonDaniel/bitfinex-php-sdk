@@ -7,6 +7,7 @@ namespace EwertonDaniel\Bitfinex\Http\Responses;
 use EwertonDaniel\Bitfinex\Entities\BookFunding;
 use EwertonDaniel\Bitfinex\Entities\BookTrading;
 use EwertonDaniel\Bitfinex\Entities\Candle;
+use EwertonDaniel\Bitfinex\Entities\Liquidation;
 use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\ForeignExchangeRate;
 use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
@@ -231,6 +232,16 @@ class PublicBitfinexResponse extends BitfinexResponse
                 'keys' => $keys,
                 'items' => array_map(fn ($row) => new DerivativeStatus($row), $content),
             ]
+        );
+    }
+
+    /**
+     * Transforms liquidations into Liquidation entities.
+     */
+    final public function liquidations(): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => ['liquidations' => array_map(fn ($row) => new Liquidation($row), $content)]
         );
     }
 }

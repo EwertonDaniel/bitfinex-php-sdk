@@ -163,12 +163,10 @@ class BitfinexPublic
     /** @throws BitfinexException
      *
      * @link https://docs.bitfinex.com/reference/rest-public-liquidations
-     *
-     * @todo Implement method for GET Liquidations
      */
-    final public function liquidations(): PublicBitfinexResponse
+    final public function liquidations(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLiquidations
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLiquidations($this->client, $this->url);
     }
 
     /** @throws BitfinexException
