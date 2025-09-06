@@ -8,6 +8,9 @@ use EwertonDaniel\Bitfinex\Entities\Alert;
 use EwertonDaniel\Bitfinex\Entities\ChangeLogItem;
 use EwertonDaniel\Bitfinex\Entities\DepositAddress;
 use EwertonDaniel\Bitfinex\Entities\KeyPermission;
+use EwertonDaniel\Bitfinex\Entities\LedgerEntry;
+use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
+use EwertonDaniel\Bitfinex\Entities\PairTrade;
 use EwertonDaniel\Bitfinex\Entities\LoginInfo;
 use EwertonDaniel\Bitfinex\Entities\Movement;
 use EwertonDaniel\Bitfinex\Entities\Order;
@@ -125,6 +128,47 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
                 ),
             ]
         );
+    }
+
+    final public function ordersHistory(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['orders' => array_map(fn ($data) => new Order($data), $content)]);
+    }
+
+    final public function orderTrades(string $symbol, \EwertonDaniel\Bitfinex\Enums\BitfinexType $type): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'symbol' => $symbol,
+                'trades' => array_map(
+                    fn ($trade) => match ($type) {
+                        \EwertonDaniel\Bitfinex\Enums\BitfinexType::TRADING => new PairTrade($symbol, $trade),
+                        \EwertonDaniel\Bitfinex\Enums\BitfinexType::FUNDING => new CurrencyTrade($symbol, $trade),
+                    },
+                    $content
+                ),
+            ]
+        );
+    }
+
+    final public function tradesHistory(string $symbol, \EwertonDaniel\Bitfinex\Enums\BitfinexType $type): AuthenticatedBitfinexResponse
+    {
+        return $this->orderTrades($symbol, $type);
+    }
+
+    final public function ledgers(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['ledgers' => array_map(fn ($row) => new LedgerEntry($row), $content)]);
+    }
+
+    final public function orderMultiOp(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['results' => $content]);
+    }
+
+    final public function orderCancelMulti(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['results' => $content]);
     }
 
     final public function movements(): AuthenticatedBitfinexResponse

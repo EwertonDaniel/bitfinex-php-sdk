@@ -146,4 +146,165 @@ class BitfinexAuthenticatedOrder
 
         return $response->submitOrder();
     }
+
+    /**
+     * Update an existing order.
+     *
+     * Accepts flexible identifiers: id, gid or cid+cid_date; optional price/amount and price helpers.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-update-order
+     */
+    final public function update(
+        ?int $id = null,
+        ?int $gid = null,
+        ?int $cid = null,
+        ?string $cidDate = null,
+        ?float $amount = null,
+        ?int $price = null,
+        ?string $priceTrailing = null,
+        ?string $priceAuxLimit = null,
+        ?string $priceOcoStop = null,
+        ?int $flags = null,
+        ?string $tif = null
+    ): AuthenticatedBitfinexResponse {
+        $params = compact('id', 'gid', 'cid', 'cidDate', 'amount', 'price', 'priceTrailing', 'priceAuxLimit', 'priceOcoStop', 'flags', 'tif');
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key === 'cidDate' ? 'cid_date' : $key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_update")->getPath());
+
+        return $response->submitOrder();
+    }
+
+    /**
+     * Cancel an order by id, gid or cid+cid_date.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-cancel-order
+     */
+    final public function cancel(
+        ?int $id = null,
+        ?int $gid = null,
+        ?int $cid = null,
+        ?string $cidDate = null
+    ): AuthenticatedBitfinexResponse {
+        $params = compact('id', 'gid', 'cid', 'cidDate');
+        array_walk($params, fn ($value, $key) => $this->request->addBody($key === 'cidDate' ? 'cid_date' : $key, $value, true));
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_order")->getPath());
+
+        return $response->submitOrder();
+    }
+
+    /**
+     * Multiple order operations in a single request.
+     * The $ops array should follow Bitfinex API structure.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-order-multi
+     */
+    final public function multi(array $ops): AuthenticatedBitfinexResponse
+    {
+        $this->request->setBody(['ops' => $ops]);
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_multi_op")->getPath());
+
+        return $response->orderMultiOp();
+    }
+
+    /**
+     * Cancel multiple orders by ids.
+     *
+     * @param  array<int>  $ids
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-cancel-multiple-orders
+     */
+    final public function cancelMultiple(array $ids): AuthenticatedBitfinexResponse
+    {
+        $this->request->setBody(['id' => $ids]);
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_order_multi")->getPath());
+
+        return $response->orderCancelMulti();
+    }
+
+    /**
+     * Orders history.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-orders-history
+     */
+    final public function history(?int $limit = null, ?int $start = null, ?int $end = null, ?int $sort = null): AuthenticatedBitfinexResponse
+    {
+        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.orders_history")->getPath());
+
+        return $response->ordersHistory();
+    }
+
+    /**
+     * Trades for a given order.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-order-trades
+     */
+    final public function orderTrades(BitfinexType $type, string $pairOrCurrency, int $orderId): AuthenticatedBitfinexResponse
+    {
+        $symbol = $type->symbol($pairOrCurrency);
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_trades", ['symbol' => $symbol, 'id' => $orderId])->getPath());
+
+        return $response->orderTrades($symbol, $type);
+    }
+
+    /**
+     * Trades history for a symbol.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-trades-history
+     */
+    final public function tradesHistory(BitfinexType $type, string $pairOrCurrency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
+    {
+        $symbol = $type->symbol($pairOrCurrency);
+        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.trades")->getPath());
+
+        return $response->tradesHistory($symbol, $type);
+    }
+
+    /**
+     * Ledgers history for a currency.
+     *
+     * @throws BitfinexPathNotFoundException
+     * @throws GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-ledgers
+     */
+    final public function ledgers(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
+    {
+        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.ledgers", ['currency' => $currency])->getPath());
+
+        return $response->ledgers();
+    }
 }
