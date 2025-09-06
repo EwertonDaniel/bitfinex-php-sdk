@@ -260,4 +260,17 @@ class PublicBitfinexResponse extends BitfinexResponse
             ]
         );
     }
+
+    /**
+     * Transforms funding statistics response.
+     */
+    final public function fundingStats(string $symbol): PublicBitfinexResponse
+    {
+        return $this->transformContent(
+            fn ($content) => [
+                'symbol' => $symbol,
+                'items' => $content,
+            ]
+        );
+    }
 }

@@ -178,15 +178,16 @@ class BitfinexPublic
         return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicLeaderboards($this->client, $this->url, $key, $timeframe, $section);
     }
 
-    /** @throws BitfinexException
+    /**
+     * Provides an instance to fetch funding statistics.
+     *
+     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
      *
      * @link https://docs.bitfinex.com/reference/rest-public-funding-stats
-     *
-     * @todo Implement method for GET Funding Stats
      */
-    final public function fundingStats(): PublicBitfinexResponse
+    final public function fundingStats(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
     {
-        throw new BitfinexException('Method not implemented.');
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats(->client, ->url);
     }
 
     // ** Calculation Endpoints **
