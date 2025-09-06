@@ -22,7 +22,10 @@ use GuzzleHttp\Utils;
  */
 abstract class JsonAdapter
 {
-    protected string $file;
+    /**
+     * Resolved JSON file path.
+     */
+    private readonly string $file;
 
     public function __construct()
     {
@@ -49,13 +52,16 @@ abstract class JsonAdapter
      *
      * @throws BitfinexFileNotFoundException If the file is not found at the specified path.
      */
-    public function transform(): array
+    final public function transform(): array
     {
         if (! file_exists($this->file)) {
             throw new BitfinexFileNotFoundException($this->file);
         }
 
         $contents = file_get_contents($this->file);
+        if ($contents === false) {
+            throw new \EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException($this->file);
+        }
 
         return Utils::jsonDecode($contents, true);
     }

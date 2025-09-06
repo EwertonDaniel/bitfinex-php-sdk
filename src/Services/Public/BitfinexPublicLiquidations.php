@@ -40,7 +40,6 @@ class BitfinexPublicLiquidations
             $apiResponse = $this->client->get($apiPath, [
                 'query' => array_filter(compact('start', 'end', 'limit', 'sort'), fn ($v) => ! is_null($v)),
             ]);
-
             return (new PublicBitfinexResponse($apiResponse))->liquidations();
         } catch (GuzzleException $e) {
             throw new BitfinexException($e->getMessage(), $e->getCode());

@@ -133,11 +133,21 @@ $candles->content['candles']; // array<Candle>
 
 ```php
 // Multiple keys at once; returns array<ConfigEntry>
-$conf = Bitfinex::public()->configs()->get(['pub:map:currency:sym', 'pub:list:pair:exchange']);
+$conf = Bitfinex::public()->configs()->get([
+    'map' => ['currency:sym'],
+    'list' => ['pair:exchange'],
+    'info' => ['pair', 'tx:status'],
+]);
 $conf->content['configs'];
 ```
 
 Notes:
+- Structured keys expand to: `pub:map:currency:sym`, `pub:list:pair:exchange`, `pub:info:pair`, `pub:info:tx:status`.
+- `map:*` responses viram mapas associativos (ex.: alias => símbolo).
+- `list:*` respostas viram arrays de string (pares, moedas etc.).
+- `info:pair*` mapeia para `array<PairInfo>`; `info:tx:status` para `array<TxStatus>`.
+
+
 - Keys are documented by Bitfinex (examples: `pub:map:currency:sym`, `pub:list:pair:exchange`).
 - Unknown keys are ignored (only returned when present).
 
@@ -148,7 +158,7 @@ Notes:
     ```php
     $pairs = Bitfinex::public()->configs()->get('pub:info:pair');
     $items = $pairs->content['configs'][0]->value; // array<PairInfo>
-    $items[0]->pair; $items[0]->block1->minOrderSize;
+    $items[0]->pair; $items[0]->one->minOrderSize;
     ```
 
 - `pub:info:tx:status` (Deposit/withdraw status per method)
@@ -175,6 +185,12 @@ $dsHist->content['items'];
 Notes:
 - `keys`: list of derivative symbols (e.g., `tBTCF0:USD`).
 - History is controlled via `start`, `end`, `limit`, `sort`.
+
+
+
+Architecture note:
+- Public responses are transformed by dedicated classes in `Http\Responses\Public\Transformers` selected via a `TransformerFactory`.
+- Conf responses are handled by `Http\Responses\Configs\ConfigsTransformer`, que aplica estratégias por modo (`map`, `list`, `info:*`).
 
 ### Liquidations
 
@@ -319,4 +335,38 @@ $audit = $auth->positions()->audit();
 // Derivative collateral
 $setColl = $auth->positions()->setDerivativeCollateral('BTCUSD', 100.0);
 $limits = $auth->positions()->derivativeCollateralLimits('BTCUSD');
+```
+
+
+### Funding (Authenticated)
+
+```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+$auth = Bitfinex::authenticated();
+
+// Active offers
+$offers = $auth->funding()->activeOffers('USD');
+$offers->content['offers']; // array<FundingOffer>
+
+// Submit / cancel offers
+$submit = $auth->funding()->submitOffer('USD', amount: 100.0, rate: 0.0002, period: 2);
+$cancel = $auth->funding()->cancelOffer(id: 123456);
+$cancelAll = $auth->funding()->cancelAllOffers('USD');
+
+// Close loan/credit, auto-renew, keep
+$close = $auth->funding()->close(id: 123456);
+$auto = $auth->funding()->autoRenew(id: 123456, enabled: true);
+$keep = $auth->funding()->keep(id: 123456);
+
+// Loans / Credits / Trades
+$loans = $auth->funding()->loans('USD');
+$credits = $auth->funding()->credits('USD');
+$trades = $auth->funding()->trades('USD', limit: 50, sort: -1);
+
+// History and info
+$offersHist = $auth->funding()->offersHistory('USD', limit: 50);
+$loansHist = $auth->funding()->loansHistory('USD', limit: 50);
+$creditsHist = $auth->funding()->creditsHistory('USD', limit: 50);
+$info = $auth->funding()->info('funding.size');
 ```

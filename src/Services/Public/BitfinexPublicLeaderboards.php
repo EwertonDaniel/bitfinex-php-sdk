@@ -7,6 +7,7 @@ namespace EwertonDaniel\Bitfinex\Services\Public;
 use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
@@ -68,8 +69,8 @@ class BitfinexPublicLeaderboards
 
             $apiResponse = $this->client->get($apiPath, [
                 'query' => array_filter([
-                    'start' => $start instanceof Carbon ? $start->getTimestampMs() : (is_string($start) ? (new Carbon($start))->getTimestampMs() : $start),
-                    'end' => $end instanceof Carbon ? $end->getTimestampMs() : (is_string($end) ? (new Carbon($end))->getTimestampMs() : $end),
+                    'start' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($start),
+                    'end' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($end),
                     'limit' => $limit,
                     'sort' => $sort,
                 ], fn ($v) => ! is_null($v)),

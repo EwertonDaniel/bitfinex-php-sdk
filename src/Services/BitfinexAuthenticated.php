@@ -14,6 +14,7 @@ use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedPositions;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedWallet;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedFunding;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedMerchants;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -146,5 +147,13 @@ class BitfinexAuthenticated
     final public function funding(): BitfinexAuthenticatedFunding
     {
         return new BitfinexAuthenticatedFunding($this->url, $this->credentials, $this->request, $this->client);
+    }
+
+    /**
+     * Access merchants (Bitfinex Pay) related actions.
+     */
+    final public function merchants(): BitfinexAuthenticatedMerchants
+    {
+        return new BitfinexAuthenticatedMerchants($this->url, $this->credentials, $this->request, $this->client);
     }
 }

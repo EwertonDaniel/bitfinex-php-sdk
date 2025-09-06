@@ -22,13 +22,17 @@ use EwertonDaniel\Bitfinex\Entities\TradingPair;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use Illuminate\Support\Arr;
 use EwertonDaniel\Bitfinex\Entities\ConfigEntry;
+use EwertonDaniel\Bitfinex\Entities\PairInfo;
+use EwertonDaniel\Bitfinex\Entities\TxStatus;
 use EwertonDaniel\Bitfinex\Entities\DerivativeStatus;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
 /**
  * Class PublicBitfinexResponse
  *
  * Handles responses from the public Bitfinex API endpoints.
- * Provides methods to parse and transform response content into specific entities or collections of entities.
+ * Delegates transformation logic to dedicated transformers (Strategy via Factory),
+ * producing entities or collections ready for consumption.
  *
  * Key Features:
  * - Parses response data into domain-specific entities like `TradingPair`, `PlatformStatus`, or `TickerHistory`.
@@ -46,7 +50,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function platformStatus(): PublicBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => new PlatformStatus($content));
+        return $this->transformContent(function ($content) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('platformStatus');
+            return $t->transform([], $content);
+        });
     }
 
     /**
@@ -57,14 +68,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function ticker(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($ticker) => [
-                'ticker' => match ($type) {
-                    BitfinexType::TRADING => new TradingPair($symbol, $ticker),
-                    BitfinexType::FUNDING => new FundingCurrency($symbol, $ticker),
-                },
-            ]
-        );
+        return $this->transformContent(function ($content) use ($symbol, $type) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('ticker');
+            return $t->transform(['symbol' => $symbol, 'type' => $type], $content);
+        });
     }
 
     /**
@@ -74,22 +85,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function tickers(BitfinexType $type): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($tickers) => [
-                'tickers' => array_map(
-                    function ($ticker) use ($type) {
-                        $symbol = $ticker[0];
-                        array_shift($ticker);
-
-                        return match ($type) {
-                            BitfinexType::TRADING => new TradingPair($symbol, $ticker),
-                            BitfinexType::FUNDING => new FundingCurrency($symbol, $ticker),
-                        };
-                    },
-                    $tickers
-                ),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($type) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('tickers');
+            return $t->transform(['type' => $type], $content);
+        });
     }
 
     /**
@@ -97,12 +100,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function tickerHistory(): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($tickerHistories) => collect($tickerHistories)
-                ->map(fn ($history) => new TickerHistory($history))
-                ->groupBy('pair')
-                ->toArray()
-        );
+        return $this->transformContent(function ($content) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('tickerHistory');
+            return $t->transform([], $content);
+        });
     }
 
     /**
@@ -113,7 +118,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     public function foreignExchangeRate(string $in, string $out): PublicBitfinexResponse
     {
-        return $this->transformContent(fn ($rate) => new ForeignExchangeRate($in, $out, $rate));
+        return $this->transformContent(function ($content) use ($in, $out) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('foreignExchangeRate');
+            return $t->transform(['in' => $in, 'out' => $out], $content);
+        });
     }
 
     /**
@@ -124,18 +136,15 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function trades(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'symbol' => $symbol,
-                'trades' => array_map(
-                    fn ($trade) => match ($type) {
-                        BitfinexType::TRADING => new PairTrade($symbol, $trade),
-                        BitfinexType::FUNDING => new CurrencyTrade($symbol, $trade),
-                    },
-                    $content
-                ),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($symbol, $type) {
+            $factory = GetThis::ifTrueOrFallback(
+                boolean: function_exists('app'),
+                callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+                fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+            );
+            $t = $factory->make('trades');
+            return $t->transform(['symbol' => $symbol, 'type' => $type], $content);
+        });
     }
 
     /**
@@ -146,18 +155,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function book(string $symbol, BitfinexType $type): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'symbol' => $symbol,
-                'books' => array_map(
-                    fn ($book) => match ($type) {
-                        BitfinexType::TRADING => new BookTrading($symbol, $book),
-                        BitfinexType::FUNDING => new BookFunding($symbol, $book),
-                    },
-                    $content
-                ),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($symbol, $type) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('book');
+            return $t->transform(['symbol' => $symbol, 'type' => $type], $content);
+        });
     }
 
     /**
@@ -171,16 +176,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function stats(string $key, string $size, string $symPlatform, string $sidePair, string $section): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'key' => $key,
-                'size' => $size,
-                'symPlatform' => $symPlatform,
-                'sidePair' => $sidePair,
-                'section' => $section,
-                'stats' => array_map(fn ($data) => new Stat($data), $content),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($key, $size, $symPlatform, $sidePair, $section) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('stats');
+            return $t->transform(compact('key','size','symPlatform','sidePair','section'), $content);
+        });
     }
 
     /**
@@ -191,14 +194,13 @@ class PublicBitfinexResponse extends BitfinexResponse
     final public function configs(array $keys): PublicBitfinexResponse
     {
         return $this->transformContent(function ($content) use ($keys) {
-            $entries = [];
-            foreach ($keys as $i => $key) {
-                if (array_key_exists($i, $content) && $content[$i] !== null) {
-                    $entries[] = new ConfigEntry($key, $content[$i]);
-                }
-            }
+            $manager = GetThis::ifTrueOrFallback(
+                boolean: function_exists('app'),
+                callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer::class),
+                fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer()
+            );
 
-            return ['configs' => $entries];
+            return $manager->transform($keys, $content);
         });
     }
 
@@ -211,16 +213,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function candles(string $symbol, string $timeframe, string $section): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'symbol' => $symbol,
-                'timeframe' => $timeframe,
-                'section' => $section,
-                'candles' => is_array($content) && isset($content[0]) && is_array($content[0])
-                    ? array_map(fn ($row) => new Candle($row), $content)
-                    : [new Candle($content)],
-            ]
-        );
+        return $this->transformContent(function ($content) use ($symbol, $timeframe, $section) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('candles');
+            return $t->transform(compact('symbol','timeframe','section'), $content);
+        });
     }
 
     /**
@@ -230,12 +230,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function derivativesStatus(array $keys): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'keys' => $keys,
-                'items' => array_map(fn ($row) => new DerivativeStatus($row), $content),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($keys) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('derivativesStatus');
+            return $t->transform(['keys' => $keys], $content);
+        });
     }
 
     /**
@@ -243,9 +245,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function liquidations(): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => ['liquidations' => array_map(fn ($row) => new Liquidation($row), $content)]
-        );
+        return $this->transformContent(function ($content) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('liquidations');
+            return $t->transform([], $content);
+        });
     }
 
     /**
@@ -253,15 +260,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function leaderboards(string $key, string $timeframe, string $symbol, string $section): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'key' => $key,
-                'timeframe' => $timeframe,
-                'symbol' => $symbol,
-                'section' => $section,
-                'items' => array_map(fn ($row) => new LeaderboardEntry($row), $content),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($key, $timeframe, $symbol, $section) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('leaderboards');
+            return $t->transform(compact('key','timeframe','symbol','section'), $content);
+        });
     }
 
     /**
@@ -269,12 +275,14 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function fundingStats(string $symbol): PublicBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
-                'symbol' => $symbol,
-                'items' => array_map(fn ($row) => new FundingStat($row), $content),
-            ]
-        );
+        return $this->transformContent(function ($content) use ($symbol) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('fundingStats');
+            return $t->transform(['symbol' => $symbol], $content);
+        });
     }
 
     /**
@@ -282,6 +290,13 @@ class PublicBitfinexResponse extends BitfinexResponse
      */
     final public function marketAveragePrice(): PublicBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['result' => new MarketAveragePriceResult($content)]);
+        return $this->transformContent(function ($content) {
+            $t = GetThis::ifTrueOrFallback(
+            boolean: function_exists('app'),
+            callback: fn () => app(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class),
+            fallback: fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory()
+        )->make('marketAveragePrice');
+            return $t->transform([], $content);
+        });
     }
 }

@@ -171,7 +171,9 @@ class BitfinexAuthenticatedOrder
         ?string $tif = null
     ): AuthenticatedBitfinexResponse {
         $params = compact('id', 'gid', 'cid', 'cidDate', 'amount', 'price', 'priceTrailing', 'priceAuxLimit', 'priceOcoStop', 'flags', 'tif');
-        array_walk($params, fn ($value, $key) => $this->request->addBody($key === 'cidDate' ? 'cid_date' : $key, $value, true));
+        array_walk($params, fn ($value, $key) => $this->request->addBody(
+            \EwertonDaniel\Bitfinex\Helpers\GetThis::ifTrueOrFallback(boolean: $key === 'cidDate', callback: 'cid_date', fallback: $key),
+            $value, true));
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_update")->getPath());
@@ -194,7 +196,9 @@ class BitfinexAuthenticatedOrder
         ?string $cidDate = null
     ): AuthenticatedBitfinexResponse {
         $params = compact('id', 'gid', 'cid', 'cidDate');
-        array_walk($params, fn ($value, $key) => $this->request->addBody($key === 'cidDate' ? 'cid_date' : $key, $value, true));
+        array_walk($params, fn ($value, $key) => $this->request->addBody(
+            \EwertonDaniel\Bitfinex\Helpers\GetThis::ifTrueOrFallback(boolean: $key === 'cidDate', callback: 'cid_date', fallback: $key),
+            $value, true));
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_order")->getPath());

@@ -27,7 +27,7 @@ use InvalidArgumentException;
  */
 class RequestBuilder
 {
-    private readonly string $method;
+    private string $method = "GET";
 
     public readonly RequestHeaderBuilder $headers;
 

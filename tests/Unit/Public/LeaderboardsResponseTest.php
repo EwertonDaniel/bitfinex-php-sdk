@@ -10,7 +10,7 @@ test('maps leaderboards to LeaderboardEntry entities', function () {
     ];
 
     $resp = (new PublicBitfinexResponse(new Response(200, [], json_encode($payload))))
-        ->leaderboards('pnl', '1D', 'tBTCUSD', 'hist');
+        ->leaderboards('pnl', '1D', 'tXMRUSD', 'hist');
 
     expect($resp->content['items'])
         ->toBeArray()

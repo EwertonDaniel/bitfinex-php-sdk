@@ -355,4 +355,95 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['deleted' => $content]);
     }
+
+    // Merchants (Bitfinex Pay) mappings
+    final public function merchantInvoiceCreated(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['invoice' => $content]);
+    }
+
+    final public function merchantPostInvoiceCreated(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['invoice' => $content]);
+    }
+
+    final public function merchantInvoiceList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['invoices' => $content]);
+    }
+
+    final public function merchantInvoiceListPaginated(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['invoices' => $content]);
+    }
+
+    final public function merchantInvoiceCountStats(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['stats' => $content]);
+    }
+
+    final public function merchantInvoiceEarningsStats(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['stats' => $content]);
+    }
+
+    final public function merchantInvoiceCompleted(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['completed' => $content]);
+    }
+
+    final public function merchantInvoiceExpired(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['expired' => $content]);
+    }
+
+    final public function merchantCurrencyConversionList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['conversions' => $content]);
+    }
+
+    final public function merchantCurrencyConversionCreated(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['conversion' => $content]);
+    }
+
+    final public function merchantCurrencyConversionRemoved(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['removed' => $content]);
+    }
+
+    final public function merchantLimit(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['limit' => $content]);
+    }
+
+    final public function merchantSettingsWrite(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function merchantSettingsWriteBatch(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function merchantSettingsRead(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function merchantSettingsList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['settings' => $content]);
+    }
+
+    final public function merchantDepositsList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['deposits' => $content]);
+    }
+
+    final public function merchantUnlinkedDepositsList(): AuthenticatedBitfinexResponse
+    {
+        return $this->transformContent(fn ($content) => ['deposits' => $content]);
+    }
 }

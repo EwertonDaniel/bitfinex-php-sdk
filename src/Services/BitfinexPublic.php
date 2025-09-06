@@ -33,7 +33,7 @@ class BitfinexPublic
 
     public function __construct(private readonly UrlBuilder $url)
     {
-        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 3.0]);
+        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 10.0]);
     }
 
     /**
@@ -187,7 +187,7 @@ class BitfinexPublic
      */
     final public function fundingStats(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
     {
-        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats(->client, ->url);
+        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats($this->client, $this->url);
     }
 
     // ** Calculation Endpoints **

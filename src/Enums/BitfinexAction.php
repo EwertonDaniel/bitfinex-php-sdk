@@ -2,6 +2,8 @@
 
 namespace EwertonDaniel\Bitfinex\Enums;
 
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+
 /**
  * Enum BitfinexAction
  *
@@ -30,7 +32,7 @@ enum BitfinexAction: string
      */
     public static function fromAmount(float $amount): self
     {
-        return $amount > 0 ? self::BUY : self::SELL;
+        return GetThis::ifTrueOrFallback(boolean: $amount > 0, callback: self::BUY, fallback: self::SELL);
     }
 
     /**
@@ -60,7 +62,7 @@ enum BitfinexAction: string
      */
     final public function dir(): int
     {
-        return $this->isBuy() ? -1 : 1;
+        return GetThis::ifTrueOrFallback(boolean: $this->isBuy(), callback: -1, fallback: 1);
     }
 
     /**
@@ -71,6 +73,6 @@ enum BitfinexAction: string
      */
     final public static function bidOrAskByAmount(float $amount): string
     {
-        return self::fromAmount($amount)->isBuy() ? 'ask' : 'bid';
+        return GetThis::ifTrueOrFallback(boolean: self::fromAmount($amount)->isBuy(), callback: 'ask', fallback: 'bid');
     }
 }

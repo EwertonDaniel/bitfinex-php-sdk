@@ -9,7 +9,7 @@ test('maps candles to Candle entities', function () {
         [1700000060000, 110.0, 120.0, 125.0, 105.0, 67.89],
     ]);
 
-    $resp = (new PublicBitfinexResponse(new Response(200, [], $body)))->candles('tBTCUSD', '1m', 'hist');
+    $resp = (new PublicBitfinexResponse(new Response(200, [], $body)))->candles('tXMRUSD', '1m', 'hist');
 
     expect($resp->content['candles'])
         ->toBeArray()

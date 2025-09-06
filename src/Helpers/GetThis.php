@@ -45,7 +45,11 @@ class GetThis
      */
     private static function resolveValue(mixed $value): mixed
     {
-        return is_a($value, Closure::class) ? $value() : $value;
+        if (is_a($value, Closure::class)) {
+            return $value();
+        }
+
+        return $value;
     }
 
     /**
@@ -65,6 +69,12 @@ class GetThis
             default => null,
         };
 
-        return filter_var($ip, FILTER_VALIDATE_IP) ?: '0.0.0.0';
+        $validIp = filter_var($ip, FILTER_VALIDATE_IP);
+
+        return self::ifTrueOrFallback(
+            boolean: $validIp,
+            callback: $validIp,
+            fallback: '0.0.0.0'
+        );
     }
 }

@@ -91,7 +91,7 @@ class BitfinexPublicTicker
      */
     final public function byPairs(array $pairs): PublicBitfinexResponse
     {
-        $type = BitfinexType::FUNDING;
+        $type = BitfinexType::TRADING;
         $symbols = $type->symbols($pairs);
 
         return $this->get(symbols: $symbols, type: $type);
