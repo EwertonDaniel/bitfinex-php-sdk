@@ -1,0 +1,31 @@
+Account Actions (status)
+- user_info: ok
+- summary: ok
+- login_history: ok
+- key_permissions: ok
+- generate_token: ok (via BitfinexAuthenticated::generateToken)
+- changelog: ok
+- transfer_between_wallets: ok
+- deposit_address: ok
+- deposit_addresses: ok
+- generate_invoice: ok
+- withdrawal: ok
+- movements: ok
+- movement_info: ok
+- alert_list: ok
+- alert_set: ok
+- alert_delete: ok
+- balance_available_for_orders_offers: ok
+- user_settings_write: ok
+- user_settings_read: ok
+- user_settings_delete: ok
+
+Helpers
+- depositHistory (filter deposits): ok
+- withdrawalHistory (filter withdrawals): ok
+
+Improvements (not endpoints)
+- movements/depositHistory/withdrawalHistory: add sort (+1/-1): to implement
+- withdrawal(): method-specific required fields validation: to implement
+- Documentation: add examples for transfer/invoice/withdraw/settings: to implement
+- Tests: unit tests with HTTP mocks for new endpoints: to implement
