@@ -8,6 +8,7 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\OrderType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
@@ -85,12 +86,12 @@ class BitfinexAuthenticatedOrder
      *
      * @param  OrderType  $type  Type of the order (e.g., LIMIT, MARKET).
      * @param  BitfinexAction  $action  Action for the order (e.g., BUY, SELL).
-     * @param  float  $amount  Amount for the order.
-     * @param  int  $price  Price for the order.
+     * @param  float|string  $amount  Amount for the order; the sign is derived from the action.
+     * @param  float|string|null  $price  Price for the order; omitted for MARKET orders.
      * @param  int|null  $leverage  Leverage for margin trading.
-     * @param  string|null  $priceTrailing  Trailing price for trailing stop orders.
-     * @param  string|null  $priceAuxLimit  Auxiliary limit price for stop-limit orders.
-     * @param  string|null  $priceOcoStop  Price for one-cancels-other (OCO) stop orders.
+     * @param  float|string|null  $priceTrailing  Trailing price for trailing stop orders.
+     * @param  float|string|null  $priceAuxLimit  Auxiliary limit price for stop-limit orders.
+     * @param  float|string|null  $priceOcoStop  Price for one-cancels-other (OCO) stop orders.
      * @param  int|null  $gid  Group ID for the order.
      * @param  int|null  $cid  Client ID for the order.
      * @param  int|null  $flags  Flags indicating additional functionalities for the order.
@@ -107,30 +108,32 @@ class BitfinexAuthenticatedOrder
         OrderType $type,
         BitfinexAction $action,
         string $pair,
-        float $amount,
-        int $price,
+        float|string $amount,
+        float|string|null $price = null,
         ?int $leverage = null,
-        ?string $priceTrailing = null,
-        ?string $priceAuxLimit = null,
-        ?string $priceOcoStop = null,
+        float|string|null $priceTrailing = null,
+        float|string|null $priceAuxLimit = null,
+        float|string|null $priceOcoStop = null,
         ?int $gid = null,
         ?int $cid = null,
         ?int $flags = null,
         ?string $tif = null,
         ?array $meta = null
     ): AuthenticatedBitfinexResponse {
+        $magnitude = ltrim(DecimalToString::convert($amount), '-');
+
         $this->request->setBody([
             'type' => $type->value,
             'symbol' => BitfinexType::TRADING->symbol($pair),
-            'amount' => (string) GetThis::ifTrueOrFallback($action->isSell(), fn () => $amount * -1, $amount),
-            'price' => (string) $price,
+            'amount' => GetThis::ifTrueOrFallback($action->isSell(), "-$magnitude", $magnitude),
         ]);
 
         $optionalParams = [
+            'price' => DecimalToString::convert($price),
             'lev' => $leverage,
-            'price_trailing' => $priceTrailing,
-            'price_aux_limit' => $priceAuxLimit,
-            'price_oco_stop' => $priceOcoStop,
+            'price_trailing' => DecimalToString::convert($priceTrailing),
+            'price_aux_limit' => DecimalToString::convert($priceAuxLimit),
+            'price_oco_stop' => DecimalToString::convert($priceOcoStop),
             'gid' => $gid,
             'cid' => $cid,
             'flags' => $flags,
@@ -138,7 +141,9 @@ class BitfinexAuthenticatedOrder
             'meta' => $meta,
         ];
 
-        array_walk($optionalParams, fn ($value, $key) => $this->request->addBody($key, $value, true));
+        foreach ($optionalParams as $key => $value) {
+            $this->request->addBody($key, $value, true);
+        }
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
@@ -162,23 +167,38 @@ class BitfinexAuthenticatedOrder
         ?int $gid = null,
         ?int $cid = null,
         ?string $cidDate = null,
-        ?float $amount = null,
-        ?int $price = null,
-        ?string $priceTrailing = null,
-        ?string $priceAuxLimit = null,
-        ?string $priceOcoStop = null,
+        float|string|null $amount = null,
+        float|string|null $price = null,
+        float|string|null $priceTrailing = null,
+        float|string|null $priceAuxLimit = null,
+        float|string|null $delta = null,
+        ?int $leverage = null,
         ?int $flags = null,
         ?string $tif = null
     ): AuthenticatedBitfinexResponse {
-        $params = compact('id', 'gid', 'cid', 'cidDate', 'amount', 'price', 'priceTrailing', 'priceAuxLimit', 'priceOcoStop', 'flags', 'tif');
-        array_walk($params, fn ($value, $key) => $this->request->addBody(
-            \EwertonDaniel\Bitfinex\Helpers\GetThis::ifTrueOrFallback(boolean: $key === 'cidDate', callback: 'cid_date', fallback: $key),
-            $value, true));
+        $params = [
+            'id' => $id,
+            'gid' => $gid,
+            'cid' => $cid,
+            'cid_date' => $cidDate,
+            'amount' => DecimalToString::convert($amount),
+            'price' => DecimalToString::convert($price),
+            'price_trailing' => DecimalToString::convert($priceTrailing),
+            'price_aux_limit' => DecimalToString::convert($priceAuxLimit),
+            'delta' => DecimalToString::convert($delta),
+            'lev' => $leverage,
+            'flags' => $flags,
+            'tif' => $tif,
+        ];
+
+        foreach ($params as $key => $value) {
+            $this->request->addBody($key, $value, true);
+        }
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_update")->getPath());
 
-        return $response->submitOrder();
+        return $response->orderNotification();
     }
 
     /**
@@ -195,15 +215,16 @@ class BitfinexAuthenticatedOrder
         ?int $cid = null,
         ?string $cidDate = null
     ): AuthenticatedBitfinexResponse {
-        $params = compact('id', 'gid', 'cid', 'cidDate');
-        array_walk($params, fn ($value, $key) => $this->request->addBody(
-            \EwertonDaniel\Bitfinex\Helpers\GetThis::ifTrueOrFallback(boolean: $key === 'cidDate', callback: 'cid_date', fallback: $key),
-            $value, true));
+        $params = ['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate];
+
+        foreach ($params as $key => $value) {
+            $this->request->addBody($key, $value, true);
+        }
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_order")->getPath());
 
-        return $response->submitOrder();
+        return $response->orderNotification();
     }
 
     /**
@@ -253,7 +274,8 @@ class BitfinexAuthenticatedOrder
      */
     final public function history(?int $limit = null, ?int $start = null, ?int $end = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
-        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $params = compact('start', 'end', 'limit', 'sort');
+        array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.orders_history")->getPath());
 
@@ -274,25 +296,42 @@ class BitfinexAuthenticatedOrder
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_trades", ['symbol' => $symbol, 'id' => $orderId])->getPath());
 
-        return $response->orderTrades($symbol, $type);
+        return $response->orderTrades($symbol);
     }
 
     /**
-     * Trades history for a symbol.
+     * Trades history, optionally restricted to a single symbol.
+     *
+     * When no symbol is given, trades of every symbol in the account are returned.
      *
      * @throws BitfinexPathNotFoundException
      * @throws GuzzleException
      *
-     * @link https://docs.bitfinex.com/reference/rest-auth-trades-history
+     * @link https://docs.bitfinex.com/reference/rest-auth-trades
      */
-    final public function tradesHistory(BitfinexType $type, string $pairOrCurrency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
-    {
-        $symbol = $type->symbol($pairOrCurrency);
-        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
-        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
-        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.trades")->getPath());
+    final public function tradesHistory(
+        ?BitfinexType $type = null,
+        ?string $pairOrCurrency = null,
+        ?int $start = null,
+        ?int $end = null,
+        ?int $limit = null,
+        ?int $sort = null
+    ): AuthenticatedBitfinexResponse {
+        $symbol = GetThis::ifTrueOrFallback($type && $pairOrCurrency, fn () => $type->symbol($pairOrCurrency));
 
-        return $response->tradesHistory($symbol, $type);
+        $params = compact('start', 'end', 'limit', 'sort');
+        array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
+
+        $apiPath = GetThis::ifTrueOrFallback(
+            boolean: $symbol,
+            callback: fn () => $this->url->setPath("$this->basePath.trades_by_symbol", ['symbol' => $symbol])->getPath(),
+            fallback: fn () => $this->url->setPath("$this->basePath.trades")->getPath()
+        );
+
+        $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
+        $response = $request->execute(apiPath: $apiPath);
+
+        return $response->tradesHistory($symbol);
     }
 
     /**
@@ -305,7 +344,8 @@ class BitfinexAuthenticatedOrder
      */
     final public function ledgers(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
-        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $params = compact('start', 'end', 'limit', 'sort');
+        array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.ledgers", ['currency' => $currency])->getPath());
 

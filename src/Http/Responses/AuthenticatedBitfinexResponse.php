@@ -9,8 +9,7 @@ use EwertonDaniel\Bitfinex\Entities\ChangeLogItem;
 use EwertonDaniel\Bitfinex\Entities\DepositAddress;
 use EwertonDaniel\Bitfinex\Entities\KeyPermission;
 use EwertonDaniel\Bitfinex\Entities\LedgerEntry;
-use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
-use EwertonDaniel\Bitfinex\Entities\PairTrade;
+use EwertonDaniel\Bitfinex\Entities\Trade;
 use EwertonDaniel\Bitfinex\Entities\FundingOffer;
 use EwertonDaniel\Bitfinex\Entities\FundingLoan;
 use EwertonDaniel\Bitfinex\Entities\FundingCredit;
@@ -115,7 +114,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
                 'method' => $method,
                 'items' => array_map(fn ($data) => [
                     'address' => new DepositAddress(
-                        BitfinexWalletType::tryFrom($data[1]),
+                        BitfinexWalletType::tryFrom((string) $data[1]) ?? (string) $data[1],
                         [
                             null,
                             null,
@@ -172,15 +171,28 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
 
     final public function submitOrder(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(
-            fn ($content) => [
+        return $this->transformContent(function ($content) {
+            $data = is_array($content[4] ?? null) ? $content[4] : [];
+
+            return [
                 'order' => GetThis::ifTrueOrFallback(
-                    boolean: is_array($content[4]),
-                    callback: fn () => array_map(fn ($data) => new Order($data), $content[4]),
-                    fallback: fn () => new Order($content)
+                    boolean: is_array($data[0] ?? null),
+                    callback: fn () => array_map(fn ($order) => new Order($order), $data),
+                    fallback: fn () => new Order($data)
                 ),
-            ]
-        );
+            ];
+        });
+    }
+
+    /**
+     * Transforms an order notification returned by the update and cancel endpoints,
+     * whose DATA field holds a single order rather than a list.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{order: \EwertonDaniel\Bitfinex\Entities\Order|list<\EwertonDaniel\Bitfinex\Entities\Order>}.
+     */
+    final public function orderNotification(): AuthenticatedBitfinexResponse
+    {
+        return $this->submitOrder();
     }
     /**
      * @return AuthenticatedBitfinexResponse with content array{orders: list<\EwertonDaniel\Bitfinex\Entities\Order>}.
@@ -192,33 +204,27 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
         return $this->transformContent(fn ($content) => ['orders' => array_map(fn ($data) => new Order($data), $content)]);
     }
     /**
-     * @return AuthenticatedBitfinexResponse with content array{symbol: string, trades: list<\EwertonDaniel\Bitfinex\Entities\PairTrade|\EwertonDaniel\Bitfinex\Entities\CurrencyTrade>}.
+     * @return AuthenticatedBitfinexResponse with content array{symbol: string|null, trades: list<\EwertonDaniel\Bitfinex\Entities\Trade>}.
      */
 
 
-    final public function orderTrades(string $symbol, \EwertonDaniel\Bitfinex\Enums\BitfinexType $type): AuthenticatedBitfinexResponse
+    final public function orderTrades(?string $symbol = null): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(
             fn ($content) => [
                 'symbol' => $symbol,
-                'trades' => array_map(
-                    fn ($trade) => match ($type) {
-                        \EwertonDaniel\Bitfinex\Enums\BitfinexType::TRADING => new PairTrade($symbol, $trade),
-                        \EwertonDaniel\Bitfinex\Enums\BitfinexType::FUNDING => new CurrencyTrade($symbol, $trade),
-                    },
-                    $content
-                ),
+                'trades' => array_map(fn ($trade) => new Trade($trade), $content),
             ]
         );
     }
     /**
-     * @return AuthenticatedBitfinexResponse with content array{symbol: string, trades: list<\EwertonDaniel\Bitfinex\Entities\PairTrade|\EwertonDaniel\Bitfinex\Entities\CurrencyTrade>}.
+     * @return AuthenticatedBitfinexResponse with content array{symbol: string|null, trades: list<\EwertonDaniel\Bitfinex\Entities\Trade>}.
      */
 
 
-    final public function tradesHistory(string $symbol, \EwertonDaniel\Bitfinex\Enums\BitfinexType $type): AuthenticatedBitfinexResponse
+    final public function tradesHistory(?string $symbol = null): AuthenticatedBitfinexResponse
     {
-        return $this->orderTrades($symbol, $type);
+        return $this->orderTrades($symbol);
     }
     /**
      * @return AuthenticatedBitfinexResponse with content array{ledgers: list<\EwertonDaniel\Bitfinex\Entities\LedgerEntry>}.
@@ -510,13 +516,17 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
         return $this->transformContent(fn ($content) => ['limits' => $content]);
     }
     /**
-     * @return AuthenticatedBitfinexResponse with content array{transferred: mixed}.
+     * @return AuthenticatedBitfinexResponse with content array{transferred: mixed, status: string|null, text: string|null}.
      */
 
 
     final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['transferred' => $content[0] ?? $content]);
+        return $this->transformContent(fn ($content) => [
+            'transferred' => $content[4] ?? $content,
+            'status' => $content[6] ?? null,
+            'text' => $content[7] ?? null,
+        ]);
     }
     /**
      * @return AuthenticatedBitfinexResponse with content array{invoice: mixed}.

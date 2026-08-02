@@ -9,6 +9,7 @@ use EwertonDaniel\Bitfinex\Adapters\UrlAdapter;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
 use Illuminate\Support\Arr;
 
 /**
@@ -47,11 +48,23 @@ class UrlBuilder
     /**
      * Constructor initializes URLs and paths by transforming data from adapters.
      *
+     * Base URLs configured through `config/bitfinex.php` or the environment take
+     * precedence over the ones shipped in `resources/urls.json`.
+     *
      * @throws BitfinexFileNotFoundException
      */
     public function __construct()
     {
-        $this->urls = (new UrlAdapter)->transform();
+        $configuredUrls = array_filter([
+            'public' => BitfinexConfig::string('urls.public', 'BITFINEX_PUBLIC_URL'),
+            'private' => BitfinexConfig::string('urls.private', 'BITFINEX_PRIVATE_URL'),
+        ]);
+
+        $this->urls = array_merge(
+            (new UrlAdapter)->transform(),
+            array_map(fn (string $url) => rtrim($url, '/'), $configuredUrls)
+        );
+
         $this->paths = (new PathAdapter)->transform();
     }
 

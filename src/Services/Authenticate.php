@@ -76,9 +76,10 @@ class Authenticate
             'scope' => $this->scope,
             'ttl' => $this->ttl,
             'writePermission' => $this->writePermission,
-            'caps' => $this->caps,
             '_cust_ip' => GetThis::userIp(),
         ]);
+
+        $this->request->addBody('caps', $this->caps, true);
 
         $this->request->setCredentials(
             credentials: $this->credentials,

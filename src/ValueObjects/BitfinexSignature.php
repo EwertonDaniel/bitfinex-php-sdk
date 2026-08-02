@@ -29,6 +29,15 @@ class BitfinexSignature
     public readonly string $nonce;
 
     /**
+     * Last nonce handed out by this process.
+     *
+     * @note microtime() resolution is not fine enough to guarantee distinct values
+     *       between consecutive calls, and Bitfinex rejects any nonce that is not
+     *       greater than the previous one used by the same API key.
+     */
+    private static int $lastNonce = 0;
+
+    /**
      * Constructs a new `BitfinexSignature` instance.
      *
      * @param  string  $apiPath  The API endpoint path (e.g., 'private/account_actions.generate_token').
@@ -37,8 +46,22 @@ class BitfinexSignature
      */
     public function __construct(string $apiPath, string $body, string $apiSecret)
     {
-        $this->nonce = (string) (time() * 1000 * 1000);
+        $this->nonce = (string) self::generateNonce();
 
         $this->signature = hash_hmac('sha384', "/api/{$apiPath}{$this->nonce}{$body}", $apiSecret);
+    }
+
+    /**
+     * Produces a strictly increasing nonce in microseconds since epoch time.
+     */
+    private static function generateNonce(): int
+    {
+        $nonce = (int) round(microtime(true) * 1_000_000);
+
+        if ($nonce <= self::$lastNonce) {
+            $nonce = self::$lastNonce + 1;
+        }
+
+        return self::$lastNonce = $nonce;
     }
 }

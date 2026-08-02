@@ -12,6 +12,7 @@ use EwertonDaniel\Bitfinex\Enums\OrderOfferType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\DateToTimestamp;
+use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\Http\Responses\BitfinexResponse;
@@ -175,14 +176,27 @@ class BitfinexAuthenticatedAccountAction
         BitfinexWalletType $from,
         BitfinexWalletType $to,
         string $currency,
-        float $amount
+        float|string $amount,
+        ?string $currencyTo = null,
+        ?string $emailDst = null,
+        ?int $userIdDst = null
     ): AuthenticatedBitfinexResponse {
         $this->request->setBody([
             'from' => $from->value,
             'to' => $to->value,
             'currency' => $currency,
-            'amount' => (string) $amount,
+            'amount' => DecimalToString::convert($amount),
         ]);
+
+        $optionalParams = [
+            'currency_to' => $currencyTo,
+            'email_dst' => $emailDst,
+            'user_id_dst' => $userIdDst,
+        ];
+
+        foreach ($optionalParams as $key => $value) {
+            $this->request->addBody($key, $value, true);
+        }
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $apiPath = $this->url->setPath("$this->basePath.transfer_between_wallets")->getPath();
@@ -260,12 +274,12 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-deposit-invoice
      */
-    final public function generateInvoice(BitfinexWalletType $walletType, string $currency, float $amount, array $options = []): AuthenticatedBitfinexResponse
+    final public function generateInvoice(BitfinexWalletType $walletType, string $currency, float|string $amount, array $options = []): AuthenticatedBitfinexResponse
     {
         $body = array_merge([
             'wallet' => $walletType->value,
             'currency' => $currency,
-            'amount' => (string) $amount,
+            'amount' => DecimalToString::convert($amount),
         ], $options);
 
         $this->request->setBody($body);
@@ -291,13 +305,13 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-withdraw
      */
-    final public function withdrawal(BitfinexWalletType $walletType, string $method, string $currency, float $amount, array $options = []): AuthenticatedBitfinexResponse
+    final public function withdrawal(BitfinexWalletType $walletType, string $method, string $currency, float|string $amount, array $options = []): AuthenticatedBitfinexResponse
     {
         $body = array_merge([
             'wallet' => $walletType->value,
             'method' => $method,
             'currency' => $currency,
-            'amount' => (string) $amount,
+            'amount' => DecimalToString::convert($amount),
         ], $options);
 
         $this->request->setBody($body);
@@ -463,7 +477,7 @@ class BitfinexAuthenticatedAccountAction
      * Sets a new alert for a given pair and price.
      *
      * @param  string  $pair  The trading pair.
-     * @param  int  $price  The target price for the alert.
+     * @param  float|string  $price  The target price for the alert.
      * @param  string  $type  The type of alert (default: 'price').
      * @param  int  $count  The count of alerts (default: 100).
      * @return AuthenticatedBitfinexResponse The response confirming the alert creation.
@@ -473,9 +487,14 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-alert-set
      */
-    final public function alertSet(string $pair, int $price, string $type = 'price', int $count = 100): AuthenticatedBitfinexResponse
+    final public function alertSet(string $pair, float|string $price, string $type = 'price', int $count = 100): AuthenticatedBitfinexResponse
     {
-        $this->request->setBody(['type' => $type, 'symbol' => BitfinexType::TRADING->symbol($pair), 'price' => $price, 'count' => $count]);
+        $this->request->setBody([
+            'type' => $type,
+            'symbol' => BitfinexType::TRADING->symbol($pair),
+            'price' => DecimalToString::convert($price),
+            'count' => $count,
+        ]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.alert_set")->getPath());
 
@@ -497,12 +516,14 @@ class BitfinexAuthenticatedAccountAction
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-alert-del
      */
-    final public function alertDelete(string $pair, int $price): AuthenticatedBitfinexResponse
+    final public function alertDelete(string $pair, float|string $price): AuthenticatedBitfinexResponse
     {
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(
-            apiPath: $this->url->setPath("$this->basePath.alert_delete", ['pair' => BitfinexType::TRADING->symbol($pair), 'price' => $price]
-            )->getPath()
+            apiPath: $this->url->setPath("$this->basePath.alert_delete", [
+                'symbol' => BitfinexType::TRADING->symbol($pair),
+                'price' => DecimalToString::convert($price),
+            ])->getPath()
         );
 
         return $response->alertDelete();
@@ -554,7 +575,7 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Writes user settings.
      *
-     * @param  array  $settings  Key-value pairs of settings to write.
+     * @param  array<string, mixed>  $settings  Key-value pairs of settings to write, keyed by setting name (e.g. `api:my_setting`).
      * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
@@ -564,7 +585,7 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userSettingsWrite(array $settings): AuthenticatedBitfinexResponse
     {
-        $this->request->setBody($settings);
+        $this->request->setBody(['settings' => $settings]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_write")->getPath());
 
@@ -574,15 +595,17 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Reads user settings.
      *
+     * @param  array<string>  $keys  Setting names to read (e.g. `api:my_setting`).
      * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
-     * @link https://docs.bitfinex.com/reference/rest-auth-settings-get
+     * @link https://docs.bitfinex.com/reference/rest-auth-settings
      */
-    final public function userSettingsRead(): AuthenticatedBitfinexResponse
+    final public function userSettingsRead(array $keys): AuthenticatedBitfinexResponse
     {
+        $this->request->setBody(['keys' => array_values($keys)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_read")->getPath());
 
@@ -592,7 +615,7 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Deletes user settings.
      *
-     * @param  array  $keys  Keys to delete.
+     * @param  array<string>  $keys  Setting names to delete.
      * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
@@ -602,7 +625,7 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userSettingsDelete(array $keys): AuthenticatedBitfinexResponse
     {
-        $this->request->setBody($keys);
+        $this->request->setBody(['keys' => array_values($keys)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_delete")->getPath());
 

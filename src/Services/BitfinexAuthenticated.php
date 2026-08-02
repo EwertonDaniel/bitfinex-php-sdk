@@ -8,6 +8,7 @@ use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedAccountAction;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
@@ -67,16 +68,16 @@ class BitfinexAuthenticated
 
         $this->client = new Client([
             'base_uri' => $this->url->getBaseUrl(),
-            'timeout' => 3.0,
+            'timeout' => BitfinexConfig::float('timeout.authenticated', 'BITFINEX_AUTHENTICATED_TIMEOUT', 30.0),
         ]);
     }
 
     /**
      * Generates an authentication token for private API endpoints.
      *
-     * @param  string  $scope  Token scope (e.g., 'api') (default: 'api').
-     * @param  int  $ttl  Time-to-live for the token in seconds (default: 120).
-     * @param  bool  $writePermission  Whether the token allows write operations (default: false).
+     * @param  string|null  $scope  Token scope (e.g., 'api'); falls back to configuration.
+     * @param  int|null  $ttl  Time-to-live for the token in seconds; falls back to configuration.
+     * @param  bool|null  $writePermission  Whether the token allows write operations; falls back to configuration.
      * @param  array|null  $caps  Additional capabilities for the token (optional).
      * @return $this Authenticated Bitfinex service instance with the token set.
      *
@@ -84,9 +85,15 @@ class BitfinexAuthenticated
      * @throws GuzzleException If the HTTP request fails.
      * @throws BitfinexUrlNotFoundException If the URL for token generation is invalid.
      */
-    final public function generateToken(string $scope = 'api', int $ttl = 120, bool $writePermission = false, ?array $caps = null): static
+    final public function generateToken(?string $scope = null, ?int $ttl = null, ?bool $writePermission = null, ?array $caps = null): static
     {
-        $response = (new Authenticate($this->credentials, $scope, $ttl, $writePermission, $caps))->authenticate();
+        $response = (new Authenticate(
+            credentials: $this->credentials,
+            scope: $scope ?? BitfinexConfig::string('token.scope', 'BITFINEX_TOKEN_SCOPE', 'api'),
+            ttl: $ttl ?? BitfinexConfig::int('token.ttl', 'BITFINEX_TOKEN_TTL', 120),
+            writePermission: $writePermission ?? BitfinexConfig::bool('token.write_permission', 'BITFINEX_TOKEN_WRITE_PERMISSION', false),
+            caps: $caps
+        ))->authenticate();
 
         $this->credentials->setToken($response->content['token']);
 

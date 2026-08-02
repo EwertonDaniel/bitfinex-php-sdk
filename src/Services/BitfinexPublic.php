@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BookPrecision;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
+use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
 use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicBook;
 use EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicStats;
@@ -33,7 +34,10 @@ class BitfinexPublic
 
     public function __construct(private readonly UrlBuilder $url)
     {
-        $this->client = new Client(config: ['base_uri' => $this->url->getBaseUrl(), 'timeout' => 10.0]);
+        $this->client = new Client(config: [
+            'base_uri' => $this->url->getBaseUrl(),
+            'timeout' => BitfinexConfig::float('timeout.public', 'BITFINEX_PUBLIC_TIMEOUT', 10.0),
+        ]);
     }
 
     /**

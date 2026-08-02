@@ -3,6 +3,7 @@
 namespace EwertonDaniel\Bitfinex\Http\Responses;
 
 use Closure;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Utils;
 
@@ -44,11 +45,15 @@ abstract class BitfinexResponse
     {
         $this->success = $response->getStatusCode() < 300;
         $this->statusCode = $response->getStatusCode();
+        $this->headers = $response->getHeaders();
 
-        if ($this->success) {
-            $this->headers = $response->getHeaders();
-            $this->content = Utils::jsonDecode($response->getBody()->getContents(), true);
-        }
+        $body = $response->getBody()->getContents();
+
+        $this->content = GetThis::ifTrueOrFallback(
+            boolean: $this->success && $body !== '',
+            callback: fn () => Utils::jsonDecode($body, true),
+            fallback: $body
+        );
     }
 
     /**

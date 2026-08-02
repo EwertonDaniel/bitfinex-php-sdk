@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\ValueObjects;
 
-use EwertonDaniel\Bitfinex\Helpers\GetThis;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
+use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
 
 /**
  * Class BitfinexCredentials
@@ -18,28 +19,26 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
  */
 class BitfinexCredentials
 {
-    /** @var string API Key for Bitfinex */
-    private readonly string $apiKey;
+    /** @var string|null API Key for Bitfinex */
+    private readonly ?string $apiKey;
 
-    /** @var string API Secret for Bitfinex */
-    private readonly string $apiSecret;
+    /** @var string|null API Secret for Bitfinex */
+    private readonly ?string $apiSecret;
 
     /**
      * BitfinexCredentials constructor.
      *
      * Initializes the credentials with the provided API Key, API Secret, and optional token.
-     * If a token is provided, it overrides the need for API Key and API Secret.
+     * When either is omitted, it is resolved from the configuration or the environment.
      *
-     * @param  string|null  $apiKey  API Key for Bitfinex (optional, fallback to config if null).
-     * @param  string|null  $apiSecret  API Secret for Bitfinex (optional, fallback to config if null).
+     * @param  string|null  $apiKey  API Key for Bitfinex (optional, resolved from config/env if null).
+     * @param  string|null  $apiSecret  API Secret for Bitfinex (optional, resolved from config/env if null).
      * @param  string|null  $token  Authentication token (optional, overrides API Key and Secret).
      */
     public function __construct(?string $apiKey = null, ?string $apiSecret = null, private ?string $token = null)
     {
-        if (is_null($token)) {
-            $this->apiKey = GetThis::ifTrueOrFallback($apiKey, $apiKey, fn () => config('bitfinex.api_key'));
-            $this->apiSecret = GetThis::ifTrueOrFallback($apiSecret, $apiSecret, fn () => config('bitfinex.api_secret'));
-        }
+        $this->apiKey = $apiKey ?? BitfinexConfig::string('api_key', 'BITFINEX_API_KEY');
+        $this->apiSecret = $apiSecret ?? BitfinexConfig::string('api_secret', 'BITFINEX_API_SECRET');
     }
 
     /**
@@ -75,13 +74,31 @@ class BitfinexCredentials
         return ! is_null($this->token);
     }
 
+    /**
+     * @throws BitfinexException When no API key was provided or configured.
+     */
     final public function getApiKey(): string
     {
-        return $this->apiKey;
+        return $this->apiKey ?? throw new BitfinexException(
+            'Bitfinex API key is missing. Set it in config/bitfinex.php, in the BITFINEX_API_KEY environment variable, or pass it to BitfinexCredentials.'
+        );
     }
 
+    /**
+     * @throws BitfinexException When no API secret was provided or configured.
+     */
     final public function getApiSecret(): string
     {
-        return $this->apiSecret;
+        return $this->apiSecret ?? throw new BitfinexException(
+            'Bitfinex API secret is missing. Set it in config/bitfinex.php, in the BITFINEX_API_SECRET environment variable, or pass it to BitfinexCredentials.'
+        );
+    }
+
+    /**
+     * Checks whether a key/secret pair is available for signing requests.
+     */
+    final public function hasApiKeys(): bool
+    {
+        return ! is_null($this->apiKey) && ! is_null($this->apiSecret);
     }
 }

@@ -158,8 +158,8 @@ class User
         $this->ctxSwitchDisabled = GetThis::ifTrueOrFallback(isset($data[39]), fn () => $data[39] === 1, false);
         $this->timeLastLogin = GetThis::ifTrueOrFallback(isset($data[44]), fn () => Carbon::parse($data[44]));
         $this->verificationLevelSubmitted = GetThis::ifTrueOrFallback(isset($data[47]), fn () => $data[47]);
-        $this->compCountries = GetThis::ifTrueOrFallback(isset($data[49]) && is_array($data[49]), new CountryAndRegion($data[49]));
-        $this->compCountriesResid = GetThis::ifTrueOrFallback(isset($data[50]) && is_array($data[50]), new CountryAndRegion($data[50]));
+        $this->compCountries = GetThis::ifTrueOrFallback(isset($data[49]) && is_array($data[49]), fn () => new CountryAndRegion($data[49]));
+        $this->compCountriesResid = GetThis::ifTrueOrFallback(isset($data[50]) && is_array($data[50]), fn () => new CountryAndRegion($data[50]));
         $this->complAccountType = GetThis::ifTrueOrFallback(isset($data[51]), fn () => $data[51]);
         $this->isMerchantEnterprise = GetThis::ifTrueOrFallback(isset($data[54]), fn () => $data[54] === 1, false);
     }

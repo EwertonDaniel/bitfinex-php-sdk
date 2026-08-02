@@ -58,11 +58,13 @@ enum BitfinexAction: string
     /**
      * Returns the direction of the action for trading logic.
      *
-     * @return int -1 for buy, 1 for sell.
+     * @return int 1 for buy, -1 for sell.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-calc-order-avail
      */
     final public function dir(): int
     {
-        return GetThis::ifTrueOrFallback(boolean: $this->isBuy(), callback: -1, fallback: 1);
+        return GetThis::ifTrueOrFallback(boolean: $this->isBuy(), callback: 1, fallback: -1);
     }
 
     /**

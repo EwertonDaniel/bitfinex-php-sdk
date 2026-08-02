@@ -29,6 +29,7 @@
       "orders_history": "v2/auth/r/orders/hist",
       "order_trades": "v2/auth/r/order/{symbol}:{id}/trades",
       "trades": "v2/auth/r/trades/hist",
+      "trades_by_symbol": "v2/auth/r/trades/{symbol}/hist",
       "ledgers": "v2/auth/r/ledgers/{currency}/hist"
     },
     "positions": {

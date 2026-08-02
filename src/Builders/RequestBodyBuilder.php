@@ -82,11 +82,14 @@ class RequestBodyBuilder
      * Converts the body parameters to a JSON string.
      *
      * Encodes the current body parameters into a JSON string with unescaped slashes.
+     * An empty body is encoded as `{}` rather than `[]`, since the API expects a JSON object.
      *
      * @return string The JSON representation of the body parameters.
      */
     final public function __toString(): string
     {
-        return json_encode($this->get(), JSON_UNESCAPED_SLASHES);
+        $body = $this->get();
+
+        return json_encode($body ?: new \stdClass, JSON_UNESCAPED_SLASHES);
     }
 }
