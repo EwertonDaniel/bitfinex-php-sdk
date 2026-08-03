@@ -2,25 +2,16 @@
 
 use EwertonDaniel\Bitfinex\Bitfinex;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
-use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
+
+// The `Auth` dataset used to hand every authenticated test a pair of placeholder
+// credentials, which meant those tests ran against the real API, failed on
+// `apikey: digest invalid` and asserted nothing. They now go through
+// `Tests\Support\BitfinexMock`, which queues the responses instead.
 
 dataset('Bitfinex', [
     'Bitfinex' => function () {
         return new Bitfinex;
     },
-]);
-
-dataset('Auth', [
-    'Credentials' => function () {
-        return new BitfinexCredentials(
-            apiKey: 'you api key',
-            apiSecret: 'your api secret'
-        );
-    },
-]);
-
-dataset('Movement Id', [
-    'id' => '123456789',
 ]);
 
 dataset('Pair/Currency and Type', [

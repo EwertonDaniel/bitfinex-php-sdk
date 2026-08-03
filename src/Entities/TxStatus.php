@@ -9,10 +9,15 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 class TxStatus
 {
     public readonly string $method;
+
     public readonly ?int $depositStatus;
+
     public readonly ?int $withdrawStatus;
+
     public readonly ?int $paymentIdDeposit;
+
     public readonly ?int $paymentIdWithdraw;
+
     public readonly ?int $depositConfirmationsRequired;
 
     /**
@@ -29,4 +34,3 @@ class TxStatus
         $this->depositConfirmationsRequired = GetThis::ifTrueOrFallback(isset($data[11]), fn () => (int) $data[11]);
     }
 }
-

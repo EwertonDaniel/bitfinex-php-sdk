@@ -19,4 +19,3 @@ test('maps derivatives status to DerivativeStatus entities', function () {
         ->and($item->spotPrice)->toBeFloat()
         ->and($item->openInterest)->toBeFloat();
 });
-

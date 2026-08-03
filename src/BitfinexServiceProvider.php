@@ -35,8 +35,8 @@ class BitfinexServiceProvider extends ServiceProvider
         $this->app->singleton('bitfinex', fn ($app) => new Bitfinex);
 
         // Bind transformers to allow customization/mocking
-        $this->app->singleton(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class, fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory());
-        $this->app->singleton(\EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer::class, fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer());
+        $this->app->singleton(\EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory::class, fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory);
+        $this->app->singleton(\EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer::class, fn () => new \EwertonDaniel\Bitfinex\Http\Responses\Configs\ConfigsTransformer);
     }
 
     /**

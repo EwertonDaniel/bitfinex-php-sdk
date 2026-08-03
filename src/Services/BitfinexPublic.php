@@ -103,13 +103,22 @@ class BitfinexPublic
     /**
      * Provides an instance of BitfinexPublicStats.
      *
-     * @param  string  $key  The type of statistic to retrieve (e.g., 'pos.size').
+     * Only two keys take a fourth path segment: `pos.size` (`long` or `short`)
+     * and `credits.size.sym` (a trading pair). Passing one for any other key
+     * builds a path the API answers with a literal null under HTTP 200, which is
+     * how `funding.size`, `credits.size`, `vol.*` and `vwap` used to be
+     * unreachable through this SDK.
+     *
+     * @param  string  $key  The type of statistic to retrieve (e.g., 'pos.size', 'funding.size', 'vwap').
      * @param  string  $size  The interval of the data (e.g., '1m', '1d').
-     * @param  string  $sidePair  The side of the data (e.g., 'long', 'short'), or a pair for credits.
+     * @param  string|null  $sidePair  Fourth segment: 'long'/'short' for `pos.size`, a pair for
+     *                                 `credits.size.sym`, null for everything else.
      * @param  string  $section  Specifies whether to fetch the 'last' or 'hist' data section.
      * @return BitfinexPublicStats The stats service for accessing public statistics data.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-stats
      */
-    final public function stats(string $key, string $size, string $sidePair, string $section): BitfinexPublicStats
+    final public function stats(string $key, string $size, ?string $sidePair = null, string $section = 'hist'): BitfinexPublicStats
     {
         return new BitfinexPublicStats($this->client, $this->url, $key, $size, $sidePair, $section);
     }
@@ -119,7 +128,6 @@ class BitfinexPublic
      *
      * @param  string  $timeframe  Timeframe (e.g., 1m, 5m, 15m, 1h, 1D, 1W).
      * @param  string  $section  'hist' or 'last' (default: 'hist').
-     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicCandles
      *
      * @link https://docs.bitfinex.com/reference/rest-public-candles
      */
@@ -131,7 +139,6 @@ class BitfinexPublic
     /**
      * Provides an instance to fetch public configurations (conf).
      *
-     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicConfigs
      *
      * @link https://docs.bitfinex.com/reference/rest-public-conf
      */
@@ -141,9 +148,10 @@ class BitfinexPublic
     }
 
     /**
-     * Provides an instance to fetch derivatives status (and history via params).
+     * Provides an instance to fetch derivatives status.
      *
-     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
+     * Call `get()` for the current snapshot, or `history($symbol, ...)` for a
+     * time range. The two use different endpoints and different row layouts.
      *
      * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status
      */
@@ -153,15 +161,17 @@ class BitfinexPublic
     }
 
     /**
-     * Provides an instance to fetch derivatives status history (via start/end/limit/sort params).
+     * Provides an instance to fetch derivatives status history.
      *
-     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
+     * Identical to `derivativesStatus()`; kept so existing callers keep working.
+     * The history itself comes from `history($symbol, ...)` on the returned
+     * service, which requires a symbol because the endpoint carries it in the path.
      *
      * @link https://docs.bitfinex.com/reference/rest-public-derivatives-status-history
      */
     final public function derivativesStatusHistory(): \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus
     {
-        return new \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicDerivativesStatus($this->client, $this->url);
+        return $this->derivativesStatus();
     }
 
     /** @throws BitfinexException
@@ -185,7 +195,6 @@ class BitfinexPublic
     /**
      * Provides an instance to fetch funding statistics.
      *
-     * @return \EwertonDaniel\Bitfinex\Services\Public\BitfinexPublicFundingStats
      *
      * @link https://docs.bitfinex.com/reference/rest-public-funding-stats
      */
@@ -229,7 +238,6 @@ class BitfinexPublic
      * Pass the payload according to the Bitfinex docs (e.g., symbol, amount, and other optional fields).
      *
      * @param  array  $payload  JSON body as defined by the API.
-     * @return PublicBitfinexResponse
      *
      * @throws BitfinexException
      *

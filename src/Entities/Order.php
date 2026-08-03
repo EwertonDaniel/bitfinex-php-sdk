@@ -145,4 +145,66 @@ class Order
         $this->routing = GetThis::ifTrueOrFallback(isset($data[28]), fn () => $data[28]);
         $this->meta = GetThis::ifTrueOrFallback(isset($data[31]) && is_array($data[31]), fn () => $data[31], []);
     }
+
+    /**
+     * Whether the order sits in the book, unfilled.
+     *
+     * @link https://docs.bitfinex.com/docs/abbreviations-glossary
+     */
+    final public function isActive(): bool
+    {
+        return $this->normalizedStatus() === 'ACTIVE';
+    }
+
+    /**
+     * Whether any amount was executed, fully or partially.
+     *
+     * The status is a composed string rather than a keyword: an executed order
+     * reads `EXECUTED @ 15000.0(0.001)`, and a partial one can arrive wrapped as
+     * `RSN_BOOK_SLIP was: PARTIALLY FILLED @ xxxx`. Matching on the substring is
+     * what the wire format allows.
+     *
+     * `INSUFFICIENT BALANCE (G1)` counts as filled: the reference is explicit that
+     * the balance was sufficient when the order was placed and that it filled for
+     * the maximum affordable amount. Only the `(U1)` variant leaves nothing.
+     *
+     * @link https://docs.bitfinex.com/docs/abbreviations-glossary
+     */
+    final public function wasFilled(): bool
+    {
+        $status = $this->normalizedStatus();
+
+        return str_contains($status, 'EXECUTED')
+            || str_contains($status, 'PARTIALLY FILLED')
+            || str_starts_with($status, 'INSUFFICIENT BALANCE (G1)')
+            // Dust closed by a market order; the status names ACTIVE as the prior
+            // state, so the substrings above do not catch it.
+            || str_starts_with($status, 'RSN_DUST');
+    }
+
+    /**
+     * Whether the order left nothing behind: not in the book, and nothing filled.
+     *
+     * This is the outcome an accepted-then-rejected order lands on. The exchange
+     * reports it with HTTP 200 and a notification whose STATUS reads `SUCCESS`, so
+     * the notification alone says the submission worked while the order says it
+     * did not: `INSUFFICIENT BALANCE (U1)`, `POSTONLY CANCELED`,
+     * `FILLORKILL CANCELED`, `IOC CANCELED`, the `RSN_POS_*` reduce-only refusals,
+     * `RSN_PAUSE`, and a plain `CANCELED`.
+     *
+     * @link https://docs.bitfinex.com/docs/abbreviations-glossary
+     */
+    final public function wasRejected(): bool
+    {
+        return ! $this->isActive() && ! $this->wasFilled();
+    }
+
+    /**
+     * The status, upper-cased and trimmed, so the checks above do not depend on
+     * the casing the API happened to use.
+     */
+    private function normalizedStatus(): string
+    {
+        return strtoupper(trim((string) $this->status));
+    }
 }

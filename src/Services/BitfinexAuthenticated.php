@@ -11,11 +11,11 @@ use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedAccountAction;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedFunding;
+use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedMerchants;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedOrder;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedPositions;
 use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedWallet;
-use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedFunding;
-use EwertonDaniel\Bitfinex\Services\Authenticated\BitfinexAuthenticatedMerchants;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -52,10 +52,14 @@ class BitfinexAuthenticated
      *
      * @param  UrlBuilder  $url  URL builder for constructing API paths.
      * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
+     * @param  Client|null  $client  Optional HTTP client. The SDK builds its own when
+     *                               omitted; supplying one is what makes the authenticated
+     *                               endpoints testable without touching the exchange, and
+     *                               lets a caller install its own middleware or proxy.
      *
      * @throws BitfinexUrlNotFoundException
      */
-    public function __construct(private readonly UrlBuilder $url, ?BitfinexCredentials $credentials = null)
+    public function __construct(private readonly UrlBuilder $url, ?BitfinexCredentials $credentials = null, ?Client $client = null)
     {
         $this->credentials = GetThis::ifTrueOrFallback(
             boolean: (bool) $credentials,
@@ -66,7 +70,7 @@ class BitfinexAuthenticated
         $this->request = (new RequestBuilder)->setMethod('POST');
         $this->url->setBaseUrl('private');
 
-        $this->client = new Client([
+        $this->client = $client ?? new Client([
             'base_uri' => $this->url->getBaseUrl(),
             'timeout' => BitfinexConfig::float('timeout.authenticated', 'BITFINEX_AUTHENTICATED_TIMEOUT', 30.0),
         ]);
@@ -92,7 +96,10 @@ class BitfinexAuthenticated
             scope: $scope ?? BitfinexConfig::string('token.scope', 'BITFINEX_TOKEN_SCOPE', 'api'),
             ttl: $ttl ?? BitfinexConfig::int('token.ttl', 'BITFINEX_TOKEN_TTL', 120),
             writePermission: $writePermission ?? BitfinexConfig::bool('token.write_permission', 'BITFINEX_TOKEN_WRITE_PERMISSION', false),
-            caps: $caps
+            caps: $caps,
+            // Token generation goes through the same client as every other call,
+            // so a caller that supplied one is not silently bypassed here.
+            client: $this->client
         ))->authenticate();
 
         $this->credentials->setToken($response->content['token']);

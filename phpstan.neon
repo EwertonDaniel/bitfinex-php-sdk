@@ -1,0 +1,37 @@
+# Without a config file at all, PHPStan silently falls back to level 0, which
+# reports almost nothing. That was the state of this repository until 2026-08-03:
+# `composer analyse` ran green while 84 real errors sat at level 2.
+#
+# Larastan is auto-registered by phpstan/extension-installer, so there is no
+# `includes:` line for it here.
+#
+# There is deliberately no baseline. Level 5 is green on its own after four
+# root-cause fixes, and a baseline would let the same classes of error creep
+# back in unnoticed:
+#
+#   - BitfinexRequest::execute() declared the base response type while always
+#     building the subclass          -> 73 errors at level 2
+#   - BitfinexResponse::transformContent() likewise                   -> 81 at level 3
+#   - BitfinexResponse::__construct() typed Guzzle's concrete Response
+#     rather than the PSR-7 interface the client is declared to return -> 18 at level 5
+#   - four match expressions with no default arm, which would have thrown
+#     UnhandledMatchError instead of a BitfinexException               -> 4 at level 5
+#
+# Path to raise: level 6 is +146, almost all "no value type specified in
+# iterable type". Annotating those is worth doing; adding a baseline to skip
+# them is not.
+
+parameters:
+    level: 5
+
+    paths:
+        - src
+
+    # src/ is a library: there is no Laravel application skeleton to boot, so
+    # Larastan must not try to resolve models through a container.
+    noModelMake: true
+
+    # Keep the reported floor honest against composer.json "php": "^8.1".
+    # The `phpVersion: {min, max}` map form needs PHPStan >= 2.0; larastan ^2
+    # pins phpstan ^1.12, which accepts only a single int here.
+    phpVersion: 80100

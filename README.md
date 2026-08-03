@@ -66,6 +66,67 @@ For detailed information on endpoints, methods, and usage guidelines, refer to t
 - All timestamps are in UNIX format, expressed in milliseconds.
 - Trading pair symbols use a `t` prefix (e.g., `tBTCUSD` for Bitcoin to USD).
 
+### One API key per process, or a shared nonce counter
+
+Every authenticated request carries a nonce. Bitfinex scopes it to the API key
+and refuses any request whose nonce is not **strictly greater** than the last one
+that key used, answering `10114` (`ERR_AUTH_NONCE`).
+
+The SDK's default counter is microseconds since epoch, kept in a static property,
+so it only spans one PHP process. Two workers signing with the same key can
+produce the same microsecond, and one of the two requests is refused. Measured
+here with 20 parallel workers issuing 40 requests each: **between 0% and 7.9% of
+requests collided across runs**, which is the awkward kind of bug — intermittent,
+load-dependent, and invisible in a single-worker test.
+
+The official guidance is literal:
+
+> you will need to generate separate API keys for each client
+
+So the first option is one API key per process. If that is not practical — PHP-FPM
+workers, queue consumers, a scheduler running alongside web requests — move the
+counter somewhere they all see:
+
+```php
+use EwertonDaniel\Bitfinex\ValueObjects\BitfinexSignature;
+use EwertonDaniel\Bitfinex\ValueObjects\LockedFileNonceProvider;
+
+// Once, during boot. One file per API key.
+BitfinexSignature::useNonceProvider(
+    new LockedFileNonceProvider('/var/run/bitfinex/nonce-'.$apiKeyId)
+);
+```
+
+`LockedFileNonceProvider` guards the counter with an exclusive `flock` and needs
+no extra dependency, but only covers processes on **one machine**. Across hosts,
+implement `EwertonDaniel\Bitfinex\Contracts\NonceProvider` over something shared:
+
+```php
+use EwertonDaniel\Bitfinex\Contracts\NonceProvider;
+
+final class RedisNonceProvider implements NonceProvider
+{
+    public function __construct(private readonly \Redis $redis, private readonly string $key) {}
+
+    public function next(): int
+    {
+        // Seed once with the current microsecond so an existing key does not rewind:
+        //   SET bitfinex:nonce:<id> <microseconds> NX
+        return (int) $this->redis->incr($this->key);
+    }
+}
+```
+
+Two things to avoid. Do not copy the PHP recipe from the reference
+(`time() * 1000 * 1000`): it is constant within the same second, so two requests
+in one second get the same nonce. And do not let a provider fail silently back to
+an in-process value — that reintroduces the collision it exists to prevent, which
+is why `LockedFileNonceProvider` throws when it cannot write.
+
+The documented ceiling is `9007199254740991`, exposed as `NonceProvider::MAX_NONCE`.
+Microseconds since epoch sit around `1.79e15`, so the sequence has room until
+roughly the year 2255.
+
 ### Legal Disclaimer
 
 Any use of the Bitfinex API is subject to the [API Terms of Service](https://www.bitfinex.com/legal/api). All API keys and interactions are at your own risk and expense. iFinex Inc. is not responsible for any losses or damages resulting from the use of this SDK or the Bitfinex API.

@@ -65,6 +65,8 @@ class BitfinexAuthenticatedOrder
         ?string $cid = null,
         ?string $cidDate = null
     ): BitfinexResponse {
+        $this->request->reset();
+
         $params = ['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate];
         array_walk($params, fn ($value, $key) => $this->request->addBody($key, $value, true));
 
@@ -120,6 +122,8 @@ class BitfinexAuthenticatedOrder
         ?string $tif = null,
         ?array $meta = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $magnitude = ltrim(DecimalToString::convert($amount), '-');
 
         $this->request->setBody([
@@ -155,7 +159,12 @@ class BitfinexAuthenticatedOrder
     /**
      * Update an existing order.
      *
-     * Accepts flexible identifiers: id, gid or cid+cid_date; optional price/amount and price helpers.
+     * `id` is the only field the endpoint requires; everything else is optional.
+     * It used to be nullable and was dropped from the body when null, so a call
+     * that forgot it silently issued an update identifying no order at all.
+     *
+     * @param  int  $id  Identifier of the order to update.
+     * @param  array|null  $meta  Order metadata (aff_code, make_visible, protect_selfmatch).
      *
      * @throws BitfinexPathNotFoundException
      * @throws GuzzleException
@@ -163,7 +172,7 @@ class BitfinexAuthenticatedOrder
      * @link https://docs.bitfinex.com/reference/rest-auth-update-order
      */
     final public function update(
-        ?int $id = null,
+        int $id,
         ?int $gid = null,
         ?int $cid = null,
         ?string $cidDate = null,
@@ -174,8 +183,11 @@ class BitfinexAuthenticatedOrder
         float|string|null $delta = null,
         ?int $leverage = null,
         ?int $flags = null,
-        ?string $tif = null
+        ?string $tif = null,
+        ?array $meta = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = [
             'id' => $id,
             'gid' => $gid,
@@ -189,6 +201,7 @@ class BitfinexAuthenticatedOrder
             'lev' => $leverage,
             'flags' => $flags,
             'tif' => $tif,
+            'meta' => $meta,
         ];
 
         foreach ($params as $key => $value) {
@@ -215,6 +228,8 @@ class BitfinexAuthenticatedOrder
         ?int $cid = null,
         ?string $cidDate = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = ['id' => $id, 'gid' => $gid, 'cid' => $cid, 'cid_date' => $cidDate];
 
         foreach ($params as $key => $value) {
@@ -238,6 +253,8 @@ class BitfinexAuthenticatedOrder
      */
     final public function multi(array $ops): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['ops' => $ops]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_multi_op")->getPath());
@@ -248,6 +265,10 @@ class BitfinexAuthenticatedOrder
     /**
      * Cancel multiple orders by ids.
      *
+     * The endpoint answers with a single status for the whole batch and lists only
+     * the orders it actually cancelled, so the ids are handed to the response
+     * mapper to reconcile: whatever does not come back lands in `missingIds`.
+     *
      * @param  array<int>  $ids
      *
      * @throws BitfinexPathNotFoundException
@@ -257,11 +278,13 @@ class BitfinexAuthenticatedOrder
      */
     final public function cancelMultiple(array $ids): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['id' => $ids]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_order_multi")->getPath());
 
-        return $response->orderCancelMulti();
+        return $response->orderCancelMulti(array_values($ids));
     }
 
     /**
@@ -274,6 +297,8 @@ class BitfinexAuthenticatedOrder
      */
     final public function history(?int $limit = null, ?int $start = null, ?int $end = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $params = compact('start', 'end', 'limit', 'sort');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
@@ -292,6 +317,8 @@ class BitfinexAuthenticatedOrder
      */
     final public function orderTrades(BitfinexType $type, string $pairOrCurrency, int $orderId): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = $type->symbol($pairOrCurrency);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.order_trades", ['symbol' => $symbol, 'id' => $orderId])->getPath());
@@ -317,6 +344,8 @@ class BitfinexAuthenticatedOrder
         ?int $limit = null,
         ?int $sort = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $symbol = GetThis::ifTrueOrFallback($type && $pairOrCurrency, fn () => $type->symbol($pairOrCurrency));
 
         $params = compact('start', 'end', 'limit', 'sort');
@@ -337,17 +366,47 @@ class BitfinexAuthenticatedOrder
     /**
      * Ledgers history for a currency.
      *
+     * The endpoint takes `category`, `start`, `end`, `limit` and `wallet`. It has
+     * no `sort` field, so the parameter that used to sit here had no effect,
+     * while `category` and `wallet` could not be reached at all.
+     *
+     * Passing no currency queries every currency at once, through the variant of
+     * the endpoint that takes no currency segment. Only the `{currency}` form was
+     * mapped before, so an account-wide ledger query was unreachable.
+     *
+     * @param  string|null  $currency  Currency to query (e.g., USD, BTC), or null for all of them.
+     * @param  int|null  $category  Ledger entry category to filter by.
+     * @param  string|null  $wallet  Wallet to filter by: exchange, margin, funding or contribution.
+     * @param  int|null  $start  Records with MTS >= start (ms).
+     * @param  int|null  $end  Records with MTS <= end (ms).
+     * @param  int|null  $limit  Maximum number of records (max 2500).
+     *
      * @throws BitfinexPathNotFoundException
      * @throws GuzzleException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-ledgers
      */
-    final public function ledgers(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
-    {
-        $params = compact('start', 'end', 'limit', 'sort');
+    final public function ledgers(
+        ?string $currency = null,
+        ?int $category = null,
+        ?string $wallet = null,
+        ?int $start = null,
+        ?int $end = null,
+        ?int $limit = null
+    ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
+        $params = compact('category', 'wallet', 'start', 'end', 'limit');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
+
+        $apiPath = GetThis::ifTrueOrFallback(
+            boolean: ! is_null($currency) && trim($currency) !== '',
+            callback: fn () => $this->url->setPath("$this->basePath.ledgers", ['currency' => $currency])->getPath(),
+            fallback: fn () => $this->url->setPath("$this->basePath.ledgers_all")->getPath()
+        );
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
-        $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.ledgers", ['currency' => $currency])->getPath());
+        $response = $request->execute(apiPath: $apiPath);
 
         return $response->ledgers();
     }

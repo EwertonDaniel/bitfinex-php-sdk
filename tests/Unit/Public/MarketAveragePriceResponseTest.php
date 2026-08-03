@@ -13,4 +13,3 @@ test('maps market average price result to entity', function () {
         ->toHaveProperty('result')
         ->and($resp->content['result']->result['avgPrice'])->toBe(35123.45);
 });
-

@@ -11,6 +11,7 @@ namespace EwertonDaniel\Bitfinex\Entities;
 class ConfigEntry
 {
     public readonly string $key;
+
     public readonly mixed $value;
 
     public function __construct(string $key, mixed $value)
@@ -19,4 +20,3 @@ class ConfigEntry
         $this->value = $value;
     }
 }
-

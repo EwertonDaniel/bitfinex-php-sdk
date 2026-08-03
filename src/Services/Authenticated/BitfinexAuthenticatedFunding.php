@@ -6,14 +6,12 @@ use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
-use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 
 class BitfinexAuthenticatedFunding
 {
@@ -30,6 +28,8 @@ class BitfinexAuthenticatedFunding
 
     final public function activeOffers(string $currency): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.active_funding_offers", ['symbol' => $symbol])->getPath());
@@ -39,6 +39,8 @@ class BitfinexAuthenticatedFunding
 
     final public function submitOffer(string $currency, float|string $amount, float|string $rate, int $period, array $options = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $body = array_merge([
             'type' => 'LIMIT',
@@ -57,6 +59,8 @@ class BitfinexAuthenticatedFunding
 
     final public function cancelOffer(int $id): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['id' => $id]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_funding_offer")->getPath());
@@ -73,6 +77,8 @@ class BitfinexAuthenticatedFunding
      */
     final public function cancelAllOffers(?string $currency = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->addBody('currency', GetThis::ifTrueOrFallback($currency, fn () => strtoupper($currency)), true);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.cancel_all_funding_offers")->getPath());
@@ -82,6 +88,8 @@ class BitfinexAuthenticatedFunding
 
     final public function close(int $id): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['id' => $id]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.funding_close")->getPath());
@@ -107,6 +115,8 @@ class BitfinexAuthenticatedFunding
         float|string|null $rate = null,
         ?int $period = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $this->request->setBody(['status' => (int) $status, 'currency' => strtoupper($currency)]);
 
         $optionalParams = [
@@ -137,6 +147,8 @@ class BitfinexAuthenticatedFunding
      */
     final public function keep(string $type, array $ids): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $type = strtolower($type);
 
         if (! in_array($type, ['credit', 'loan'], true)) {
@@ -152,6 +164,8 @@ class BitfinexAuthenticatedFunding
 
     final public function offersHistory(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $params = compact('start', 'end', 'limit', 'sort');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
@@ -163,6 +177,8 @@ class BitfinexAuthenticatedFunding
 
     final public function loans(string $currency): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.funding_loans", ['symbol' => $symbol])->getPath());
@@ -172,6 +188,8 @@ class BitfinexAuthenticatedFunding
 
     final public function loansHistory(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $params = compact('start', 'end', 'limit', 'sort');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
@@ -183,6 +201,8 @@ class BitfinexAuthenticatedFunding
 
     final public function credits(string $currency): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.funding_credits", ['symbol' => $symbol])->getPath());
@@ -192,6 +212,8 @@ class BitfinexAuthenticatedFunding
 
     final public function creditsHistory(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $params = compact('start', 'end', 'limit', 'sort');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
@@ -203,6 +225,8 @@ class BitfinexAuthenticatedFunding
 
     final public function trades(string $currency, ?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::FUNDING->symbol($currency);
         $params = compact('start', 'end', 'limit', 'sort');
         array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
@@ -214,10 +238,11 @@ class BitfinexAuthenticatedFunding
 
     final public function info(string $key): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.funding_info", ['key' => $key])->getPath());
 
         return $response->fundingInfo();
     }
 }
-

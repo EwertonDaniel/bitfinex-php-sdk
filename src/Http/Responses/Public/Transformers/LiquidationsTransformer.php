@@ -10,12 +10,11 @@ use EwertonDaniel\Bitfinex\Http\Responses\Public\Contracts\PublicTransformer;
 /**
  * Normalizes liquidation rows and maps to Liquidation.
  */
-
 class LiquidationsTransformer implements PublicTransformer
 {
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  array  $context  Contextual parameters.
+     * @param  mixed  $content  Decoded response content.
      * @return mixed Returns array{liquidations: list<Liquidation>}.
      */
     public function transform(array $context, mixed $content): mixed
@@ -29,10 +28,13 @@ class LiquidationsTransformer implements PublicTransformer
             }
             if (is_array($row) && count($row) >= 4) {
                 $posRow = ['pos', $row[0], $row[1], null, null, $row[2], $row[3], null, null, null, null, null];
+
                 return new Liquidation($posRow);
             }
+
             return new Liquidation($row);
         };
+
         return ['liquidations' => array_map($normalize, $content)];
     }
 }

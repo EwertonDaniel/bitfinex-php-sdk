@@ -1,7 +1,7 @@
 <?php
 
-use EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Contracts\PublicTransformer;
+use EwertonDaniel\Bitfinex\Http\Responses\Public\TransformerFactory;
 
 test('TransformerFactory resolves transformers by name', function () {
     $factory = app(TransformerFactory::class);

@@ -68,6 +68,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userInfo(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         try {
             $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
             $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.user_info")->getPath());
@@ -90,6 +92,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function summary(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.summary")->getPath());
 
@@ -111,6 +115,8 @@ class BitfinexAuthenticatedAccountAction
         Carbon|string|null $end = null,
         int $limit = 250
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $params = ['start' => DateToTimestamp::convert($start), 'end' => DateToTimestamp::convert($end), 'limit' => $limit];
@@ -134,6 +140,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function keyPermissions(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.key_permissions")->getPath());
 
@@ -155,6 +163,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function changelog(Carbon|string|null $start = null, Carbon|string|null $end = null, int $limit = 250): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $params = ['start' => DateToTimestamp::convert($start), 'end' => DateToTimestamp::convert($end), 'limit' => $limit];
@@ -181,6 +191,8 @@ class BitfinexAuthenticatedAccountAction
         ?string $emailDst = null,
         ?int $userIdDst = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $this->request->setBody([
             'from' => $from->value,
             'to' => $to->value,
@@ -220,6 +232,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function depositAddress(BitfinexWalletType $walletType, string $method, int $opRenew = 0): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['wallet' => $walletType->value, 'method' => $method, 'op_renew' => $opRenew]);
 
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
@@ -246,6 +260,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function depositAddressList(string $method, int $page = 1, int $pageSize = 20): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody([
             'method' => $method,
             'page' => $page,
@@ -276,6 +292,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function generateInvoice(BitfinexWalletType $walletType, string $currency, float|string $amount, array $options = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $body = array_merge([
             'wallet' => $walletType->value,
             'currency' => $currency,
@@ -294,25 +312,31 @@ class BitfinexAuthenticatedAccountAction
     /**
      * Processes a withdrawal request.
      *
+     * The endpoint takes no `currency` field: the currency is implied by
+     * `method` (`bitcoin`, `tetheruse`, `ethereum`, …), so the parameter that
+     * used to sit here was sending a field the API does not define.
+     *
      * @param  BitfinexWalletType  $walletType  Wallet type (exchange/margin/funding).
-     * @param  string  $method  Withdrawal method (e.g., crypto network name, 'wire').
-     * @param  string  $currency  Currency code.
-     * @param  float  $amount  Amount to withdraw.
-     * @param  array  $options  Additional method-specific options (e.g., address, payment_id, bank fields).
+     * @param  string  $method  Withdrawal method, lowercase (e.g., 'bitcoin', 'tetheruse', 'wire').
+     * @param  float|string  $amount  Amount to withdraw.
+     * @param  array  $options  Additional method-specific options (address, payment_id, fee_deduct, bank fields).
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-withdraw
      */
-    final public function withdrawal(BitfinexWalletType $walletType, string $method, string $currency, float|string $amount, array $options = []): AuthenticatedBitfinexResponse
+    final public function withdrawal(BitfinexWalletType $walletType, string $method, float|string $amount, array $options = []): AuthenticatedBitfinexResponse
     {
-        $body = array_merge([
+        $this->request->reset();
+
+        // The caller's options come first so a converted amount cannot be
+        // silently replaced by a raw float carrying scientific notation.
+        $body = array_merge($options, [
             'wallet' => $walletType->value,
             'method' => $method,
-            'currency' => $currency,
             'amount' => DecimalToString::convert($amount),
-        ], $options);
+        ]);
 
         $this->request->setBody($body);
 
@@ -339,8 +363,9 @@ class BitfinexAuthenticatedAccountAction
         Carbon|string|null $start = null,
         Carbon|string|null $end = null,
         ?int $limit = null
-    ): AuthenticatedBitfinexResponse
-    {
+    ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = [
             'start' => DateToTimestamp::convert($start),
             'end' => DateToTimestamp::convert($end),
@@ -378,6 +403,8 @@ class BitfinexAuthenticatedAccountAction
         Carbon|string|null $end = null,
         ?int $limit = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = [
             'start' => DateToTimestamp::convert($start),
             'end' => DateToTimestamp::convert($end),
@@ -415,6 +442,8 @@ class BitfinexAuthenticatedAccountAction
         Carbon|string|null $end = null,
         ?int $limit = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = [
             'start' => DateToTimestamp::convert($start),
             'end' => DateToTimestamp::convert($end),
@@ -445,6 +474,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function movementInfo(string|int $id): BitfinexResponse
     {
+        $this->request->reset();
+
         $request = (new BitfinexRequest($this->request->setBody(['id' => $id]), $this->credentials, $this->client));
 
         $apiPath = $this->url->setPath("$this->basePath.movement_info")->getPath();
@@ -467,6 +498,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function alertList(string $type): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request->addBody('type', $type), $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.alert_list")->getPath());
 
@@ -489,6 +522,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function alertSet(string $pair, float|string $price, string $type = 'price', int $count = 100): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody([
             'type' => $type,
             'symbol' => BitfinexType::TRADING->symbol($pair),
@@ -508,7 +543,7 @@ class BitfinexAuthenticatedAccountAction
      * trading pair pair. The alert is identified by the ṕair and target price.
      *
      * @param  string  $pair  The trading pair (e.g., BTCUSD).
-     * @param  int  $price  The target price of the alert to be deleted.
+     * @param  float|string  $price  The target price of the alert to be deleted.
      * @return AuthenticatedBitfinexResponse The response confirming the alert deletion.
      *
      * @throws GuzzleException If an HTTP request error occurs.
@@ -518,6 +553,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function alertDelete(string $pair, float|string $price): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(
             apiPath: $this->url->setPath("$this->basePath.alert_delete", [
@@ -557,6 +594,8 @@ class BitfinexAuthenticatedAccountAction
         ?string $rate = null,
         ?string $lev = null
     ): AuthenticatedBitfinexResponse {
+        $this->request->reset();
+
         $params = [
             'dir' => $action->dir(),
             'symbol' => $type->symbol($pairOrCurrency),
@@ -576,7 +615,6 @@ class BitfinexAuthenticatedAccountAction
      * Writes user settings.
      *
      * @param  array<string, mixed>  $settings  Key-value pairs of settings to write, keyed by setting name (e.g. `api:my_setting`).
-     * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
@@ -585,6 +623,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userSettingsWrite(array $settings): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['settings' => $settings]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_write")->getPath());
@@ -596,7 +636,6 @@ class BitfinexAuthenticatedAccountAction
      * Reads user settings.
      *
      * @param  array<string>  $keys  Setting names to read (e.g. `api:my_setting`).
-     * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
@@ -605,6 +644,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userSettingsRead(array $keys): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['keys' => array_values($keys)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_read")->getPath());
@@ -616,7 +657,6 @@ class BitfinexAuthenticatedAccountAction
      * Deletes user settings.
      *
      * @param  array<string>  $keys  Setting names to delete.
-     * @return AuthenticatedBitfinexResponse
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
@@ -625,6 +665,8 @@ class BitfinexAuthenticatedAccountAction
      */
     final public function userSettingsDelete(array $keys): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody(['keys' => array_values($keys)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute($this->url->setPath("$this->basePath.user_settings_delete")->getPath());

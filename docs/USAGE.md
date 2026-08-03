@@ -31,7 +31,7 @@ composer require ewertondaniel/bitfinex-php-sdk
   - [Market Average Price](#market-average-price-calc)
   - [Foreign Exchange Rate](#foreign-exchange-rate)
 - Authenticated
-  - [Initialize](#authenticated-api-endpoints)
+  - [Initialize](#initialize)
   - [Wallets](#wallets)
   - [Orders](#orders)
   - [Positions](#positions)
@@ -130,31 +130,59 @@ $resp->content['tickers']; // list<FundingCurrency>
 
 Retrieve the history of tickers for specific pairs. It provides historical data of the best bid and ask prices at hourly intervals, up to one year.
 
+The history call lives on `ticker()`, not directly on `public()`: `ticker()->history(...)`, not `tickerHistory(...)`.
+
 ```php
 use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 
-$symbols = ['tBTCUSD', 'tETHUSD']; // Specify the trading pairs
-$limit = 100; // Optional: Limit the number of results
-$start = int; // min -9223372036854776000 max 9223372036854776000 | If start is given, only records with MTS >= start (milliseconds) will be given as response.
-$end = int; // min -9223372036854776000 max 9223372036854776000 |  If end is given, only records with MTS <= end (milliseconds) will be given as response.
+// Pairs without the 't' prefix; it is added automatically.
+$response = Bitfinex::public()->ticker()->history(['BTCUSD', 'ETHUSD'], limit: 100);
 
-$response = Bitfinex::public()->tickerHistory($symbols, $limit, $start, $end);
+$response->content; // array<string, list<TickerHistory>> keyed by pair, e.g. 'BTCUSD' => [...]
+```
 
-$response->content; // Displays the historical data for the specified pairs
+`start` and `end` (milliseconds, or a Carbon-parsable string) restrict the window; the endpoint only keeps up to one year of history, so a window older than that returns an empty array for the affected pairs:
+
+```php
+$response = Bitfinex::public()->ticker()->history(
+    pairs: ['BTCUSD', 'ETHUSD'],
+    limit: 100,
+    start: '2026-07-01',
+    end: '2026-08-01'
+);
 ```
 
 ### Book
 
+`book()` defaults to precision `P0` (aggregated price levels). Pass `BookPrecision::R0` for the raw, per-order book; its rows carry an order/offer id instead of an aggregate count and map to a different pair of entities.
+
 ```php
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
 $book = Bitfinex::public()->book();
 
-// Trading order book
+// Trading order book (aggregated, P0)
 $resp = $book->byPair('BTCUSD');
 $resp->content['books']; // list<BookTrading>
 
-// Funding order book
+// Funding order book (aggregated, P0)
 $resp = $book->byCurrency('USD');
 $resp->content['books']; // list<BookFunding>
+```
+
+```php
+use EwertonDaniel\Bitfinex\Enums\BookPrecision;
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+$rawBook = Bitfinex::public()->book(BookPrecision::R0);
+
+// Trading order book (raw, one row per order)
+$resp = $rawBook->byPair('BTCUSD');
+$resp->content['books']; // list<BookTradingRaw>
+
+// Funding order book (raw, one row per offer)
+$resp = $rawBook->byCurrency('USD');
+$resp->content['books']; // list<BookFundingRaw>
 ```
 
 ### Trades
@@ -184,20 +212,30 @@ use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 
 // Example: long position size for BTCUSD, 1-minute intervals, historical series
 $stats = Bitfinex::public()->stats(
-    key: 'pos.size',    // e.g., 'pos.size', 'credits.size'
+    key: 'pos.size',    // e.g., 'pos.size', 'funding.size', 'credits.size', 'vwap'
     size: '1m',         // interval: '1m', '5m', '1h', '1d', ...
-    sidePair: 'long',   // side or pair depending on key
+    sidePair: 'long',   // fourth path segment — see below
     section: 'hist'     // 'last' or 'hist'
 );
 
 $resp = $stats->byPair('BTCUSD', sort: -1, start: '2024-01-01', limit: 100);
 $resp->content['stats']; // array<Stat>
 
-// Funding currency example (e.g., credits size for USD)
-$stats = Bitfinex::public()->stats('credits.size', '1h', 'tBTCUSD', 'hist');
-$resp = $stats->byCurrency('USD', limit: 50);
-$resp->content['stats']; // array<Stat>
+// Most keys take no fourth segment: omit sidePair entirely.
+Bitfinex::public()->stats('funding.size', '1m')->byCurrency('USD', limit: 50);
+Bitfinex::public()->stats('credits.size', '1m')->byCurrency('USD', limit: 50);
+Bitfinex::public()->stats('vwap', '1d')->byPair('BTCUSD', limit: 50);
+Bitfinex::public()->stats('vol.1d', '30m')->byPair('BFX', limit: 50);
+
+// Only these two take one:
+Bitfinex::public()->stats('pos.size', '1m', 'long')->byPair('BTCUSD', limit: 50);
+Bitfinex::public()->stats('credits.size.sym', '1m', 'tBTCUSD')->byCurrency('USD', limit: 50);
 ```
+
+`sidePair` is the fourth path segment, and only `pos.size` (`long`/`short`) and
+`credits.size.sym` (a trading pair) accept one. Supplying it for any other key
+builds `funding.size:1m:fUSD:` — note the trailing colon — which the API answers
+with a literal `null` under HTTP 200. That is why it defaults to null.
 
 ### Foreign Exchange Rate
 
@@ -219,7 +257,17 @@ use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 // 1-minute candles for BTCUSD (hist)
 $candles = Bitfinex::public()->candles('1m')->byPair('BTCUSD', start: '2024-01-01', limit: 100, sort: -1);
 $candles->content['candles']; // array<Candle>
+
+// Funding candles need a period on the symbol. The default aggregates the
+// 2-to-30-day range, which is what the funding chart on the website shows.
+$candles = Bitfinex::public()->candles('1m')->byCurrency('USD', limit: 100);
+
+// A single period instead of an aggregate:
+$candles = Bitfinex::public()->candles('1m')->byCurrency('USD', period: 'p30', limit: 100);
 ```
+
+Without a period, `trade:1m:fUSD` answers HTTP 200 with a literal `null`, so
+`byCurrency()` returned nothing at all before the period was added.
 
 ### Configs (Conf)
 
@@ -264,19 +312,31 @@ Notes:
 
 ### Derivatives Status & History
 
+`get()` is a snapshot only: it does not accept `start`, `end`, `limit` or `sort`, and defaults `keys` to `ALL` when omitted. Historical data comes from `history($symbol, ...)`, which requires a single symbol because the endpoint carries it in the path and returns a different row layout (`DerivativeStatusHistory`, no leading `KEY` field).
+
 ```php
-// Current snapshot
-$ds = Bitfinex::public()->derivativesStatus()->get(['tBTCF0:USD']);
+use EwertonDaniel\Bitfinex\Facades\Bitfinex;
+
+// Current snapshot for one or more symbols
+$ds = Bitfinex::public()->derivativesStatus()->get(['tBTCF0:USTF0']);
 $ds->content['items']; // array<DerivativeStatus>
 
-// History window (use derivativesStatusHistory entry)
-$dsHist = Bitfinex::public()->derivativesStatusHistory()->get('tBTCF0:USD', start: 1700000000000, end: 1700100000000, limit: 100, sort: -1);
-$dsHist->content['items'];
+// History window for a single symbol
+$dsHist = Bitfinex::public()->derivativesStatus()->history(
+    symbol: 'tBTCF0:USTF0',
+    start: 1700000000000,
+    end: 1700100000000,
+    limit: 100,
+    sort: -1
+);
+$dsHist->content['items']; // array<DerivativeStatusHistory>
 ```
 
+`derivativesStatusHistory()` is an alias for `derivativesStatus()`; both return the same service, so `history()` is reached the same way from either.
+
 Notes:
-- `keys`: list of derivative symbols (e.g., `tBTCF0:USD`).
-- History is controlled via `start`, `end`, `limit`, `sort`.
+- `keys`: list of derivative symbols (e.g., `tBTCF0:USTF0`). Only symbols listed by `pub:list:pair:futures` are valid.
+- The history window is controlled via `start`, `end`, `limit`, `sort`; there is no `keys` filter since the symbol is already fixed in the path.
 
 
 
@@ -307,20 +367,50 @@ Notes:
 ```php
 // Example: key/timeframe depend on Bitfinex docs
 $rank = Bitfinex::public()->leaderboards('pnl', '1D')->byPair('BTCUSD', limit: 50, sort: -1);
-$rank->content['items']; // array<LeaderboardEntry>
+
+foreach ($rank->content['items'] as $entry) { // list<LeaderboardEntry>
+    $entry->ranking;  // 1 is first
+    $entry->username;
+    $entry->value;    // what it measures depends on `key`
+    $entry->mts;      // Carbon
+}
 ```
 
 Notes:
 - `key`: ranking metric (consult Bitfinex docs; e.g., `pnl`, `vol`).
 - `timeframe`: period (e.g., `1D`, `7D`).
 - `section`: `hist` (history) or `last` (latest), default `hist`.
+- The reference documents 10 fields but the API returns **13**. Only the four
+  confirmed on the wire get accessors; `$entry->raw` holds the untouched row, so
+  the undocumented tail stays reachable. `twitterHandle` is documented as a
+  string and comes back null on every row checked.
+- `byCurrency('USD')` asks for the global board, `tGLOBAL:USD`. Rankings are not
+  a funding endpoint: a funding symbol answers HTTP 200 with an empty array.
+
+```php
+// Every pair quoted in USD, not a funding board
+$rank = Bitfinex::public()->leaderboards('vol', '1M')->byCurrency('USD', limit: 10);
+```
 
 ### Funding Statistics
 
 ```php
 $stats = Bitfinex::public()->fundingStats()->byCurrency('USD', start: '2024-01-01', limit: 100, sort: -1);
-$stats->content['items']; // array<FundingStat>
+
+foreach ($stats->content['items'] as $stat) { // list<FundingStat>
+    $stat->frr;           // as sent: one 365th of the daily rate
+    $stat->dailyRate();   // frr * 365
+    $stat->annualRate();  // frr * 365 * 365, no compounding
+    $stat->averagePeriod;
+    $stat->fundingAmount;
+    $stat->fundingAmountUsed;
+    $stat->fundingBelowThreshold;
+}
 ```
+
+The FRR arrives divided by 365. Reading `$stat->frr` as a daily rate understates
+it by that factor, which is why the scaling is a method rather than something you
+are expected to remember.
 
 Notes:
 - Currency is a funding code (e.g., `USD`, `BTC`), not prefixed.
@@ -336,9 +426,11 @@ $map->content['result']; // MarketAveragePriceResult
 
 ## Authenticated Endpoints
 
-Below are common authenticated flows relevant to deposits/withdrawals. Set credentials via env (`BITFINEX_API_KEY`, `BITFINEX_API_SECRET`) or pass them explicitly.
+Authenticated endpoints require valid API credentials and cover wallets, orders, positions, funding, account actions and Bitfinex Pay merchants. Set credentials via env (`BITFINEX_API_KEY`, `BITFINEX_API_SECRET`) or pass them explicitly, as shown in [Initialize](#initialize). Every example below assumes `$auth` was built that way.
 
-### Credentials (Laravel Facade)
+Writes (submitting or cancelling orders, withdrawals, transfers, funding offers) move real funds or account state and are shown here but never executed as part of this guide; verify request shape against a local capture server first.
+
+### Initialize
 
 ```php
 use EwertonDaniel\Bitfinex\Facades\Bitfinex;
@@ -346,8 +438,6 @@ use EwertonDaniel\Bitfinex\Facades\Bitfinex;
 // Uses credentials from config/env
 $auth = Bitfinex::authenticated();
 ```
-
-### Credentials (Vanilla PHP)
 
 ```php
 use EwertonDaniel\Bitfinex\Bitfinex;
@@ -357,135 +447,14 @@ $bf = new Bitfinex();
 $auth = $bf->authenticated(new BitfinexCredentials('API_KEY', 'API_SECRET'));
 ```
 
-### Deposit Address and List
+Some endpoints (e.g. Bitfinex Pay) additionally require a session token:
 
 ```php
-use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
-
-// Single deposit address
-$addr = $auth->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'crypto');
-$addr->content['address'];
-
-// Paginated list of addresses (e.g., method: 'crypto')
-$list = $auth->accountAction()->depositAddressList('crypto', page: 1, pageSize: 20);
-$list->content['addresses']['items'];
-```
-
-### Movements (Deposits and Withdrawals)
-
-You can fetch movements by currency with optional filters `start`, `end` (timestamps or Carbon strings) and `limit`.
-
-```php
-// All movements for BTC (mixed deposits/withdrawals)
-$all = $auth->accountAction()->movements('BTC', start: '2024-01-01', end: '2024-12-31', limit: 200);
-$all->content['movements']; // array<Movement>
-
-// Only deposits (amount > 0)
-$deposits = $auth->accountAction()->depositHistory('BTC', limit: 100);
-$deposits->content['deposits']; // array<Movement>
-
-// Only withdrawals (amount < 0)
-$withdrawals = $auth->accountAction()->withdrawalHistory('BTC', limit: 100);
-$withdrawals->content['withdrawals']; // array<Movement>
-```
-
-### Movement Details
-
-```php
-$info = $auth->accountAction()->movementInfo(1234567890);
-$info->content['movement']; // Movement
-```
-
-### Positions (Authenticated)
-
-```php
-use EwertonDaniel\Bitfinex\Facades\Bitfinex;
-
-$auth = Bitfinex::authenticated();
-
-// Margin info (e.g., 'base' or specific key)
-$margin = $auth->positions()->marginInfo('base');
-$margin->content['margin'];
-
-// Open positions
-$open = $auth->positions()->retrieve();
-$open->content['positions']; // array<Position>
-
-// Claim or increase position
-$claim = $auth->positions()->claim('BTCUSD', 0.1);
-$inc   = $auth->positions()->increase('BTCUSD', 0.05, price: 35000);
-
-// Increase info (what-if)
-$info = $auth->positions()->increaseInfo('BTCUSD', 0.05);
-$info->content['info'];
-
-// History / Snapshot / Audit
-$hist = $auth->positions()->history(start: 1700000000000, end: 1700100000000, limit: 50, sort: -1);
-$snap = $auth->positions()->snapshot();
-$audit = $auth->positions()->audit();
-
-// Derivative collateral
-$setColl = $auth->positions()->setDerivativeCollateral('BTCUSD', 100.0);
-$limits = $auth->positions()->derivativeCollateralLimits('BTCUSD');
-```
-
-
-### Funding (Authenticated)
-
-```php
-use EwertonDaniel\Bitfinex\Facades\Bitfinex;
-
-$auth = Bitfinex::authenticated();
-
-// Active offers
-$offers = $auth->funding()->activeOffers('USD');
-$offers->content['offers']; // array<FundingOffer>
-
-// Submit / cancel offers
-$submit = $auth->funding()->submitOffer('USD', amount: 100.0, rate: 0.0002, period: 2);
-$cancel = $auth->funding()->cancelOffer(id: 123456);
-$cancelAll = $auth->funding()->cancelAllOffers('USD');
-
-// Close loan/credit, auto-renew, keep
-$close = $auth->funding()->close(id: 123456);
-$auto = $auth->funding()->autoRenew(id: 123456, enabled: true);
-$keep = $auth->funding()->keep(id: 123456);
-
-// Loans / Credits / Trades
-$loans = $auth->funding()->loans('USD');
-$credits = $auth->funding()->credits('USD');
-$trades = $auth->funding()->trades('USD', limit: 50, sort: -1);
-
-// History and info
-$offersHist = $auth->funding()->offersHistory('USD', limit: 50);
-$loansHist = $auth->funding()->loansHistory('USD', limit: 50);
-$creditsHist = $auth->funding()->creditsHistory('USD', limit: 50);
-$info = $auth->funding()->info('funding.size');
-```
-
-
-## Authenticated API Endpoints
-
-Below are concise examples for common authenticated flows. In Laravel, set `BITFINEX_API_KEY` and `BITFINEX_API_SECRET` in `.env`.
-
-### Initialize (Laravel Facade)
-```php
-use EwertonDaniel\Bitfinex\Facades\Bitfinex;
-
-// Uses credentials from config/env
 $auth = Bitfinex::authenticated()->generateToken();
 ```
 
-### Initialize (Vanilla PHP)
-```php
-use EwertonDaniel\Bitfinex\Bitfinex;
-use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
-
-$bf = new Bitfinex();
-$auth = $bf->authenticated(new BitfinexCredentials('API_KEY', 'API_SECRET'))->generateToken();
-```
-
 ### Wallets
+
 ```php
 $resp = $auth->wallets()->get();
 $resp->content['wallets']; // list<Wallet>
@@ -493,85 +462,43 @@ $resp->content['wallets']; // list<Wallet>
 
 ### Orders
 
-### Orders (retrieve)
 ```php
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 
-// All symbols
+// Retrieve: all symbols, or filtered by trading pair
 $resp = $auth->orders()->retrieve();
 $resp->content['orders']; // list<Order>
 
-// By trading pair
 $resp = $auth->orders()->retrieve('XMRUSD');
 $resp->content['orders'];
-```
 
-### Orders (history & trades)
-```php
-// Orders history
+// History
 $resp = $auth->orders()->history(limit: 50);
 $resp->content['orders'];
 
 // Trades for a given symbol (history)
 $resp = $auth->orders()->tradesHistory(BitfinexType::TRADING, 'XMRUSD', limit: 50, sort: -1);
 $resp->content['trades'];
+
+// Ledgers for a currency; `category` and `wallet` are optional filters, there is no `sort`
+$resp = $auth->orders()->ledgers(currency: 'USD', limit: 50);
+$resp->content['ledgers']; // list<LedgerEntry>
+
+// Omit the currency for every currency at once
+$resp = $auth->orders()->ledgers(limit: 50);
 ```
 
-### Positions
-```php
-// Open positions
-$resp = $auth->positions()->retrieve();
-$resp->content['positions']; // list<Position>
+Every write endpoint answers with a notification envelope. Its `STATUS` field is
+what says whether the operation actually happened, and it can read `ERROR` under
+an HTTP 200, so a refusal arrives as a `BitfinexNotificationException` rather than
+as a response you have to inspect. The envelope itself is always available under
+`content['notification']`.
 
-// Margin info
-$resp = $auth->positions()->marginInfo('base');
-$resp->content['margin'];
-```
-
-### Funding
-```php
-// Active funding offers for USD
-$resp = $auth->funding()->activeOffers('USD');
-$resp->content['offers'];
-```
-
-### Account Actions
-```php
-use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
-
-// User info
-$resp = $auth->accountAction()->userInfo();
-$resp->content['user'];
-
-// Deposit address
-$resp = $auth->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'monero');
-$resp->content['address'];
-
-// Movements
-$resp = $auth->accountAction()->movements('USD', limit: 50);
-$resp->content['movements'];
-
-// Alerts
-$resp = $auth->accountAction()->alertSet('XMRUSD', 250);   // create
-$resp = $auth->accountAction()->alertDelete('XMRUSD', 250); // delete
-```
-
-### Merchants (Bitfinex Pay)
-```php
-$resp = $auth->merchants()->submitInvoice([
-  'wallet'   => 'exchange',
-  'currency' => 'USD',
-  'amount'   => '10.00',
-  'label'    => 'Order #123',
-]);
-$resp->content['invoice'];
-```
-
-
-### Orders (submit/update/cancel)
 ```php
 use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
 use EwertonDaniel\Bitfinex\Enums\OrderType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexBatchException;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 
 // Submit
 $resp = $auth->orders()->submit(
@@ -581,94 +508,240 @@ $resp = $auth->orders()->submit(
   amount: 0.01,
   price: 140
 );
-$resp->content['order'];
+$resp->content['order'];        // Order|null, the first entry of DATA
+$resp->content['orders'];       // list<Order>, the full DATA list
+$resp->content['notification']; // Notification: type, status, text, mts
 
-// Update
-$resp = $auth->orders()->update(id: 123456, price: 145);
+// Update: `id` is required; `meta` is optional order metadata (aff_code, make_visible, protect_selfmatch)
+$resp = $auth->orders()->update(id: 123456, price: 145, meta: ['aff_code' => 'partnerXYZ']);
+$resp->content['order']; // Order|null
 
 // Cancel
 $resp = $auth->orders()->cancel(id: 123456);
+$resp->content['order']; // Order|null
 
-// Multi operations
+// A refusal carries the exchange's own words, and DATA survives on the exception:
+// on a refused cancel it holds the order as it currently stands.
+try {
+    $auth->orders()->cancel(id: 123456);
+} catch (BitfinexNotificationException $e) {
+    $e->getMessage();             // "The Bitfinex API answered oc-req with status ERROR: Order not found."
+    $e->notification->status;     // 'ERROR'
+    $e->notification->data;       // raw DATA, or null when the API sent none
+}
+```
+
+A submission can be **accepted and still leave no order**. Insufficient balance
+takes two routes: an HTTP 500 with an error envelope, and an HTTP 200 whose
+notification reads `SUCCESS` while the order's own `ORDER_STATUS` reads
+`INSUFFICIENT BALANCE (U1)`. Same outcome, so both raise.
+
+```php
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexOrderRejectedException;
+
+try {
+    $auth->orders()->submit(
+      type: OrderType::EXCHANGE_LIMIT, action: BitfinexAction::BUY,
+      pair: 'XMRUSD', amount: 0.01, price: 140
+    );
+} catch (BitfinexOrderRejectedException $e) {
+    $e->rejected;     // list<Order> — INSUFFICIENT BALANCE (U1), POSTONLY CANCELED, …
+    $e->accepted();   // list<Order> — anything that did survive
+}
+```
+
+`INSUFFICIENT BALANCE (G1)` does **not** raise: the reference is explicit that it
+filled for the maximum affordable amount, so the caller is holding something. The
+same goes for `PARTIALLY FILLED` and `RSN_BOOK_SLIP`. To classify a status
+yourself, without matching strings:
+
+```php
+$order->isActive();    // sitting in the book, unfilled
+$order->wasFilled();   // executed, fully or partially
+$order->wasRejected(); // not in the book, nothing filled
+```
+
+```php
+// Multi operations: each sub-operation carries its own status, and the outer one
+// can read SUCCESS while an inner one failed. A partial failure raises, with both
+// lists attached, because the accepted operations are live on the exchange.
 $ops = [
   ['type' => 'LIMIT', 'symbol' => 'tXMRUSD', 'price' => '140', 'amount' => '0.01'],
   ['id' => 123456, 'type' => 'CANCEL'],
 ];
-$resp = $auth->orders()->multi($ops);
 
-// Cancel multiple
+try {
+    $resp = $auth->orders()->multi($ops);
+    $resp->content['operations']; // list<Notification>, one per sub-operation
+} catch (BitfinexBatchException $e) {
+    $e->failures;    // list<Notification>, the rejected ones
+    $e->succeeded(); // list<Notification>, the accepted ones — not rolled back
+}
+
+// Cancel multiple: the endpoint reports one status for the whole batch and lists
+// only the orders it cancelled, so the ids are reconciled for you. An id in
+// `missingIds` was not cancelled: already filled, already cancelled, or unknown.
 $resp = $auth->orders()->cancelMultiple([111, 222, 333]);
+$resp->content['orders'];       // list<Order>, the ones actually cancelled
+$resp->content['cancelledIds']; // [111, 222]
+$resp->content['missingIds'];   // [333]
 ```
 
+### Positions
 
-### Positions (claim/increase)
 ```php
-// Claim
-$resp = $auth->positions()->claim('XMRUSD', amount: 0.01);
+// Margin info (e.g., 'base' or a specific key)
+$resp = $auth->positions()->marginInfo('base');
+$resp->content['margin'];
 
-// Increase
-$resp = $auth->positions()->increase('XMRUSD', amount: 0.01, price: 150);
+// Open positions
+$resp = $auth->positions()->retrieve();
+$resp->content['positions']; // list<Position>
+
+// Claim: `id` is the position ID from retrieve(); amount is optional (partial claim)
+$resp = $auth->positions()->claim(id: 123456);
+
+// Increase: the endpoint accepts only symbol and amount, there is no price
+$resp = $auth->positions()->increase('XMRUSD', 0.01);
 
 // Increase info (what-if)
-$resp = $auth->positions()->increaseInfo('XMRUSD', amount: 0.01);
+$resp = $auth->positions()->increaseInfo('XMRUSD', 0.01);
+$resp->content['info'];
+
+// History: `id` restricts the result to a single position, there is no `sort`
+$resp = $auth->positions()->history(start: 1700000000000, end: 1700100000000, limit: 50);
+
+// Snapshot / Audit
+$resp = $auth->positions()->snapshot();
+$resp = $auth->positions()->audit();
+
+// Derivative collateral
+$resp = $auth->positions()->setDerivativeCollateral('BTCUSD', 100.0);
+$resp = $auth->positions()->derivativeCollateralLimits('BTCUSD');
 ```
 
+### Funding
 
-### Funding (offers/loans/credits/trades)
 ```php
-// Submit offer
-$resp = $auth->funding()->submitOffer('USD', amount: 100.0, rate: 0.0002, period: 2);
+// Active offers
+$resp = $auth->funding()->activeOffers('USD');
 
-// Cancel / Cancel all
+foreach ($resp->content['offers'] as $offer) { // list<FundingOffer>
+    $offer->symbol;   // 'fUSD'
+    $offer->currency; // 'USD', prefix stripped
+    $offer->amount;
+    $offer->rate;     // per period; for an FRR offer this is the delta
+    $offer->period;   // days
+    $offer->status;   // ACTIVE, EXECUTED, PARTIALLY FILLED, CANCELED
+}
+
+// Submit / cancel offers
+$resp = $auth->funding()->submitOffer('USD', amount: 100.0, rate: 0.0002, period: 2);
 $resp = $auth->funding()->cancelOffer(id: 123456);
 $resp = $auth->funding()->cancelAllOffers('USD');
 
-// Close loan/credit, auto-renew, keep
+// Close a loan/credit
 $resp = $auth->funding()->close(id: 123456);
-$resp = $auth->funding()->autoRenew(id: 123456, enabled: true);
-$resp = $auth->funding()->keep(id: 123456);
 
-// History
+// Toggle auto-renew for a currency
+$resp = $auth->funding()->autoRenew(currency: 'USD', status: true);
+
+// Keep a credit or loan from being returned automatically when the position closes
+$resp = $auth->funding()->keep(type: 'credit', ids: [123456]);
+
+// Loans / Credits / Trades
+$resp = $auth->funding()->loans('USD');
+$resp->content['loans']; // list<FundingLoan>
+
+// A credit is a loan that is financing a position: same layout, plus one field.
+$resp = $auth->funding()->credits('USD');
+foreach ($resp->content['credits'] as $credit) { // list<FundingCredit>
+    $credit->positionPair; // 'tBTCUST' — the field a FundingLoan does not have
+    $credit->rateType;     // FIXED, or VAR for the Flash Return Rate
+    $credit->openedAt;
+    $credit->lastPayoutAt;
+}
+
+$resp = $auth->funding()->trades('USD', limit: 50, sort: -1);
+$resp->content['trades']; // list<FundingTrade>: offerId, amount, rate, period
+
+// History and info
 $resp = $auth->funding()->offersHistory('USD', limit: 50);
 $resp = $auth->funding()->loansHistory('USD', limit: 50);
 $resp = $auth->funding()->creditsHistory('USD', limit: 50);
-$resp = $auth->funding()->trades('USD', limit: 50);
-
-// Info
 $resp = $auth->funding()->info('funding.size');
 ```
 
+### Account Actions
 
-### Account Actions (settings, alerts, movements)
 ```php
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
 
-// Settings
-$resp = $auth->accountAction()->userSettingsWrite(['key' => 'value']);
-$resp = $auth->accountAction()->userSettingsRead();
-$resp = $auth->accountAction()->userSettingsDelete(['key']);
+// User info
+$resp = $auth->accountAction()->userInfo();
+$resp->content['user'];
+
+// Deposit address: single, or a paginated list for a method
+$resp = $auth->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'crypto');
+$resp->content['address'];
+
+$resp = $auth->accountAction()->depositAddressList('crypto', page: 1, pageSize: 20);
+$resp->content['addresses']['items'];
+
+// Movements: mixed, deposits only, withdrawals only
+$resp = $auth->accountAction()->movements('BTC', start: '2024-01-01', end: '2024-12-31', limit: 200);
+$resp->content['movements']; // array<Movement>
+
+$resp = $auth->accountAction()->depositHistory('BTC', limit: 100);
+$resp->content['deposits']; // array<Movement>
+
+$resp = $auth->accountAction()->withdrawalHistory('BTC', limit: 100);
+$resp->content['withdrawals']; // array<Movement>
+
+$resp = $auth->accountAction()->movementInfo(1234567890);
+$resp->content['movement']; // Movement
+
+// Withdrawal: the currency is implied by `method` (e.g. 'tetheruse'), not a separate argument
+$resp = $auth->accountAction()->withdrawal(
+  walletType: BitfinexWalletType::EXCHANGE,
+  method: 'tetheruse',
+  amount: 50.0,
+  options: ['address' => '0x0000000000000000000000000000000000dEaD']
+);
+$resp->content['withdrawal'];
+
+// Transfer between wallets. A refused transfer raises BitfinexNotificationException
+// rather than returning a response whose `status` reads 'ERROR'.
+$resp = $auth->accountAction()->transferBetweenWallets(
+  from: BitfinexWalletType::EXCHANGE,
+  to: BitfinexWalletType::MARGIN,
+  currency: 'USD',
+  amount: 50.0
+);
+$resp->content['transferred'];  // raw DATA of the notification
+$resp->content['notification']; // Notification
 
 // Alerts
-$resp = $auth->accountAction()->alertSet('XMRUSD', 250);
+$resp = $auth->accountAction()->alertSet('XMRUSD', 250); // create
 $resp = $auth->accountAction()->alertList('price');
-$resp = $auth->accountAction()->alertDelete('XMRUSD', 250);
+$resp = $auth->accountAction()->alertDelete('XMRUSD', 250); // delete
 
-// Movements
-$resp = $auth->accountAction()->movements('USD', limit: 50);
-$resp = $auth->accountAction()->movementInfo(123456);
-
-// Transfer between wallets
-$resp = $auth->accountAction()->transferBetweenWallets(); // Provide body via request builder before execution if needed
+// User settings: `keys` is required for both read and delete
+$resp = $auth->accountAction()->userSettingsWrite(['api:my_setting' => 'value']);
+$resp = $auth->accountAction()->userSettingsRead(['api:my_setting']);
+$resp = $auth->accountAction()->userSettingsDelete(['api:my_setting']);
 ```
 
+### Merchants (Bitfinex Pay)
 
-### Merchants (Bitfinex Pay) (invoices/settings/conversions)
 ```php
 // Invoices
 $resp = $auth->merchants()->submitInvoice(['wallet' => 'exchange', 'currency' => 'USD', 'amount' => '10.00']);
+$resp->content['invoice'];
+
 $resp = $auth->merchants()->submitPostInvoice(['wallet' => 'exchange', 'currency' => 'USD', 'amount' => '10.00']);
 $resp = $auth->merchants()->invoiceList(['status' => 'pending']);
-$resp = $auth->merchants()->invoiceListPaginated(page=1, pageSize=30);
+$resp = $auth->merchants()->invoiceListPaginated(page: 1, pageSize: 30);
 $resp = $auth->merchants()->completeInvoice(['invoiceId' => '...']);
 $resp = $auth->merchants()->expireInvoice(['invoiceId' => '...']);
 

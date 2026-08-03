@@ -17,4 +17,3 @@ class MarketAveragePriceResult
         $this->result = $result;
     }
 }
-

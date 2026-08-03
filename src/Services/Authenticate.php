@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\Services;
 
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexApiException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexUrlNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
@@ -14,6 +15,7 @@ use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexSignature;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class Authenticate
@@ -42,6 +44,7 @@ class Authenticate
      * @param  int  $ttl  Time-to-live for the token in seconds (default: 120).
      * @param  bool  $writePermission  Indicates whether the token has write permissions (default: false).
      * @param  array|null  $caps  Additional capabilities or restrictions for the token.
+     * @param  Client|null  $client  Optional HTTP client; the SDK builds its own when omitted.
      *
      * @throws BitfinexPathNotFoundException If the API path could not be built.
      * @throws BitfinexUrlNotFoundException If the base URL could not be resolved.
@@ -51,10 +54,11 @@ class Authenticate
         private readonly string $scope = 'api',
         private readonly int $ttl = 120,
         private readonly bool $writePermission = false,
-        private readonly ?array $caps = null
+        private readonly ?array $caps = null,
+        ?Client $client = null
     ) {
         $url = (new UrlBuilder)->setBaseUrl('private');
-        $this->client = new Client(config: ['base_uri' => $url->getBaseUrl()]);
+        $this->client = $client ?? new Client(config: ['base_uri' => $url->getBaseUrl()]);
         $this->apiPath = $url->setPath('private.account_actions.generate_token')->getPath();
         $this->request = (new RequestBuilder)->setMethod('POST');
     }
@@ -68,6 +72,7 @@ class Authenticate
      *
      * @return AuthenticatedBitfinexResponse A response object containing the generated token.
      *
+     * @throws BitfinexApiException If the API rejects the request.
      * @throws GuzzleException If the HTTP request fails or encounters an error.
      */
     public function authenticate(): AuthenticatedBitfinexResponse
@@ -86,9 +91,25 @@ class Authenticate
             signature: $this->getSignature()
         );
 
-        $apiResponse = $this->client->post($this->apiPath, $this->request->getOptions());
+        try {
+            $apiResponse = $this->client->post($this->apiPath, $this->request->getOptions());
+        } catch (RequestException $e) {
+            // This call bypasses BitfinexRequest, so it needs the same treatment:
+            // the reason the exchange refused sits in the body of an HTTP 500.
+            throw BitfinexApiException::fromResponse($e->getResponse(), $e);
+        } finally {
+            $this->request->reset();
+        }
 
-        return (new AuthenticatedBitfinexResponse($apiResponse))->generateToken();
+        $response = new AuthenticatedBitfinexResponse($apiResponse);
+
+        $error = BitfinexApiException::fromBody($response->content, $response->statusCode);
+
+        if (! is_null($error)) {
+            throw $error;
+        }
+
+        return $response->generateToken();
     }
 
     /**

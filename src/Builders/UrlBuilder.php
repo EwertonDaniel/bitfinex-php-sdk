@@ -152,12 +152,36 @@ class UrlBuilder
 
         if (! empty($params)) {
             $keys = array_map(fn ($key) => "{{$key}}", array_keys($params));
-            $foundPath = str_replace($keys, array_values($params), $foundPath);
+            $values = array_map(fn ($value) => self::encodeSegment((string) $value), array_values($params));
+            $foundPath = str_replace($keys, $values, $foundPath);
         }
 
         $this->path = $foundPath;
 
         return $this;
+    }
+
+    /**
+     * Percent-encodes a value so it cannot escape the path segment it belongs to.
+     *
+     * Interpolating a raw value let a caller-supplied `?` or `#` truncate the
+     * path, so the URI that went on the wire stopped matching the one that was
+     * signed and the request landed on a different endpoint. A literal space had
+     * the same effect the other way around: Guzzle encoded it on send while the
+     * signature was computed over the raw character.
+     *
+     * Only characters a path segment does not allow are encoded. `:` is legal
+     * there per RFC 3986 and is load-bearing for symbols such as
+     * `tBTCF0:USTF0` and configuration keys such as `pub:list:pair:exchange`,
+     * so it is deliberately preserved.
+     */
+    private static function encodeSegment(string $value): string
+    {
+        return preg_replace_callback(
+            '/[^A-Za-z0-9\-._~:@!$&\'()*+,;=]/',
+            fn (array $matches) => rawurlencode($matches[0]),
+            $value
+        );
     }
 
     final public function getBaseUrl(): string

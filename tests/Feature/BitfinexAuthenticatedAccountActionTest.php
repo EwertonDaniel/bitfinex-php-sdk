@@ -1,159 +1,246 @@
 <?php
 
-use EwertonDaniel\Bitfinex\Bitfinex;
 use EwertonDaniel\Bitfinex\Entities\Alert;
 use EwertonDaniel\Bitfinex\Entities\DepositAddress;
 use EwertonDaniel\Bitfinex\Entities\Movement;
 use EwertonDaniel\Bitfinex\Entities\Summary;
 use EwertonDaniel\Bitfinex\Entities\User;
+use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
+use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
+use EwertonDaniel\Bitfinex\Enums\OrderOfferType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexApiException;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
-use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
+use GuzzleHttp\Psr7\Response;
+use Tests\Support\BitfinexMock;
+use Tests\Support\Fixtures;
 
-test('Can generate bitfinex token', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $token = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o'])->getToken();
+test('Can generate bitfinex token', function () {
+    $mock = BitfinexMock::queue([Fixtures::token()]);
 
-    expect($token)->toBeString();
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+    $token = $mock->authenticated()->generateToken(writePermission: true, caps: ['o'])->getToken();
 
-test('Can retrieve key permissions', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o']);
+    expect($token)->toBeString()->toStartWith('eyJ')
+        ->and($mock->paths()[0])->toBe('/v2/auth/w/token')
+        ->and($mock->bodyOf(0))->toMatchArray(['scope' => 'api', 'writePermission' => true, 'caps' => ['o']]);
+});
 
-    $response = $authenticated->accountAction()->keyPermissions();
+test('a generated token replaces the api key on the next request but not the nonce', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::keyPermissions()]);
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['permissions'])->toBeArray();
-})->with('Auth')->with('Bitfinex');
+    $mock->authenticated()->generateToken()->accountAction()->keyPermissions();
 
-test('Can retrieve user info', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+    $headers = $mock->headersOf(1);
 
-    $response = $authenticated->accountAction()->userInfo();
+    expect($headers)->toHaveKey('bfx-token')
+        ->and($headers)->toHaveKey('bfx-nonce')
+        ->and($headers)->not->toHaveKey('bfx-apikey');
+});
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['user'])->toBeInstanceOf(User::class);
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('Can retrieve key permissions', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::keyPermissions()]);
 
-test('Can retrieve user login history', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+    $response = $mock->authenticated()->generateToken(writePermission: true, caps: ['o'])
+        ->accountAction()->keyPermissions();
 
-    $response = $authenticated->accountAction()->loginHistory();
+    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)
+        ->and($response->content['permissions'])->toHaveCount(5)
+        ->and($response->content['permissions'][0]->scope)->toBe('account')
+        ->and($response->content['permissions'][0]->read)->toBeTrue()
+        ->and($response->content['permissions'][0]->write)->toBeFalse()
+        ->and($response->content['permissions'][1]->write)->toBeTrue();
+});
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['history'])->toBeArray();
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('Can retrieve user info', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::userInfo()]);
 
-test('Can retrieve summary', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+    $response = $mock->authenticated()->generateToken()->accountAction()->userInfo();
 
-    $response = $authenticated->accountAction()->summary();
+    expect($response->content['user'])->toBeInstanceOf(User::class)
+        ->and($response->content['user']->id)->toBe(1234567)
+        ->and($response->content['user']->email)->toBe('trader@example.com')
+        ->and($response->content['user']->verified)->toBeTrue()
+        ->and($response->content['user']->timezone)->toBe('Europe/Lisbon')
+        // [26] holds the 2FA modes; reading it one index off would lose this.
+        ->and($response->content['user']->twoFactorAuthModes->oneTimePassword)->toBeTrue();
+});
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['summary'])->toBeInstanceOf(Summary::class);
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('Can retrieve user login history', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::loginHistory()]);
 
-test('Can retrieve changelog', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+    $response = $mock->authenticated()->generateToken()->accountAction()->loginHistory();
 
-    $response = $authenticated->accountAction()->changelog();
+    expect($response->content['history'])->toHaveCount(2)
+        ->and($response->content['history'][0]->ip)->toBe('203.0.113.10')
+        ->and($response->content['history'][0]->time->timestamp)->toBe(1754006400)
+        ->and($response->content['history'][0]->extraInfo)->toBe(['user_agent' => ['browser' => 'Firefox']]);
+});
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['changelog'])->toBeArray();
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('Can retrieve summary', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::summary()]);
 
-test('Should retrieve deposit address', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $response = $bitfinex->authenticated($credentials)->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'monero');
-    expect($response)
-        ->toBeInstanceOf(AuthenticatedBitfinexResponse::class)
-        ->and($response->content['address'])
-        ->toBeInstanceOf(DepositAddress::class);
-    sleep(1);
-})->with('Auth')->with('Bitfinex');
+    $response = $mock->authenticated()->generateToken()->accountAction()->summary();
 
-test('Should retrieve deposit address list', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $response = $bitfinex->authenticated($credentials)->accountAction()->depositAddressList('monero');
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['addresses'])->toBeArray();
-    sleep(1);
-})->with('Auth')->with('Bitfinex');
+    expect($response->content['summary'])->toBeInstanceOf(Summary::class)
+        ->and($response->content['summary']->feeInfo->makerFeeInfo->makerFeeToCrypto)->toBe(0.001)
+        ->and($response->content['summary']->feeInfo->takerFeeInfo->takerFeeToCrypto)->toBe(0.002)
+        ->and($response->content['summary']->tradingVolAndFee->tradeVolMonth[0]['vol'])->toBe(125000.5)
+        ->and($response->content['summary']->tradingVolAndFee->feesTradingTotalMonth)->toBe(300.10)
+        // LeoInfo is keyed by name rather than by position, and typed float.
+        ->and($response->content['summary']->leoInfo->leoLevel)->toBe(2.0);
+});
 
-test('Can retrieve movements', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+test('Can retrieve changelog', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::changelog()]);
 
-    $response = $authenticated->accountAction()->movements('UST');
+    $response = $mock->authenticated()->generateToken()->accountAction()->changelog();
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['movements'])->toBeArray();
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+    expect($response->content['changelog'])->toHaveCount(1)
+        ->and($response->content['changelog'][0]->log)->toBe('Password changed')
+        ->and($response->content['changelog'][0]->ip)->toBe('203.0.113.10');
+});
 
-test('Can retrieve movement info', function (BitfinexCredentials $credentials, Bitfinex $bitfinex, int $id) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+test('Should retrieve deposit address', function () {
+    $mock = BitfinexMock::queue([Fixtures::depositAddress()]);
 
-    $response = $authenticated->accountAction()->movements($id);
+    $response = $mock->authenticated()->accountAction()->depositAddress(BitfinexWalletType::EXCHANGE, 'monero');
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['movement'])->toBeInstanceOf(Movement::class);
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex')
-    ->with('Movement Id')
-    ->skip();
+    expect($response->content['address'])->toBeInstanceOf(DepositAddress::class)
+        // The address sits at DATA[4], not at the top level of the envelope.
+        ->and($response->content['address']->address)->toStartWith('44AFFq5kSiGBoZ4NMDwYtN18obc8AemS33DBLWs3H7ot')
+        ->and($response->content['address']->currencyCode)->toBe('XMR')
+        ->and($response->content['address']->method)->toBe('monero')
+        ->and($response->content['address']->walletType)->toBe(BitfinexWalletType::EXCHANGE);
+});
 
-test('Can retrieve alert set', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o', 'a']);
+test('Should retrieve deposit address list', function () {
+    $mock = BitfinexMock::queue([Fixtures::depositAddressList()]);
 
-    $response = $authenticated->accountAction()->alertSet(pair: 'XMRUSD', price: 250);
+    $response = $mock->authenticated()->accountAction()->depositAddressList('monero');
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['alert'])->toBeInstanceOf(Alert::class);
+    expect($response->content['addresses']['method'])->toBe('monero')
+        ->and($response->content['addresses']['items'])->toHaveCount(2)
+        ->and($response->content['addresses']['items'][0]['address'])->toBeInstanceOf(DepositAddress::class)
+        ->and($response->content['addresses']['items'][0]['address']->walletType)->toBe(BitfinexWalletType::EXCHANGE)
+        ->and($response->content['addresses']['items'][1]['address']->walletType)->toBe(BitfinexWalletType::MARGIN);
+});
 
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('Can retrieve movements', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::movements()]);
 
-test('Can retrieve delete alert', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken(writePermission: true, caps: ['o', 'a']);
+    $response = $mock->authenticated()->generateToken()->accountAction()->movements('UST');
 
-    $response = $authenticated->accountAction()->alertDelete(pair: 'XMRUSD', price: 250);
+    expect($response->content['movements'])->toHaveCount(2)
+        ->and($response->content['movements'][0])->toBeInstanceOf(Movement::class)
+        ->and($response->content['movements'][0]->currency)->toBe('UST')
+        ->and($response->content['movements'][0]->amount)->toBe(-250.0)
+        ->and($response->content['movements'][0]->status)->toBe('COMPLETED');
+});
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['deleted'])->toBeTrue();
+test('deposit and withdrawal history split the same rows by the sign of the amount', function () {
+    $mock = BitfinexMock::queue([Fixtures::movements(), Fixtures::movements()]);
+    $account = $mock->authenticated()->accountAction();
 
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+    $deposits = $account->depositHistory('UST')->content['deposits'];
+    $withdrawals = $account->withdrawalHistory('UST')->content['withdrawals'];
 
-test('Can retrieve alert list', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+    expect($deposits)->toHaveCount(1)
+        ->and($deposits[0]->amount)->toBe(500.0)
+        ->and($withdrawals)->toHaveCount(1)
+        ->and($withdrawals[0]->amount)->toBe(-250.0);
+});
 
-    $response = $authenticated->accountAction()->alertList('price');
+test('Can retrieve movement info', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::movements()[0]]);
 
-    expect($response)->toBeInstanceOf(AuthenticatedBitfinexResponse::class)->and($response->content['alerts'])->toBeArray();
+    $response = $mock->authenticated()->generateToken()->accountAction()->movementInfo(987654321);
 
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+    expect($response->content['movement'])->toBeInstanceOf(Movement::class)
+        ->and($response->content['movement']->id)->toBe(987654321);
+});
+
+test('Can retrieve alert set', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::alert()]);
+
+    $response = $mock->authenticated()->generateToken(writePermission: true, caps: ['o', 'a'])
+        ->accountAction()->alertSet(pair: 'XMRUSD', price: 250);
+
+    expect($response->content['alert'])->toBeInstanceOf(Alert::class)
+        ->and($response->content['alert']->price)->toBe(250.0)
+        ->and($response->content['alert']->pair)->toBe('XMRUSD')
+        ->and($response->content['alert']->bitfinexType)->toBe(BitfinexType::TRADING);
+});
+
+test('Can retrieve delete alert', function () {
+    // The endpoint answers with a boolean, not with a 1.
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::alertDelete()]);
+
+    $response = $mock->authenticated()->generateToken(writePermission: true, caps: ['o', 'a'])
+        ->accountAction()->alertDelete(pair: 'XMRUSD', price: 250);
+
+    expect($response->content['deleted'])->toBeTrue()
+        // The price is a path segment here, so a formatting slip changes the target.
+        ->and($mock->paths()[1])->toBe('/v2/auth/w/alert/price:tXMRUSD:250/del');
+});
+
+test('Can retrieve alert list', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::alertList()]);
+
+    $response = $mock->authenticated()->generateToken()->accountAction()->alertList('price');
+
+    expect($response->content['alerts'])->toHaveCount(2)
+        ->and($response->content['alerts'][0])->toBeInstanceOf(Alert::class)
+        ->and($response->content['alerts'][1]->price)->toBe(300.0);
+});
 
 /** @link https://docs.bitfinex.com/reference/rest-auth-calc-order-avail */
-test('Can Retrieve Available Balance for Orders and Offers', function (BitfinexCredentials $credentials, Bitfinex $bitfinex) {
-    $authenticated = $bitfinex->authenticated($credentials)->generateToken();
+test('Can Retrieve Available Balance for Orders and Offers', function () {
+    $mock = BitfinexMock::queue([Fixtures::token(), Fixtures::balanceAvailable()]);
 
-    $response = $authenticated->accountAction()
+    $response = $mock->authenticated()->generateToken()->accountAction()
         ->balanceAvailableForOrdersOffers(
-            type: \EwertonDaniel\Bitfinex\Enums\BitfinexType::TRADING,
+            type: BitfinexType::TRADING,
             pairOrCurrency: 'XMRUSD',
-            action: \EwertonDaniel\Bitfinex\Enums\BitfinexAction::BUY,
-            orderOfferType: \EwertonDaniel\Bitfinex\Enums\OrderOfferType::DERIV,
+            action: BitfinexAction::BUY,
+            orderOfferType: OrderOfferType::DERIV,
             rate: '0.1'
         );
 
-    expect($response)
-        ->toBeInstanceOf(AuthenticatedBitfinexResponse::class)
-        ->and($response->content['available'])
-        ->toBeNumeric();
+    expect($response->content['available'])->toBeNumeric()->toBe(0.8056309);
+});
 
-    sleep(1);
-})->with('Auth')
-    ->with('Bitfinex');
+test('a refused transfer raises instead of returning a status field', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification(
+            [1754006400000, 'exchange', 'margin', null, 'USD', 'USD', null, 50.0],
+            'ERROR',
+            'acc_tf',
+            'Not enough balance in exchange wallet.'
+        ),
+    ]);
+
+    $mock->authenticated()->accountAction()->transferBetweenWallets(
+        from: BitfinexWalletType::EXCHANGE,
+        to: BitfinexWalletType::MARGIN,
+        currency: 'USD',
+        amount: 50.0
+    );
+})->throws(BitfinexNotificationException::class, 'Not enough balance in exchange wallet.');
+
+test('an error envelope reaches the caller with the code the API gave', function () {
+    // The API reports failure in the body while answering HTTP 500.
+    $mock = BitfinexMock::queue([
+        new Response(500, ['Content-Type' => 'application/json'], json_encode(Fixtures::error(10100, 'apikey: digest invalid'))),
+    ]);
+
+    try {
+        $mock->authenticated()->accountAction()->userInfo();
+        $this->fail('the error envelope was accepted as a success');
+    } catch (BitfinexApiException $e) {
+        expect($e->apiCode)->toBe(BitfinexApiException::ERR_AUTH_FAIL)
+            ->and($e->httpStatus)->toBe(500)
+            ->and($e->getMessage())->toBe('apikey: digest invalid')
+            ->and($e->isRetryable())->toBeFalse();
+    }
+});

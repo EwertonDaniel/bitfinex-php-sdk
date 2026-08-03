@@ -6,6 +6,7 @@ namespace EwertonDaniel\Bitfinex\ValueObjects;
 
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Helpers\BitfinexConfig;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 
 /**
  * Class BitfinexCredentials
@@ -100,5 +101,40 @@ class BitfinexCredentials
     final public function hasApiKeys(): bool
     {
         return ! is_null($this->apiKey) && ! is_null($this->apiSecret);
+    }
+
+    /**
+     * Masks the credentials for any debugging output.
+     *
+     * `print_r()`, `var_dump()` and Laravel's `dd()` reach private properties, so
+     * a single debug statement or an exception dump used to print the API secret
+     * and the session token in clear text. Only enough is kept to tell one key
+     * from another.
+     *
+     * @return array<string, string|null>
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'apiKey' => self::mask($this->apiKey),
+            'apiSecret' => self::mask($this->apiSecret),
+            'token' => self::mask($this->token),
+        ];
+    }
+
+    /**
+     * Reduces a secret to a recognizable, non-reusable hint.
+     */
+    private static function mask(?string $secret): ?string
+    {
+        if (is_null($secret)) {
+            return null;
+        }
+
+        return GetThis::ifTrueOrFallback(
+            boolean: mb_strlen($secret) <= 8,
+            callback: '********',
+            fallback: fn () => mb_substr($secret, 0, 4).'…'.mb_substr($secret, -2)
+        );
     }
 }

@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
-use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
+use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\DateToTimestamp;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -36,7 +37,9 @@ class BitfinexPublicStats
      * @param  UrlBuilder  $url  Instance of UrlBuilder for constructing API paths.
      * @param  string  $key  The type of statistic to retrieve (e.g., 'pos.size', 'funding.size').
      * @param  string  $size  The interval or granularity of the data (e.g., '1m', '30m', '1d').
-     * @param  string  $sidePair  The side of the data (e.g., 'long', 'short'), or a pair for credits.
+     * @param  string|null  $sidePair  Fourth path segment. Only `pos.size` (long/short) and
+     *                                 `credits.size.sym` (a trading pair) take one; leave it
+     *                                 null for every other key.
      * @param  string  $section  Specifies whether to fetch the 'last' or 'hist' data section.
      */
     public function __construct(
@@ -44,8 +47,8 @@ class BitfinexPublicStats
         private readonly UrlBuilder $url,
         private readonly string $key,
         private readonly string $size,
-        private readonly string $sidePair,
-        private readonly string $section
+        private readonly ?string $sidePair = null,
+        private readonly string $section = 'hist'
     ) {}
 
     /**
@@ -70,15 +73,25 @@ class BitfinexPublicStats
     protected function get(string $symPlatform, ?int $sort, ?int $start, ?int $end, ?int $limit): PublicBitfinexResponse
     {
         try {
-            $apiPath = $this->url->setPath('public.stats_one', [
+            // The fourth segment is not optional-with-an-empty-value: sending
+            // `funding.size:1m:fUSD:` answers HTTP 200 with a literal null, so
+            // `funding.size`, `credits.size`, `vol.*` and `vwap` were all
+            // unreachable while the SDK always built four segments. Only
+            // `pos.size` and `credits.size.sym` take one.
+            $params = [
                 'key' => $this->key,
                 'size' => $this->size,
                 'sym_platform' => $symPlatform,
-                'side_pair' => $this->sidePair,
                 'section' => $this->section,
-            ])->getPath();
+            ];
 
-            $options = (new RequestBuilder())->setMethod('GET')->setQuery(array_filter([
+            $apiPath = GetThis::ifTrueOrFallback(
+                boolean: ! is_null($this->sidePair) && $this->sidePair !== '',
+                callback: fn () => $this->url->setPath('public.stats_one', $params + ['side_pair' => $this->sidePair])->getPath(),
+                fallback: fn () => $this->url->setPath('public.stats_one_no_side', $params)->getPath()
+            );
+
+            $options = (new RequestBuilder)->setMethod('GET')->setQuery(array_filter([
                 'sort' => $sort,
                 'start' => $start,
                 'end' => $end,

@@ -40,6 +40,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function submitInvoice(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.submit_invoice")->getPath());
@@ -55,6 +57,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function submitPostInvoice(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.submit_post_invoice")->getPath());
@@ -67,6 +71,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function invoiceList(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.invoice_list")->getPath());
@@ -79,6 +85,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function invoiceListPaginated(int $page = 1, int $pageSize = 30, array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $body = array_merge(['page' => $page, 'pageSize' => $pageSize], $filters);
         $this->request->setBody($body);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
@@ -92,6 +100,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function invoiceCountStats(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.invoice_count_stats")->getPath());
@@ -104,6 +114,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function invoiceEarningsStats(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.invoice_earnings_stats")->getPath());
@@ -116,6 +128,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function completeInvoice(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.complete_invoice")->getPath());
@@ -128,6 +142,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function expireInvoice(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.expire_invoice")->getPath());
@@ -140,6 +156,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function currencyConversionList(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.currency_Conversion_list")->getPath());
@@ -152,6 +170,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function addCurrencyConversion(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.add_currency_conversion")->getPath());
@@ -164,6 +184,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function removeCurrencyConversion(array $payload): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($payload);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.remove_currency_conversion")->getPath());
@@ -176,6 +198,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function merchantLimit(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.merchant_limit")->getPath());
@@ -188,6 +212,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function merchantSettingsWrite(array $settings): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($settings);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.merchant_settings_write")->getPath());
@@ -200,6 +226,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function merchantSettingsWriteBatch(array $settings): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($settings);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.merchant_settings_write_batch")->getPath());
@@ -212,6 +240,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function merchantSettingsRead(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.merchant_settings_read")->getPath());
@@ -224,6 +254,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function merchantSettingsList(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.merchant_settings_list")->getPath());
@@ -236,6 +268,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function depositsList(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.deposits_list")->getPath());
@@ -248,6 +282,8 @@ class BitfinexAuthenticatedMerchants
      */
     final public function unlinkedDepositsList(array $filters = []): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $this->request->setBody($filters);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.unlinked_deposits_list")->getPath());
@@ -255,4 +291,3 @@ class BitfinexAuthenticatedMerchants
         return $response->merchantUnlinkedDepositsList();
     }
 }
-
