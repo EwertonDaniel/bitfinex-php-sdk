@@ -16,11 +16,21 @@ use Illuminate\Support\Carbon;
  * leaves the interpretation to the response mapper that knows which endpoint was
  * called:
  *
- * - `/auth/w/order/submit`       DATA is a list of orders
- * - `/auth/w/order/cancel/multi` DATA is a list of orders
- * - `/auth/w/order/update`       DATA is a single, flat order
- * - `/auth/w/order/cancel`       DATA is a single, flat order
- * - `/auth/w/order/multi`        DATA is a list of nested notifications
+ * - `/auth/w/order/submit`             DATA is a list of orders
+ * - `/auth/w/order/cancel/multi`       DATA is a list of orders
+ * - `/auth/w/order/update`             DATA is a single, flat order
+ * - `/auth/w/order/cancel`             DATA is a single, flat order
+ * - `/auth/w/order/multi`              DATA is a list of nested notifications
+ * - `/auth/w/withdraw`                 DATA is a single, flat withdrawal record
+ * - `/auth/w/funding/offer/submit`     DATA is a single, flat funding offer
+ * - `/auth/w/funding/offer/cancel`     DATA is a single, flat funding offer
+ * - `/auth/w/funding/auto`             DATA is `[CURRENCY, PERIOD, RATE, THRESHOLD]`
+ * - `/auth/w/funding/offer/cancel/all`,
+ *   `/auth/w/funding/close`,
+ *   `/auth/w/funding/keep`             DATA is null; the outcome lives in TEXT
+ *
+ * `/auth/w/alert/set` is the confirmed exception: it answers with the alert row
+ * itself, not with this envelope.
  *
  * STATUS at [6] is documented as an open set (`SUCCESS`, `ERROR`, `FAILURE`,
  * ...), so anything other than `SUCCESS` is a failure. TEXT at [7] is explicitly

@@ -635,19 +635,33 @@ foreach ($resp->content['offers'] as $offer) { // list<FundingOffer>
     $offer->status;   // ACTIVE, EXECUTED, PARTIALLY FILLED, CANCELED
 }
 
-// Submit / cancel offers
+// Writes answer with a notification envelope. A status other than SUCCESS
+// raises BitfinexNotificationException instead of returning; on success the
+// envelope is in content['notification'] and its DATA is mapped per endpoint.
+
+// Submit / cancel offers: DATA is the offer as the exchange recorded it
 $resp = $auth->funding()->submitOffer('USD', amount: 100.0, rate: 0.0002, period: 2);
+$resp->content['offer'];        // FundingOffer|null
+$resp->content['notification']; // Notification
+
 $resp = $auth->funding()->cancelOffer(id: 123456);
+$resp->content['offer'];        // FundingOffer|null, as it stands after cancellation
+
+// Cancel-all: DATA is null, the outcome only exists in the free-form text
 $resp = $auth->funding()->cancelAllOffers('USD');
+$resp->content['notification']->text; // e.g. 'All (8) submitted for cancellation'
 
-// Close a loan/credit
+// Close a loan/credit: DATA is null
 $resp = $auth->funding()->close(id: 123456);
+$resp->content['notification'];
 
-// Toggle auto-renew for a currency
+// Toggle auto-renew for a currency: DATA is [CURRENCY, PERIOD, RATE, THRESHOLD]
 $resp = $auth->funding()->autoRenew(currency: 'USD', status: true);
+$resp->content['autorenew'];    // array|null, e.g. ['USD', 2, 0, 350]
 
 // Keep a credit or loan from being returned automatically when the position closes
 $resp = $auth->funding()->keep(type: 'credit', ids: [123456]);
+$resp->content['notification']->text; // e.g. 'Credit updated'
 
 // Loans / Credits / Trades
 $resp = $auth->funding()->loans('USD');
@@ -701,14 +715,17 @@ $resp->content['withdrawals']; // array<Movement>
 $resp = $auth->accountAction()->movementInfo(1234567890);
 $resp->content['movement']; // Movement
 
-// Withdrawal: the currency is implied by `method` (e.g. 'tetheruse'), not a separate argument
+// Withdrawal: the currency is implied by `method` (e.g. 'tetheruse'), not a separate argument.
+// A refused withdrawal raises BitfinexNotificationException; on success the
+// notification's DATA is mapped to a Withdrawal entity.
 $resp = $auth->accountAction()->withdrawal(
   walletType: BitfinexWalletType::EXCHANGE,
   method: 'tetheruse',
   amount: 50.0,
   options: ['address' => '0x0000000000000000000000000000000000dEaD']
 );
-$resp->content['withdrawal'];
+$resp->content['withdrawal'];         // Withdrawal|null: id, method, wallet, amount, fee
+$resp->content['notification'];       // Notification
 
 // Transfer between wallets. A refused transfer raises BitfinexNotificationException
 // rather than returning a response whose `status` reads 'ERROR'.

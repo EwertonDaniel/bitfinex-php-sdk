@@ -22,6 +22,7 @@ use EwertonDaniel\Bitfinex\Entities\Summary;
 use EwertonDaniel\Bitfinex\Entities\Trade;
 use EwertonDaniel\Bitfinex\Entities\User;
 use EwertonDaniel\Bitfinex\Entities\Wallet;
+use EwertonDaniel\Bitfinex\Entities\Withdrawal;
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexBatchException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
@@ -337,51 +338,121 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{offer: \EwertonDaniel\Bitfinex\Entities\FundingOffer}.
+     * Transforms the notification returned by the funding offer submit endpoint,
+     * whose DATA field holds the offer as the exchange recorded it.
+     *
+     * The envelope used to be handed to `FundingOffer` whole, so every field read
+     * the wrong index: `id` got the timestamp, `symbol` got the type string.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, offer: \EwertonDaniel\Bitfinex\Entities\FundingOffer|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function fundingOfferSubmitted(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['offer' => new FundingOffer($content)]);
+        return $this->transformContent(function ($content) {
+            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+
+            return [
+                'notification' => $notification,
+                'offer' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($notification->data),
+                    callback: fn () => new FundingOffer($notification->data)
+                ),
+            ];
+        });
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{cancelled: mixed}.
+     * Transforms the notification returned by the funding offer cancel endpoint,
+     * whose DATA field holds the offer as it stands after the cancellation.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, offer: \EwertonDaniel\Bitfinex\Entities\FundingOffer|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function cancelFundingOffer(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['cancelled' => $content]);
+        return $this->transformContent(function ($content) {
+            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+
+            return [
+                'notification' => $notification,
+                'offer' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($notification->data),
+                    callback: fn () => new FundingOffer($notification->data)
+                ),
+            ];
+        });
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{results: mixed}.
+     * Transforms the notification returned by the cancel-all endpoint. Its DATA
+     * field is null; the outcome, including how many offers were submitted for
+     * cancellation, only exists in the free-form TEXT.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function cancelAllFundingOffers(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['results' => $content]);
+        return $this->transformContent(fn ($content) => [
+            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+        ]);
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{closed: mixed}.
+     * Transforms the notification returned by the funding close endpoint. Its
+     * DATA field is null.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function fundingClose(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['closed' => $content]);
+        return $this->transformContent(fn ($content) => [
+            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+        ]);
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{autorenew: mixed}.
+     * Transforms the notification returned by the auto-renew endpoint, whose DATA
+     * field holds `[CURRENCY, PERIOD, RATE, THRESHOLD]`.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, autorenew: array|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function fundingAutoRenew(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['autorenew' => $content]);
+        return $this->transformContent(function ($content) {
+            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+
+            return [
+                'notification' => $notification,
+                'autorenew' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($notification->data),
+                    callback: fn () => $notification->data
+                ),
+            ];
+        });
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{kept: mixed}.
+     * Transforms the notification returned by the keep-funding endpoint. Its DATA
+     * field is null.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function keepFunding(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['kept' => $content]);
+        return $this->transformContent(fn ($content) => [
+            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+        ]);
     }
 
     /**
@@ -596,11 +667,26 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{withdrawal: mixed}.
+     * Transforms the notification returned by the withdraw endpoint, whose DATA
+     * field holds the withdrawal record.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, withdrawal: \EwertonDaniel\Bitfinex\Entities\Withdrawal|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function withdrawal(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['withdrawal' => $content]);
+        return $this->transformContent(function ($content) {
+            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+
+            return [
+                'notification' => $notification,
+                'withdrawal' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($notification->data),
+                    callback: fn () => new Withdrawal($notification->data)
+                ),
+            ];
+        });
     }
 
     /**

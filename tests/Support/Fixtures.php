@@ -227,6 +227,25 @@ final class Fixtures
         return [$mts, $type, null, null, $data, null, $status, $text];
     }
 
+    /**
+     * A funding offer row, 21 positions, as carried in the DATA of the
+     * `fon-req`/`foc-req` notifications and in the offer listings. Values from
+     * the documented example of `v2/auth/w/funding/offer/submit`.
+     */
+    public static function fundingOfferRow(int $id = 41237920, string $status = 'ACTIVE'): array
+    {
+        return [$id, 'fETH', 1573912039569, 1573912063119, 0.5, 0.5, 'LIMIT', null, null, 0, $status, null, null, null, 0.0024, 2, 0, 0, null, 0, null];
+    }
+
+    /**
+     * A withdrawal row, 9 positions, as carried in the DATA of the `acc_wd-req`
+     * notification. Values from the documented example of `v2/auth/w/withdraw`.
+     */
+    public static function withdrawalRow(): array
+    {
+        return [13080092, null, 'ethereum', null, 'exchange', 0.01, null, null, 0.00135];
+    }
+
     /** An error envelope, which the API sends with HTTP 500. */
     public static function error(int $code = 10001, string $message = 'Invalid order: not enough exchange balance'): array
     {

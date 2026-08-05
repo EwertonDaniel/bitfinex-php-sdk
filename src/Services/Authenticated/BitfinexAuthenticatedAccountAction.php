@@ -10,6 +10,7 @@ use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
 use EwertonDaniel\Bitfinex\Enums\OrderOfferType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\DateToTimestamp;
 use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
@@ -323,6 +324,7 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     * @throws BitfinexNotificationException When the API refuses the withdrawal.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-withdraw
      */

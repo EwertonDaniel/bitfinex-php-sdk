@@ -6,6 +6,7 @@ use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
@@ -37,6 +38,19 @@ class BitfinexAuthenticatedFunding
         return $response->fundingOffers();
     }
 
+    /**
+     * Submits a funding offer.
+     *
+     * @param  string  $currency  Plain currency code (e.g. USD).
+     * @param  float|string  $amount  Amount to offer.
+     * @param  float|string  $rate  Rate per period ('0' for FRR).
+     * @param  int  $period  Period in days.
+     * @param  array  $options  Additional fields (e.g. type, flags).
+     *
+     * @throws BitfinexNotificationException When the API refuses the offer.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-submit-funding-offer
+     */
     final public function submitOffer(string $currency, float|string $amount, float|string $rate, int $period, array $options = []): AuthenticatedBitfinexResponse
     {
         $this->request->reset();
@@ -57,6 +71,15 @@ class BitfinexAuthenticatedFunding
         return $response->fundingOfferSubmitted();
     }
 
+    /**
+     * Cancels a funding offer.
+     *
+     * @param  int  $id  Offer ID.
+     *
+     * @throws BitfinexNotificationException When the API refuses the cancellation.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-cancel-funding-offer
+     */
     final public function cancelOffer(int $id): AuthenticatedBitfinexResponse
     {
         $this->request->reset();
@@ -73,6 +96,8 @@ class BitfinexAuthenticatedFunding
      *
      * @param  string|null  $currency  Plain currency code (e.g. USD). When null, offers of every currency are cancelled.
      *
+     * @throws BitfinexNotificationException When the API refuses the cancellation.
+     *
      * @link https://docs.bitfinex.com/reference/rest-auth-cancel-all-funding-offers
      */
     final public function cancelAllOffers(?string $currency = null): AuthenticatedBitfinexResponse
@@ -86,6 +111,15 @@ class BitfinexAuthenticatedFunding
         return $response->cancelAllFundingOffers();
     }
 
+    /**
+     * Returns taken funding early.
+     *
+     * @param  int  $id  Funding credit or loan ID.
+     *
+     * @throws BitfinexNotificationException When the API refuses the close.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-funding-close
+     */
     final public function close(int $id): AuthenticatedBitfinexResponse
     {
         $this->request->reset();
@@ -105,6 +139,8 @@ class BitfinexAuthenticatedFunding
      * @param  float|string|null  $amount  Amount to be auto-renewed (null means everything available).
      * @param  float|string|null  $rate  Percentage rate at which to auto-renew ('0' for FRR).
      * @param  int|null  $period  Period in days.
+     *
+     * @throws BitfinexNotificationException When the API refuses the change.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-funding-auto-renew
      */
@@ -142,6 +178,7 @@ class BitfinexAuthenticatedFunding
      * @param  array<int>  $ids  Funding credit or loan IDs.
      *
      * @throws BitfinexException When an unsupported type is given.
+     * @throws BitfinexNotificationException When the API refuses the change.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-keep-funding
      */

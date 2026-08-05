@@ -5,6 +5,7 @@ use EwertonDaniel\Bitfinex\Entities\DepositAddress;
 use EwertonDaniel\Bitfinex\Entities\Movement;
 use EwertonDaniel\Bitfinex\Entities\Summary;
 use EwertonDaniel\Bitfinex\Entities\User;
+use EwertonDaniel\Bitfinex\Entities\Withdrawal;
 use EwertonDaniel\Bitfinex\Enums\BitfinexAction;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
@@ -244,3 +245,44 @@ test('an error envelope reaches the caller with the code the API gave', function
             ->and($e->isRetryable())->toBeFalse();
     }
 });
+
+/** @link https://docs.bitfinex.com/reference/rest-auth-withdraw */
+test('a withdrawal maps the record its notification carries', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification(
+            Fixtures::withdrawalRow(),
+            type: 'acc_wd-req',
+            text: 'Your withdrawal request has been successfully submitted.'
+        ),
+    ]);
+
+    $response = $mock->authenticated()->accountAction()->withdrawal(
+        walletType: BitfinexWalletType::EXCHANGE,
+        method: 'ethereum',
+        amount: 0.01,
+        options: ['address' => '0x742d35Cc6634C0532925a3b844Bc454e4438f44e']
+    );
+
+    $withdrawal = $response->content['withdrawal'];
+
+    expect($withdrawal)->toBeInstanceOf(Withdrawal::class)
+        ->and($withdrawal->id)->toBe(13080092)
+        ->and($withdrawal->method)->toBe('ethereum')
+        ->and($withdrawal->wallet)->toBe('exchange')
+        ->and($withdrawal->amount)->toBe(0.01)
+        ->and($withdrawal->fee)->toBe(0.00135)
+        ->and($mock->paths()[0])->toBe('/v2/auth/w/withdraw')
+        ->and($mock->bodyOf(0))->toMatchArray(['wallet' => 'exchange', 'method' => 'ethereum', 'amount' => '0.01']);
+});
+
+test('a refused withdrawal raises instead of returning the envelope', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification(null, 'ERROR', 'acc_wd-req', 'Invalid withdrawal amount, minimum is 0.001 (ETH)'),
+    ]);
+
+    $mock->authenticated()->accountAction()->withdrawal(
+        walletType: BitfinexWalletType::EXCHANGE,
+        method: 'ethereum',
+        amount: 0.0001
+    );
+})->throws(BitfinexNotificationException::class, 'Invalid withdrawal amount, minimum is 0.001 (ETH)');
