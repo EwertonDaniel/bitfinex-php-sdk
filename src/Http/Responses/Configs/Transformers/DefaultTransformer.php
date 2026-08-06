@@ -9,7 +9,6 @@ use EwertonDaniel\Bitfinex\Http\Responses\Configs\Contracts\ConfigTransformer;
 /**
  * Fallback transformer (identity).
  */
-
 class DefaultTransformer implements ConfigTransformer
 {
     public function supports(string $key, mixed $value): bool
@@ -18,8 +17,8 @@ class DefaultTransformer implements ConfigTransformer
     }
 
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  string  $key  Config key the response came from (e.g. pub:map:currency:sym).
+     * @param  mixed  $value  Decoded payload for that key.
      * @return mixed Returns original value.
      */
     public function transform(string $key, mixed $value): mixed

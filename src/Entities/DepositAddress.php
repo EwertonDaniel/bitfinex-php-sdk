@@ -3,6 +3,7 @@
 namespace EwertonDaniel\Bitfinex\Entities;
 
 use EwertonDaniel\Bitfinex\Enums\BitfinexWalletType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use Illuminate\Support\Carbon;
 
@@ -24,7 +25,7 @@ class DepositAddress
 {
     public readonly BitfinexWalletType $walletType;
 
-    /** @note Seconds epoch timestamp of the notification */
+    /** @note Timestamp of the notification, in milliseconds since epoch */
     public readonly ?Carbon $createdAt;
 
     /** @note Type of the notification (e.g., "on-req") */
@@ -34,13 +35,13 @@ class DepositAddress
     public readonly ?int $messageId;
 
     /** @note Method used for the deposit */
-    public readonly string $method;
+    public readonly ?string $method;
 
     /** @note Currency code for the deposit address */
     public readonly ?string $currencyCode;
 
     /** @note Deposit address (or Tag/Memo/Payment_ID for specific currencies) */
-    public readonly string $address;
+    public readonly ?string $address;
 
     /** @note Pool address for deposits requiring Tag/Memo/Payment_ID */
     public readonly ?string $poolAddress;
@@ -58,8 +59,12 @@ class DepositAddress
      */
     public function __construct(string|BitfinexWalletType $walletType, array $data)
     {
-        $this->walletType = GetThis::ifTrueOrFallback(is_string($walletType), fn () => BitfinexWalletType::from($walletType), $walletType);
-        $this->createdAt = GetThis::ifTrueOrFallback(isset($data[0]), fn () => Carbon::createFromTimestamp($data[0]));
+        $this->walletType = GetThis::ifTrueOrFallback(
+            boolean: is_string($walletType),
+            callback: fn () => BitfinexWalletType::tryFrom($walletType) ?? throw new BitfinexException("Unknown Bitfinex wallet type: $walletType."),
+            fallback: $walletType
+        );
+        $this->createdAt = GetThis::ifTrueOrFallback(isset($data[0]), fn () => Carbon::createFromTimestampMs($data[0]));
         $this->type = GetThis::ifTrueOrFallback(isset($data[1]), fn () => $data[1]);
         $this->messageId = GetThis::ifTrueOrFallback(isset($data[2]), fn () => $data[2]);
         $this->method = GetThis::ifTrueOrFallback(isset($data[4][1]), fn () => $data[4][1]);

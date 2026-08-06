@@ -12,8 +12,8 @@ interface ConfigTransformer
     public function supports(string $key, mixed $value): bool;
 
     /**
-     * @param array $context Contextual parameters (e.g., symbol, type).
-     * @param mixed $content Decoded response content.
+     * @param  string  $key  Config key the response came from (e.g. pub:map:currency:sym).
+     * @param  mixed  $value  Decoded payload for that key.
      * @return mixed Transformed payload.
      */
     public function transform(string $key, mixed $value): mixed;

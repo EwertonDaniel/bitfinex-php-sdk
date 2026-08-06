@@ -10,8 +10,10 @@ class PairInfo
 {
     /** Trading pair symbol (e.g., tBTCUSD). */
     public readonly string $pair;
+
     /** First info block for the pair (formerly block1). */
     public readonly PairInfoBlock $one;
+
     /** Second info block for the pair (formerly block2). */
     public readonly PairInfoBlock $two;
 

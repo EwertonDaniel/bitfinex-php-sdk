@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Adapters;
 
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException;
-use GuzzleHttp\Utils;
 
 /**
  * Class JsonAdapter
@@ -63,6 +62,6 @@ abstract class JsonAdapter
             throw new \EwertonDaniel\Bitfinex\Exceptions\BitfinexFileNotFoundException($this->file);
         }
 
-        return Utils::jsonDecode($contents, true);
+        return json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
     }
 }

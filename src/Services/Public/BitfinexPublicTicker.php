@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
-use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
+use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
@@ -175,7 +175,7 @@ class BitfinexPublicTicker
         try {
             $apiPath = $this->url->setPath(path: 'public.ticker_history')->getPath();
 
-            $options = (new RequestBuilder())->setMethod('GET')->setQuery([
+            $options = (new RequestBuilder)->setMethod('GET')->setQuery([
                 'symbols' => BitfinexType::TRADING->symbols($pairs),
                 'limit' => $limit,
                 'start' => DateToTimestamp::convert($start),

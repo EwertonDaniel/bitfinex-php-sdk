@@ -18,4 +18,3 @@ test('maps candles to Candle entities', function () {
         ->and($resp->content['candles'][1])
         ->toHaveProperty('volume');
 });
-

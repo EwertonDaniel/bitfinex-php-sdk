@@ -21,13 +21,19 @@ use InvalidArgumentException;
  * - Integration of authentication credentials and signatures for secure API communication.
  * - getOptions() assembles headers, query and (for non-GET methods) body for HTTP clients.
  *
+ * Lifecycle: a single instance is shared by every authenticated sub-service, so it
+ * carries state between calls. Each public service method must therefore call
+ * `reset()` before populating it — `getOptions()` only clears the instance on the
+ * successful path, and an exception raised in between would otherwise carry the
+ * previous call's body and auth headers into the next request.
+ *
  * @author  Ewerton Daniel
  *
  * @contact contact@ewertondaniel.work
  */
 class RequestBuilder
 {
-    private string $method = "GET";
+    private string $method = 'GET';
 
     public readonly RequestHeaderBuilder $headers;
 
@@ -173,8 +179,7 @@ class RequestBuilder
     /**
      * Sets multiple query parameters.
      *
-     * @param array $query Associative array of query parameters.
-     * @return static
+     * @param  array  $query  Associative array of query parameters.
      */
     final public function setQuery(array $query): static
     {
@@ -185,10 +190,6 @@ class RequestBuilder
 
     /**
      * Adds a single query parameter.
-     *
-     * @param string $name
-     * @param mixed $value
-     * @return static
      */
     final public function addQuery(string $name, mixed $value): static
     {
@@ -199,8 +200,6 @@ class RequestBuilder
 
     /**
      * Retrieves the query parameters.
-     *
-     * @return array
      */
     final public function getQuery(): array
     {
@@ -237,7 +236,7 @@ class RequestBuilder
         }
 
         $query = $this->query->get();
-        if (!empty($query)) {
+        if (! empty($query)) {
             $options['query'] = $query;
         }
 

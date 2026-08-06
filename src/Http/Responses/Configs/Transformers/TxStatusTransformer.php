@@ -10,17 +10,16 @@ use EwertonDaniel\Bitfinex\Http\Responses\Configs\Contracts\ConfigTransformer;
 /**
  * Maps tx status rows to TxStatus.
  */
-
 class TxStatusTransformer implements ConfigTransformer
 {
     public function supports(string $key, mixed $value): bool
     {
-        return $key === 'pub:info:tx:status' && is_array($value) && !empty($value);
+        return $key === 'pub:info:tx:status' && is_array($value) && ! empty($value);
     }
 
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  string  $key  Config key the response came from (e.g. pub:map:currency:sym).
+     * @param  mixed  $value  Decoded payload for that key.
      * @return mixed Returns list<TxStatus>.
      */
     public function transform(string $key, mixed $value): mixed

@@ -1,0 +1,234 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, development ]
+    tags: [ 'v*' ]
+  pull_request:
+  schedule:
+    # Catch upstream breakage (new Laravel patch, new advisory) without a push.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Cheap gate: fails fast on metadata problems before burning the matrix.
+  # ---------------------------------------------------------------------
+  validate:
+    name: composer validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      # --strict also fails on a composer.lock that has drifted from
+      # composer.json, which is the check that would have caught the
+      # "illuminate/container added but never locked" class of bug.
+      - name: Validate composer.json
+        run: composer validate --strict
+
+  # ---------------------------------------------------------------------
+  # Real PHP x Laravel matrix.
+  #
+  # Every leg below was resolved with `composer update --dry-run` on 2026-08-03,
+  # simulating each runtime through `composer config platform.php`:
+  #
+  #   PHP 8.1 + L10                -> framework 10.50.2, testbench v8.37.0,
+  #                                   larastan v2.11.2, phpstan 1.12.34,
+  #                                   pest v2.36.0, carbon 2.73.0
+  #   PHP 8.1 + L10 prefer-lowest  -> framework v10.50.0, testbench v8.37.0,
+  #                                   larastan v2.11.0, pest v2.34.0, carbon 2.67.0
+  #   PHP 8.2 + L11                -> framework v11.55.0, testbench v9.17.0,
+  #                                   larastan v2.11.2, pest v2.36.1, carbon 3.13.1
+  #   PHP 8.3 + L12                -> framework v12.64.0, pest v3.8.7
+  #   PHP 8.4 + L12                -> framework v12.64.0, testbench v10.11.0,
+  #                                   larastan v3.10.0, phpstan 2.2.7, pest v3.8.7
+  #   PHP 8.4 + L10 / L11          -> framework 10.50.2 / v11.55.0, pest v2.36.1
+  #
+  # Two blockers had to be cleared in composer.json before any of this resolved,
+  # both found by running the dry-run rather than by reading the constraints:
+  #
+  #   1. `symfony/var-dumper: ^6.2` in require-dev conflicted with
+  #      laravel/framework 12.x, which needs ^7.2. It is imported nowhere in
+  #      src/ or tests/ and arrives transitively at the right major for each
+  #      line, so it was dropped rather than pinned per leg.
+  #   2. `phpstan/phpstan-phpunit: ^1.3` and `phpstan/phpstan-deprecation-rules:
+  #      ^1.1` both cap phpstan at ^1, while larastan ^3.10 requires phpstan ^2.
+  #      Widened to `^1.3 || ^2.0` and `^1.1 || ^2.0`, which lets Composer pick
+  #      the major that matches whichever larastan the leg pinned. That is why
+  #      the pinning step below does NOT mention them.
+  #
+  # Laravel 10 and 11 are EOL-adjacent: every laravel/framework 10.x and 11.x
+  # release currently carries unresolved Packagist advisories, so Composer's
+  # default `audit.block-insecure` refuses to resolve them. Those legs set
+  # COMPOSER_AUDIT_BLOCK_INSECURE=0 so the matrix still runs; the dedicated
+  # `audit` job below is what actually reports the vulnerability status.
+  # ---------------------------------------------------------------------
+  test:
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }} ${{ matrix.dependency-version }}
+    runs-on: ubuntu-latest
+    needs: validate
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
+        laravel: ['10', '11', '12']
+        dependency-version: ['prefer-stable']
+        include:
+          # Prove the declared floor (php ^8.1 + illuminate ^10.0) really
+          # installs at its lowest published point, not just at the newest
+          # release that happens to satisfy the caret range.
+          - php: '8.1'
+            laravel: '10'
+            dependency-version: 'prefer-lowest'
+        exclude:
+          # Laravel 11 and 12 both require PHP >= 8.2.
+          - php: '8.1'
+            laravel: '11'
+          - php: '8.1'
+            laravel: '12'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # mbstring is declared in composer.json (mb_substr in
+          # src/Entities/Alert.php); install it explicitly so a missing
+          # ext-mbstring fails here rather than in a consumer's app.
+          extensions: mbstring, json, curl
+          coverage: none
+          tools: composer:v2
+
+      - name: Pin dev tooling to the Laravel line under test
+        run: |
+          set -eux
+          case "${{ matrix.laravel }}" in
+            10) TESTBENCH='^8.37'  ; LARASTAN='^2.11' ; PEST='^2.34' ;;
+            11) TESTBENCH='^9.17'  ; LARASTAN='^2.11' ; PEST='^2.34' ;;
+            12) TESTBENCH='^10.11' ; LARASTAN='^3.10' ; PEST='^3.0'  ;;
+          esac
+
+          # Only these three genuinely cannot span the range: no single
+          # constraint of testbench, larastan or pest covers L10 through L12.
+          # symfony/var-dumper is not pinned because it is no longer a declared
+          # dev dependency, and the two phpstan plugins are not pinned because
+          # their constraints already span both majors.
+          composer require --no-update --dev \
+            "orchestra/testbench:${TESTBENCH}" \
+            "larastan/larastan:${LARASTAN}" \
+            "pestphp/pest:${PEST}"
+
+          composer require --no-update \
+            "illuminate/container:^${{ matrix.laravel }}.0" \
+            "illuminate/contracts:^${{ matrix.laravel }}.0" \
+            "illuminate/support:^${{ matrix.laravel }}.0"
+
+      - name: Allow resolving EOL Laravel lines
+        if: matrix.laravel == '10' || matrix.laravel == '11'
+        run: composer config audit.block-insecure false
+
+      - name: Install dependencies
+        run: |
+          composer update \
+            --${{ matrix.dependency-version }} \
+            --prefer-dist --no-interaction --no-progress
+
+      # Guard against the failure mode this repo already hit: resolving on a
+      # newer runtime silently dragged symfony/* to v7.3 (php >= 8.2) into the
+      # NON-dev graph, so vendor/composer/platform_check.php demanded PHP 8.2
+      # while composer.json still advertised ^8.1.
+      - name: Assert the installed graph honours the declared PHP floor
+        run: |
+          php -r '
+            $c = file_get_contents("vendor/composer/platform_check.php");
+            preg_match("/PHP_VERSION_ID >= (\d+)/", $c, $m);
+            $got = $m[1] ?? null;
+            printf("platform_check requires PHP_VERSION_ID >= %s; runtime is %d (%s)\n",
+                   $got ?? "none", PHP_VERSION_ID, PHP_VERSION);
+            if ($got !== null && (int) $got > PHP_VERSION_ID) {
+              fwrite(STDERR, "FAIL: dependency graph requires a newer PHP than this job runs.\n");
+              exit(1);
+            }
+          '
+
+      - name: Run test suite
+        run: vendor/bin/pest --ci
+
+  # ---------------------------------------------------------------------
+  # Static analysis runs once, on the floor PHP, against the pinned config.
+  # Without phpstan.neon this silently degrades to level 0.
+  # ---------------------------------------------------------------------
+  static-analysis:
+    name: PHPStan
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, json, curl
+          coverage: none
+
+      - run: composer config audit.block-insecure false
+      - run: composer update --prefer-dist --no-interaction --no-progress
+
+      # Without a config file PHPStan reports level 0 and says nothing useful,
+      # so its absence has to fail loudly rather than pass quietly.
+      - name: Fail if phpstan.neon is missing
+        run: test -f phpstan.neon || { echo "phpstan.neon absent -> analysis would run at level 0"; exit 1; }
+
+      # Level 5 needs more than the default 128M and crashes the parallel worker
+      # without this.
+      - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G --error-format=github
+
+  # ---------------------------------------------------------------------
+  # Blocking. The repository went Pint-clean on 2026-08-03: the sweep touched
+  # 43 files that predated any Pint run, all of it import ordering, redundant
+  # constructor parentheses and superfluous PHPDoc. `.claude/CONSTITUTION.md`
+  # §II.9 now requires a full-repository run before commit, so drift here means
+  # someone skipped it.
+  # ---------------------------------------------------------------------
+  code-style:
+    name: Pint
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: composer config audit.block-insecure false
+      - run: composer update --prefer-dist --no-interaction --no-progress
+      - run: vendor/bin/pint --test
+
+  # ---------------------------------------------------------------------
+  # Reports advisories without blocking the matrix. Currently non-green:
+  # 30 advisories across 13 packages on the committed lock.
+  # ---------------------------------------------------------------------
+  audit:
+    name: composer audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: composer audit --locked --format=table

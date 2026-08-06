@@ -10,6 +10,7 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Services\BitfinexAuthenticated;
 use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
+use GuzzleHttp\Client;
 
 /**
  * Class Bitfinex
@@ -55,11 +56,14 @@ class Bitfinex
      * If no credentials are provided, a default instance is created.
      *
      * @param  BitfinexCredentials|null  $credentials  Optional API credentials.
+     * @param  Client|null  $client  Optional HTTP client, for tests and for callers
+     *                               that need their own middleware, retries or proxy.
+     *                               When omitted the SDK builds its own.
      * @return BitfinexAuthenticated Instance for interacting with private endpoints.
      *
      * @throws BitfinexUrlNotFoundException If URL initialization or credentials setup fails.
      */
-    final public function authenticated(?BitfinexCredentials $credentials = null): BitfinexAuthenticated
+    final public function authenticated(?BitfinexCredentials $credentials = null, ?Client $client = null): BitfinexAuthenticated
     {
         $credentials = GetThis::ifTrueOrFallback(
             boolean: is_null($credentials),
@@ -69,7 +73,8 @@ class Bitfinex
 
         return new BitfinexAuthenticated(
             url: (new UrlBuilder)->setBaseUrl('private'),
-            credentials: $credentials
+            credentials: $credentials,
+            client: $client
         );
     }
 }

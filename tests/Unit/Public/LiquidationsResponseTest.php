@@ -6,7 +6,7 @@ use GuzzleHttp\Psr7\Response;
 test('maps liquidations to Liquidation entities', function () {
     $payload = [
         [123, 1700000000000, -0.5, 35000.0],
-        [[ 'pos', 124, 1700000300000, null, 'tETHF0:USD', -10.0, 2000.0 ]],
+        [['pos', 124, 1700000300000, null, 'tETHF0:USD', -10.0, 2000.0]],
     ];
 
     $resp = (new PublicBitfinexResponse(new Response(200, [], json_encode($payload))))

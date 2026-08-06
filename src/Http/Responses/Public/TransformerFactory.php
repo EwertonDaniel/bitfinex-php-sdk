@@ -16,8 +16,8 @@ use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\MarketAveragePrice
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\PlatformStatusTransformer;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\StatsTransformer;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\TickerHistoryTransformer;
-use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\TickerTransformer;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\TickersTransformer;
+use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\TickerTransformer;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers\TradesTransformer;
 
 class TransformerFactory
@@ -25,21 +25,21 @@ class TransformerFactory
     public function make(string $name): PublicTransformer
     {
         return match ($name) {
-            'platformStatus' => new PlatformStatusTransformer(),
-            'ticker' => new TickerTransformer(),
-            'tickers' => new TickersTransformer(),
-            'tickerHistory' => new TickerHistoryTransformer(),
-            'foreignExchangeRate' => new ForeignExchangeRateTransformer(),
-            'trades' => new TradesTransformer(),
-            'book' => new BookTransformer(),
-            'stats' => new StatsTransformer(),
-            'candles' => new CandlesTransformer(),
-            'derivativesStatus' => new DerivativesStatusTransformer(),
-            'liquidations' => new LiquidationsTransformer(),
-            'leaderboards' => new LeaderboardsTransformer(),
-            'fundingStats' => new FundingStatsTransformer(),
-            'marketAveragePrice' => new MarketAveragePriceTransformer(),
-            default => new PlatformStatusTransformer(),
+            'platformStatus' => new PlatformStatusTransformer,
+            'ticker' => new TickerTransformer,
+            'tickers' => new TickersTransformer,
+            'tickerHistory' => new TickerHistoryTransformer,
+            'foreignExchangeRate' => new ForeignExchangeRateTransformer,
+            'trades' => new TradesTransformer,
+            'book' => new BookTransformer,
+            'stats' => new StatsTransformer,
+            'candles' => new CandlesTransformer,
+            'derivativesStatus' => new DerivativesStatusTransformer,
+            'liquidations' => new LiquidationsTransformer,
+            'leaderboards' => new LeaderboardsTransformer,
+            'fundingStats' => new FundingStatsTransformer,
+            'marketAveragePrice' => new MarketAveragePriceTransformer,
+            default => new PlatformStatusTransformer,
         };
     }
 }
