@@ -112,6 +112,19 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      # composer.json pins config.platform.php to 8.1.0 so a contributor sitting
+      # on the declared floor can install from the committed lock. Left in place
+      # here that pin lies: Composer resolves every leg as 8.1.0 regardless of
+      # the runtime setup-php just installed, so illuminate/* ^11 and ^12 (which
+      # require php ^8.2) are unsatisfiable even on an 8.4 runner — the six
+      # L11/L12 legs failed on exactly that. Re-pointing it at the leg's own
+      # floor keeps the "lowest point of the line" rigour the pin exists for,
+      # which `--unset` would give up: unset, the 8.1 leg would resolve against
+      # the runner's 8.1.x patch release and a dependency needing >= 8.1.10
+      # would pass CI while breaking on 8.1.0.
+      - name: Point the platform pin at the PHP this leg runs
+        run: composer config platform.php "${{ matrix.php }}.0"
+
       - name: Pin dev tooling to the Laravel line under test
         run: |
           set -eux
