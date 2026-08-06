@@ -286,3 +286,39 @@ test('a refused withdrawal raises instead of returning the envelope', function (
         amount: 0.0001
     );
 })->throws(BitfinexNotificationException::class, 'Invalid withdrawal amount, minimum is 0.001 (ETH)');
+
+/** @link https://docs.bitfinex.com/reference/rest-auth-settings-set */
+test('writing settings maps the count its notification carries', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification([2], type: 'acc_ss'),
+    ]);
+
+    $response = $mock->authenticated()->accountAction()
+        ->userSettingsWrite(['api:key1' => 'foo', 'api:key2' => 'bar']);
+
+    expect($response->content['count'])->toBe(2)
+        ->and($mock->paths()[0])->toBe('/v2/auth/w/settings/set')
+        ->and($mock->bodyOf(0))->toMatchArray(['settings' => ['api:key1' => 'foo', 'api:key2' => 'bar']]);
+});
+
+test('a refused settings write raises instead of returning the envelope', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification(null, 'ERROR', 'acc_ss', 'Invalid setting key.'),
+    ]);
+
+    $mock->authenticated()->accountAction()->userSettingsWrite(['bad-key' => 'x']);
+})->throws(BitfinexNotificationException::class, 'Invalid setting key.');
+
+/** @link https://docs.bitfinex.com/reference/rest-auth-settings-del */
+test('deleting settings succeeds on the envelope status alone', function () {
+    $mock = BitfinexMock::queue([
+        Fixtures::notification([1], type: 'acc_sd'),
+    ]);
+
+    $response = $mock->authenticated()->accountAction()->userSettingsDelete(['api:key1']);
+
+    expect($response->content)->toHaveKey('notification')
+        ->and($response->content['notification']->status)->toBe('SUCCESS')
+        ->and($mock->paths()[0])->toBe('/v2/auth/w/settings/del')
+        ->and($mock->bodyOf(0))->toMatchArray(['keys' => ['api:key1']]);
+});

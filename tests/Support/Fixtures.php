@@ -246,6 +246,16 @@ final class Fixtures
         return [13080092, null, 'ethereum', null, 'exchange', 0.01, null, null, 0.00135];
     }
 
+    /**
+     * A position row, 20 positions, as carried in the DATA of the `pm-req`
+     * notification (a single flat array, not a list). Values from the documented
+     * example of `v2/auth/w/position/claim`.
+     */
+    public static function positionRow(): array
+    {
+        return ['tBTCUSD', 'ACTIVE', -0.001, 10119, 0, 0, null, null, null, null, null, 142031891, 1568650294000, 1568650294000, null, 0, null, 0, null, '{"reason":"TRADE"}'];
+    }
+
     /** An error envelope, which the API sends with HTTP 500. */
     public static function error(int $code = 10001, string $message = 'Invalid order: not enough exchange balance'): array
     {

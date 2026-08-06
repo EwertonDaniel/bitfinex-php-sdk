@@ -175,7 +175,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function submitOrder(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             $orders = array_map(fn ($order) => new Order($order), $notification->rows());
 
@@ -213,7 +213,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function orderNotification(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -279,7 +279,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function orderMultiOp(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             $operations = array_map(fn ($row) => new Notification($row), $notification->rows());
             $failures = array_values(array_filter($operations, fn (Notification $op) => ! $op->isSuccess()));
@@ -314,7 +314,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function orderCancelMulti(array $requestedIds = []): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) use ($requestedIds) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             $orders = array_map(fn ($row) => new Order($row), $notification->rows());
             $cancelledIds = array_map(fn (Order $order) => $order->id, $orders);
@@ -351,7 +351,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function fundingOfferSubmitted(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -374,7 +374,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function cancelFundingOffer(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -398,7 +398,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function cancelAllFundingOffers(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => [
-            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+            'notification' => $this->succeededNotification($content),
         ]);
     }
 
@@ -413,7 +413,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function fundingClose(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => [
-            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+            'notification' => $this->succeededNotification($content),
         ]);
     }
 
@@ -428,7 +428,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function fundingAutoRenew(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -451,7 +451,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function keepFunding(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => [
-            'notification' => $this->assertNotificationSucceeded(new Notification((array) $content)),
+            'notification' => $this->succeededNotification($content),
         ]);
     }
 
@@ -597,9 +597,33 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     /**
      * @return AuthenticatedBitfinexResponse with content array{positions: list<\EwertonDaniel\Bitfinex\Entities\Position>}.
      */
+    /**
+     * Transforms the notification returned by the position claim endpoint, whose
+     * DATA field holds the claimed position as a single, flat position array —
+     * not a list. The response used to be read as a plain list of positions, so
+     * a successful claim mapped each envelope field as a "position" and a
+     * refused claim passed as a success.
+     *
+     * The reference's field table labels TYPE as `on-req`, but its own embedded
+     * example shows `pm-req`; the table is boilerplate from the order submit page.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, position: \EwertonDaniel\Bitfinex\Entities\Position|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
+     */
     final public function positionsClaim(): AuthenticatedBitfinexResponse
     {
-        return $this->positions();
+        return $this->transformContent(function ($content) {
+            $notification = $this->succeededNotification($content);
+
+            return [
+                'notification' => $notification,
+                'position' => GetThis::ifTrueOrFallback(
+                    boolean: is_array($notification->data),
+                    callback: fn () => new Position($notification->data)
+                ),
+            ];
+        });
     }
 
     /**
@@ -647,7 +671,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function transferBetweenWallets(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -677,7 +701,7 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function withdrawal(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(function ($content) {
-            $notification = $this->assertNotificationSucceeded(new Notification((array) $content));
+            $notification = $this->succeededNotification($content);
 
             return [
                 'notification' => $notification,
@@ -690,11 +714,28 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{settings: mixed}.
+     * Transforms the notification returned by the settings write endpoint, whose
+     * DATA field holds `[NUMBER_OF_SETTINGS]` — how many settings were created
+     * or changed. The reference's field table types it as a string, but its own
+     * embedded example shows an integer; the example prevails.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification, count: int|null}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function userSettingsWrite(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['settings' => $content]);
+        return $this->transformContent(function ($content) {
+            $notification = $this->succeededNotification($content);
+
+            return [
+                'notification' => $notification,
+                'count' => GetThis::ifTrueOrFallback(
+                    boolean: is_numeric($notification->data[0] ?? null),
+                    callback: fn () => (int) $notification->data[0]
+                ),
+            ];
+        });
     }
 
     /**
@@ -706,11 +747,20 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     }
 
     /**
-     * @return AuthenticatedBitfinexResponse with content array{deleted: mixed}.
+     * Transforms the notification returned by the settings delete endpoint. The
+     * single element its DATA carries is labelled only PLACEHOLDER in the
+     * reference, so no meaning is asserted for it here: it stays raw on the
+     * notification for whoever needs it.
+     *
+     * @return AuthenticatedBitfinexResponse with content array{notification: \EwertonDaniel\Bitfinex\Entities\Notification}.
+     *
+     * @throws BitfinexNotificationException When the API reports a status other than SUCCESS.
      */
     final public function userSettingsDelete(): AuthenticatedBitfinexResponse
     {
-        return $this->transformContent(fn ($content) => ['deleted' => $content]);
+        return $this->transformContent(fn ($content) => [
+            'notification' => $this->succeededNotification($content),
+        ]);
     }
 
     // Merchants (Bitfinex Pay) mappings
@@ -856,6 +906,18 @@ class AuthenticatedBitfinexResponse extends BitfinexResponse
     final public function merchantUnlinkedDepositsList(): AuthenticatedBitfinexResponse
     {
         return $this->transformContent(fn ($content) => ['deposits' => $content]);
+    }
+
+    /**
+     * Reads the notification envelope out of a raw response body and applies the
+     * status gate — the one shared step of every notification transformer. How
+     * DATA is interpreted stays with each endpoint's own method.
+     *
+     * @throws BitfinexNotificationException
+     */
+    private function succeededNotification(mixed $content): Notification
+    {
+        return $this->assertNotificationSucceeded(new Notification((array) $content));
     }
 
     /**

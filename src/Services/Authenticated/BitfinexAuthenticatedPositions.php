@@ -5,6 +5,7 @@ namespace EwertonDaniel\Bitfinex\Services\Authenticated;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
 use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
@@ -63,6 +64,7 @@ class BitfinexAuthenticatedPositions
      * @param  float|string|null  $amount  Partial amount to claim; null claims the whole position.
      *
      * @throws BitfinexPathNotFoundException|GuzzleException
+     * @throws BitfinexNotificationException When the API refuses the claim.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-position-claim
      */

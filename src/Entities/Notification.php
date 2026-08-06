@@ -25,12 +25,17 @@ use Illuminate\Support\Carbon;
  * - `/auth/w/funding/offer/submit`     DATA is a single, flat funding offer
  * - `/auth/w/funding/offer/cancel`     DATA is a single, flat funding offer
  * - `/auth/w/funding/auto`             DATA is `[CURRENCY, PERIOD, RATE, THRESHOLD]`
+ * - `/auth/w/position/claim`           DATA is a single, flat position array
+ * - `/auth/w/settings/set`             DATA is `[NUMBER_OF_SETTINGS]`
+ * - `/auth/w/settings/del`             DATA is a one-element array the reference
+ *                                      labels only as PLACEHOLDER
  * - `/auth/w/funding/offer/cancel/all`,
  *   `/auth/w/funding/close`,
  *   `/auth/w/funding/keep`             DATA is null; the outcome lives in TEXT
  *
- * `/auth/w/alert/set` is the confirmed exception: it answers with the alert row
- * itself, not with this envelope.
+ * Two write endpoints confirmedly do NOT answer with this envelope:
+ * `/auth/w/alert/set` returns the alert row itself, and
+ * `/auth/w/deriv/collateral/set` returns `[[1]]` on success.
  *
  * STATUS at [6] is documented as an open set (`SUCCESS`, `ERROR`, `FAILURE`,
  * ...), so anything other than `SUCCESS` is a failure. TEXT at [7] is explicitly

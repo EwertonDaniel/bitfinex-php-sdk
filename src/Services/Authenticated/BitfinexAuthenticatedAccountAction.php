@@ -620,6 +620,7 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     * @throws BitfinexNotificationException When the API refuses the write.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-settings-set
      */
@@ -662,6 +663,7 @@ class BitfinexAuthenticatedAccountAction
      *
      * @throws GuzzleException
      * @throws BitfinexPathNotFoundException
+     * @throws BitfinexNotificationException When the API refuses the deletion.
      *
      * @link https://docs.bitfinex.com/reference/rest-auth-settings-del
      */

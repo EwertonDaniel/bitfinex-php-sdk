@@ -598,8 +598,12 @@ $resp->content['margin'];
 $resp = $auth->positions()->retrieve();
 $resp->content['positions']; // list<Position>
 
-// Claim: `id` is the position ID from retrieve(); amount is optional (partial claim)
+// Claim: `id` is the position ID from retrieve(); amount is optional (partial claim).
+// The answer is a notification whose DATA is the claimed position — a refused
+// claim raises BitfinexNotificationException.
 $resp = $auth->positions()->claim(id: 123456);
+$resp->content['position'];     // Position|null, as the exchange recorded the claim
+$resp->content['notification']; // Notification
 
 // Increase: the endpoint accepts only symbol and amount, there is no price
 $resp = $auth->positions()->increase('XMRUSD', 0.01);
@@ -743,10 +747,16 @@ $resp = $auth->accountAction()->alertSet('XMRUSD', 250); // create
 $resp = $auth->accountAction()->alertList('price');
 $resp = $auth->accountAction()->alertDelete('XMRUSD', 250); // delete
 
-// User settings: `keys` is required for both read and delete
+// User settings: `keys` is required for both read and delete. Write and delete
+// answer with a notification envelope — a refusal raises
+// BitfinexNotificationException.
 $resp = $auth->accountAction()->userSettingsWrite(['api:my_setting' => 'value']);
+$resp->content['count'];        // int|null, settings created or changed
+
 $resp = $auth->accountAction()->userSettingsRead(['api:my_setting']);
+
 $resp = $auth->accountAction()->userSettingsDelete(['api:my_setting']);
+$resp->content['notification']; // DATA's meaning is undocumented; it stays on the notification
 ```
 
 ### Merchants (Bitfinex Pay)
