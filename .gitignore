@@ -1,3 +1,10 @@
 /vendor/
 /.idea
 /phpunit.result.cache
+/.claude/
+
+# Real API credentials live here. It was untracked but not ignored, so a single
+# `git add .` would have committed the key and secret.
+/.env
+/.env.*
+!/.env.example

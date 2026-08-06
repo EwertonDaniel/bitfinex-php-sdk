@@ -5,7 +5,9 @@ namespace EwertonDaniel\Bitfinex\Services\Authenticated;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexNotificationException;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\DecimalToString;
 use EwertonDaniel\Bitfinex\Http\Requests\BitfinexRequest;
 use EwertonDaniel\Bitfinex\Http\Responses\AuthenticatedBitfinexResponse;
 use EwertonDaniel\Bitfinex\ValueObjects\BitfinexCredentials;
@@ -27,10 +29,13 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Margin info for a given key (e.g., 'base' or symbol specific).
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
     final public function marginInfo(string $key): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.margin_info", ['key' => $key])->getPath());
 
@@ -39,10 +44,13 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Retrieve open positions
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
     final public function retrieve(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.retrieve_positions")->getPath());
 
@@ -50,13 +58,22 @@ class BitfinexAuthenticatedPositions
     }
 
     /**
-     * Claim a position (symbol as trading pair like 'BTCUSD').
+     * Claim a position.
+     *
+     * @param  int  $id  Position ID, as returned by retrieve().
+     * @param  float|string|null  $amount  Partial amount to claim; null claims the whole position.
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
+     * @throws BitfinexNotificationException When the API refuses the claim.
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-position-claim
      */
-    final public function claim(string $pair, float $amount): AuthenticatedBitfinexResponse
+    final public function claim(int $id, float|string|null $amount = null): AuthenticatedBitfinexResponse
     {
-        $symbol = BitfinexType::TRADING->symbol($pair);
-        $this->request->setBody(['symbol' => $symbol, 'amount' => (string) $amount]);
+        $this->request->reset();
+
+        $this->request->setBody(['id' => $id]);
+        $this->request->addBody('amount', DecimalToString::convert($amount), true);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.claim_position")->getPath());
 
@@ -64,14 +81,25 @@ class BitfinexAuthenticatedPositions
     }
 
     /**
-     * Increase a position size
+     * Increase a position size.
+     *
+     * The endpoint accepts exactly `symbol` and `amount`. The `price` parameter
+     * that used to sit here was sending a field the API does not define, which
+     * could read as though the increase were priceable when it is not.
+     *
+     * @param  string  $pair  Trading pair (e.g., BTCUSD).
+     * @param  float|string  $amount  Amount to add to the position.
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-position-increase
      */
-    final public function increase(string $pair, float $amount, ?float $price = null): AuthenticatedBitfinexResponse
+    final public function increase(string $pair, float|string $amount): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::TRADING->symbol($pair);
-        $this->request->setBody(['symbol' => $symbol, 'amount' => (string) $amount]);
-        $this->request->addBody('price', $price, true);
+        $this->request->setBody(['symbol' => $symbol, 'amount' => DecimalToString::convert($amount)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.increase_position")->getPath());
 
@@ -80,14 +108,17 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Increase position info (optional symbol/amount details)
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
-    final public function increaseInfo(?string $pair = null, ?float $amount = null): AuthenticatedBitfinexResponse
+    final public function increaseInfo(?string $pair = null, float|string|null $amount = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         if ($pair) {
             $this->request->addBody('symbol', BitfinexType::TRADING->symbol($pair), true);
         }
-        $this->request->addBody('amount', $amount, true);
+        $this->request->addBody('amount', DecimalToString::convert($amount), true);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.increase_position_info")->getPath());
 
@@ -95,12 +126,26 @@ class BitfinexAuthenticatedPositions
     }
 
     /**
-     * Positions history
+     * Positions history.
+     *
+     * The endpoint takes `start`, `end`, `limit` and `id`; it has no `sort`
+     * field, so the parameter that used to sit here had no effect.
+     *
+     * @param  int|null  $start  Records with MTS >= start (ms).
+     * @param  int|null  $end  Records with MTS <= end (ms).
+     * @param  int|null  $limit  Maximum number of records (max 50).
+     * @param  int|null  $id  Restrict the result to a single position.
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-auth-positions-hist
      */
-    final public function history(?int $start = null, ?int $end = null, ?int $limit = null, ?int $sort = null): AuthenticatedBitfinexResponse
+    final public function history(?int $start = null, ?int $end = null, ?int $limit = null, ?int $id = null): AuthenticatedBitfinexResponse
     {
-        array_walk(compact('start', 'end', 'limit', 'sort'), fn ($v, $k) => $this->request->addBody($k, $v, true));
+        $this->request->reset();
+
+        $params = compact('start', 'end', 'limit', 'id');
+        array_walk($params, fn ($v, $k) => $this->request->addBody($k, $v, true));
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.positions_history")->getPath());
 
@@ -109,10 +154,13 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Positions snapshot
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
     final public function snapshot(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.positions_snapshot")->getPath());
 
@@ -121,10 +169,13 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Positions audit
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
     final public function audit(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.positions_audit")->getPath());
 
@@ -133,12 +184,15 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Set derivative position collateral
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
-    final public function setDerivativeCollateral(string $pair, float $collateral): AuthenticatedBitfinexResponse
+    final public function setDerivativeCollateral(string $pair, float|string $collateral): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $symbol = BitfinexType::TRADING->symbol($pair);
-        $this->request->setBody(['symbol' => $symbol, 'collateral' => (string) $collateral]);
+        $this->request->setBody(['symbol' => $symbol, 'collateral' => DecimalToString::convert($collateral)]);
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
         $response = $request->execute(apiPath: $this->url->setPath("$this->basePath.derivative_position_collateral")->getPath());
 
@@ -147,10 +201,13 @@ class BitfinexAuthenticatedPositions
 
     /**
      * Derivative position collateral limits (calc)
+     *
      * @throws BitfinexPathNotFoundException|GuzzleException
      */
     final public function derivativeCollateralLimits(?string $pair = null): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         if ($pair) {
             $this->request->addBody('symbol', BitfinexType::TRADING->symbol($pair), true);
         }
@@ -160,4 +217,3 @@ class BitfinexAuthenticatedPositions
         return $response->derivativePositionCollateralLimits();
     }
 }
-

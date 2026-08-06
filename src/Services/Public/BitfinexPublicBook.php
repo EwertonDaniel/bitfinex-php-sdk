@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
-use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
 use EwertonDaniel\Bitfinex\Enums\BookPrecision;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
@@ -18,6 +17,7 @@ class BitfinexPublicBook
 {
     /**
      * @param  BookPrecision|null  $precision  The precision level for the order book data (e.g., P0, P1).
+     *                                         Defaults to `P0`, the aggregated layout the book entities describe.
      * @param  int|null  $length  The maximum number of price levels to retrieve (default: 25).
      */
     public function __construct(
@@ -26,7 +26,7 @@ class BitfinexPublicBook
         private ?BookPrecision $precision,
         private readonly ?int $length = 25
     ) {
-        $this->precision = GetThis::ifTrueOrFallback($precision, $this->precision, fn () => BookPrecision::R0);
+        $this->precision = GetThis::ifTrueOrFallback($precision, $this->precision, fn () => BookPrecision::P0);
     }
 
     /**
@@ -50,7 +50,7 @@ class BitfinexPublicBook
 
             $apiResponse = $this->client->get($apiPath, ['query' => ['len' => $this->length]]);
 
-            return (new PublicBitfinexResponse($apiResponse))->book($symbol, $type);
+            return (new PublicBitfinexResponse($apiResponse))->book($symbol, $type, $this->precision);
         } catch (GuzzleException $e) {
             throw new BitfinexException($e->getMessage(), $e->getCode());
         }

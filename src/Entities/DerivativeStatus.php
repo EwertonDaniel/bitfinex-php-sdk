@@ -30,17 +30,29 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 class DerivativeStatus
 {
     public readonly ?string $key;
+
     public readonly ?int $mts;
+
     public readonly ?float $derivPrice;
+
     public readonly ?float $spotPrice;
+
     public readonly ?float $insuranceFundBalance;
+
     public readonly ?int $nextFundingEvtMts;
+
     public readonly ?float $nextFundingAccrued;
+
     public readonly ?int $nextFundingStep;
+
     public readonly ?float $currentFunding;
+
     public readonly ?float $markPrice;
+
     public readonly ?float $openInterest;
+
     public readonly ?float $clampMin;
+
     public readonly ?float $clampMax;
 
     public function __construct(array $data)
@@ -60,4 +72,3 @@ class DerivativeStatus
         $this->clampMax = GetThis::ifTrueOrFallback(isset($data[23]), fn () => (float) $data[23]);
     }
 }
-

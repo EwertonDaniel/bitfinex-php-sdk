@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Entities;
 
 use EwertonDaniel\Bitfinex\Helpers\GetThis;
-use GuzzleHttp\Utils;
 use Illuminate\Support\Arr;
 
 /**
@@ -129,7 +128,7 @@ class FundingCurrency
      */
     public function __toString(): string
     {
-        return Utils::jsonEncode($this->toArray());
+        return json_encode($this->toArray(), JSON_THROW_ON_ERROR);
     }
 
     /**

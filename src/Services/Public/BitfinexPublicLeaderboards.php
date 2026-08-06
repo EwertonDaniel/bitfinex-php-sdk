@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace EwertonDaniel\Bitfinex\Services\Public;
 
 use Carbon\Carbon;
-use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Builders\RequestBuilder;
+use EwertonDaniel\Bitfinex\Builders\UrlBuilder;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
-use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
-use EwertonDaniel\Bitfinex\Exceptions\BitfinexPathNotFoundException;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
 use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -36,11 +35,22 @@ class BitfinexPublicLeaderboards
         ?int $sort = null
     ): PublicBitfinexResponse {
         $symbol = BitfinexType::TRADING->symbol($pair);
+
         return $this->get($symbol, $start, $end, $limit, $sort);
     }
 
     /**
-     * Leaderboards by funding currency.
+     * Leaderboards for a currency, across every pair quoted in it.
+     *
+     * Rankings are not a funding endpoint: asking for `fUSD` answers HTTP 200
+     * with an empty array, which is how this method used to return nothing.
+     * The global board for a currency is addressed as `tGLOBAL:USD`.
+     *
+     * @param  string  $currency  Quote currency, e.g. USD. The `tGLOBAL:` prefix is added.
+     *
+     * @throws BitfinexException
+     *
+     * @link https://docs.bitfinex.com/reference/rest-public-rankings
      */
     final public function byCurrency(
         string $currency,
@@ -49,8 +59,7 @@ class BitfinexPublicLeaderboards
         ?int $limit = null,
         ?int $sort = null
     ): PublicBitfinexResponse {
-        $symbol = BitfinexType::FUNDING->symbol($currency);
-        return $this->get($symbol, $start, $end, $limit, $sort);
+        return $this->get('tGLOBAL:'.mb_strtoupper(ltrim(trim($currency), 'fF')), $start, $end, $limit, $sort);
     }
 
     private function get(
@@ -68,12 +77,12 @@ class BitfinexPublicLeaderboards
                 'section' => $this->section,
             ])->getPath();
 
-            $options = (new RequestBuilder())->setMethod('GET')->setQuery(array_filter([
-                    'start' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($start),
-                    'end' => (fn($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($end),
-                    'limit' => $limit,
-                    'sort' => $sort,
-                ], fn ($v) => ! is_null($v)))->getOptions();
+            $options = (new RequestBuilder)->setMethod('GET')->setQuery(array_filter([
+                'start' => (fn ($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($start),
+                'end' => (fn ($dt) => GetThis::ifTrueOrFallback(boolean: $dt instanceof Carbon, callback: fn () => $dt->getTimestampMs(), fallback: fn () => GetThis::ifTrueOrFallback(boolean: is_string($dt), callback: fn () => (new Carbon($dt))->getTimestampMs(), fallback: $dt)))($end),
+                'limit' => $limit,
+                'sort' => $sort,
+            ], fn ($v) => ! is_null($v)))->getOptions();
             $apiResponse = $this->client->get($apiPath, $options);
 
             return (new PublicBitfinexResponse($apiResponse))->leaderboards($this->key, $this->timeframe, $symbol, $this->section);
@@ -82,4 +91,3 @@ class BitfinexPublicLeaderboards
         }
     }
 }
-

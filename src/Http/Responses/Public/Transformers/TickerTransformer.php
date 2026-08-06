@@ -7,17 +7,17 @@ namespace EwertonDaniel\Bitfinex\Http\Responses\Public\Transformers;
 use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
 use EwertonDaniel\Bitfinex\Entities\TradingPair;
 use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
 use EwertonDaniel\Bitfinex\Http\Responses\Public\Contracts\PublicTransformer;
 
 /**
  * Maps single ticker array to TradingPair/FundingCurrency.
  */
-
 class TickerTransformer implements PublicTransformer
 {
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  array  $context  Contextual parameters.
+     * @param  mixed  $content  Decoded response content.
      * @return mixed Returns array{ticker: TradingPair|FundingCurrency}.
      */
     public function transform(array $context, mixed $content): mixed
@@ -28,6 +28,7 @@ class TickerTransformer implements PublicTransformer
         $ticker = match ($type) {
             BitfinexType::TRADING => new TradingPair($symbol, $content),
             BitfinexType::FUNDING => new FundingCurrency($symbol, $content),
+            default => throw new BitfinexException('Unknown Bitfinex type for a ticker: '.get_debug_type($type).'.'),
         };
 
         return ['ticker' => $ticker];

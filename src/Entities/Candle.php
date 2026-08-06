@@ -13,10 +13,15 @@ namespace EwertonDaniel\Bitfinex\Entities;
 class Candle
 {
     public readonly int $mts;
+
     public readonly float $open;
+
     public readonly float $close;
+
     public readonly float $high;
+
     public readonly float $low;
+
     public readonly float $volume;
 
     public function __construct(array $data)
@@ -29,4 +34,3 @@ class Candle
         $this->volume = (float) $data[5];
     }
 }
-

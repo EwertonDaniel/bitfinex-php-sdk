@@ -1,23 +1,25 @@
 <?php
 
 use EwertonDaniel\Bitfinex\Bitfinex;
-use EwertonDaniel\Bitfinex\Enums\BitfinexType;
-use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
-use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
-use EwertonDaniel\Bitfinex\Entities\TradingPair;
-use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
-use EwertonDaniel\Bitfinex\Entities\PairTrade;
-use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
-use EwertonDaniel\Bitfinex\Entities\BookTrading;
 use EwertonDaniel\Bitfinex\Entities\BookFunding;
-use EwertonDaniel\Bitfinex\Entities\Stat as StatEntity;
+use EwertonDaniel\Bitfinex\Entities\BookTrading;
 use EwertonDaniel\Bitfinex\Entities\Candle as CandleEntity;
 use EwertonDaniel\Bitfinex\Entities\ConfigEntry;
+use EwertonDaniel\Bitfinex\Entities\CurrencyTrade;
 use EwertonDaniel\Bitfinex\Entities\DerivativeStatus as DerivativeStatusEntity;
-use EwertonDaniel\Bitfinex\Entities\LeaderboardEntry;
-use EwertonDaniel\Bitfinex\Entities\FundingStat as FundingStatEntity;
-use EwertonDaniel\Bitfinex\Entities\MarketAveragePriceResult;
+use EwertonDaniel\Bitfinex\Entities\DerivativeStatusHistory as DerivativeStatusHistoryEntity;
 use EwertonDaniel\Bitfinex\Entities\ForeignExchangeRate;
+use EwertonDaniel\Bitfinex\Entities\FundingCurrency;
+use EwertonDaniel\Bitfinex\Entities\FundingStat as FundingStatEntity;
+use EwertonDaniel\Bitfinex\Entities\LeaderboardEntry;
+use EwertonDaniel\Bitfinex\Entities\MarketAveragePriceResult;
+use EwertonDaniel\Bitfinex\Entities\PairTrade;
+use EwertonDaniel\Bitfinex\Entities\Stat as StatEntity;
+use EwertonDaniel\Bitfinex\Entities\TradingPair;
+use EwertonDaniel\Bitfinex\Enums\BitfinexType;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+use EwertonDaniel\Bitfinex\Http\Responses\PublicBitfinexResponse;
+use EwertonDaniel\Bitfinex\Services\BitfinexPublic;
 
 test('Should retrieve bitfinex public class', function (Bitfinex $bitfinex) {
     expect($bitfinex->public())->toBeInstanceOf(BitfinexPublic::class);
@@ -28,7 +30,11 @@ test('Should retrieve bitfinex platform status', function (Bitfinex $bitfinex) {
 })->with('Bitfinex');
 
 test('Should retrieve bitfinex ticker', function (Bitfinex $bitfinex, string $symbol, BitfinexType $type) {
-    $expected = $type->isFunding() ? $bitfinex->public()->ticker()->byCurrency($symbol) : $bitfinex->public()->ticker()->byPair($symbol);
+    $expected = GetThis::ifTrueOrFallback(
+        boolean: $type->isFunding(),
+        callback: fn () => $bitfinex->public()->ticker()->byCurrency($symbol),
+        fallback: fn () => $bitfinex->public()->ticker()->byPair($symbol)
+    );
 
     expect($expected)->toBeInstanceOf(PublicBitfinexResponse::class);
     $ticker = $expected->content['ticker'] ?? null;
@@ -40,12 +46,16 @@ test('Should retrieve bitfinex ticker', function (Bitfinex $bitfinex, string $sy
 })->with('Bitfinex')->with('Pair/Currency and Type');
 
 test('Should retrieve bitfinex tickers', function (Bitfinex $bitfinex, array $symbols, BitfinexType $type) {
-    $expected = $type->isFunding() ? $bitfinex->public()->ticker()->byCurrencies($symbols) : $bitfinex->public()->ticker()->byPairs($symbols);
+    $expected = GetThis::ifTrueOrFallback(
+        boolean: $type->isFunding(),
+        callback: fn () => $bitfinex->public()->ticker()->byCurrencies($symbols),
+        fallback: fn () => $bitfinex->public()->ticker()->byPairs($symbols)
+    );
 
     expect($expected)->toBeInstanceOf(PublicBitfinexResponse::class);
     $items = $expected->content['tickers'] ?? [];
     expect($items)->toBeArray();
-    if (!empty($items)) {
+    if (! empty($items)) {
         if ($type->isFunding()) {
             expect($items[0])->toBeInstanceOf(FundingCurrency::class);
         } else {
@@ -61,12 +71,16 @@ test('Should retrieve bitfinex ticker history', function (Bitfinex $bitfinex, ar
 test('Should retrieve bitfinex trades', function (Bitfinex $bitfinex, $symbol, BitfinexType $type) {
     $trades = $bitfinex->public()->trades();
 
-    $expected = $type->isFunding() ? $trades->byCurrency($symbol) : $trades->byPair($symbol);
+    $expected = GetThis::ifTrueOrFallback(
+        boolean: $type->isFunding(),
+        callback: fn () => $trades->byCurrency($symbol),
+        fallback: fn () => $trades->byPair($symbol)
+    );
 
     expect($expected)->toBeInstanceOf(PublicBitfinexResponse::class);
     $trades = $expected->content['trades'] ?? [];
     expect($trades)->toBeArray();
-    if (!empty($trades)) {
+    if (! empty($trades)) {
         if ($type->isFunding()) {
             expect($trades[0])->toBeInstanceOf(CurrencyTrade::class);
         } else {
@@ -78,12 +92,16 @@ test('Should retrieve bitfinex trades', function (Bitfinex $bitfinex, $symbol, B
 test('Should retrieve bitfinex book', function (Bitfinex $bitfinex, $symbol, BitfinexType $type) {
     $book = $bitfinex->public()->book();
 
-    $expected = $type->isFunding() ? $book->byCurrency($symbol) : $book->byPair($symbol);
+    $expected = GetThis::ifTrueOrFallback(
+        boolean: $type->isFunding(),
+        callback: fn () => $book->byCurrency($symbol),
+        fallback: fn () => $book->byPair($symbol)
+    );
 
     expect($expected)->toBeInstanceOf(PublicBitfinexResponse::class);
     $books = $expected->content['books'] ?? [];
     expect($books)->toBeArray();
-    if (!empty($books)) {
+    if (! empty($books)) {
         if ($type->isFunding()) {
             expect($books[0])->toBeInstanceOf(BookFunding::class);
         } else {
@@ -94,12 +112,16 @@ test('Should retrieve bitfinex book', function (Bitfinex $bitfinex, $symbol, Bit
 
 test('Should retrieve bitfinex stats', function (Bitfinex $bitfinex, $symbol, BitfinexType $type) {
     $stats = $bitfinex->public()->stats(key: 'pos.size', size: '1m', sidePair: 'long', section: 'hist');
-    $expected = $type->isFunding() ? $stats->byCurrency($symbol) : $stats->byPair($symbol);
+    $expected = GetThis::ifTrueOrFallback(
+        boolean: $type->isFunding(),
+        callback: fn () => $stats->byCurrency($symbol),
+        fallback: fn () => $stats->byPair($symbol)
+    );
 
     expect($expected)->toBeInstanceOf(PublicBitfinexResponse::class);
     $stats = $expected->content['stats'] ?? [];
     expect($stats)->toBeArray();
-    if (!empty($stats)) {
+    if (! empty($stats)) {
         expect($stats[0])->toBeInstanceOf(StatEntity::class);
     }
 })->with('Bitfinex')->with('Pair/Currency and Type');
@@ -109,7 +131,7 @@ test('Should retrieve candles', function (Bitfinex $bitfinex) {
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
     $candles = $resp->content['candles'] ?? [];
     expect($candles)->toBeArray();
-    if (!empty($candles)) {
+    if (! empty($candles)) {
         expect($candles[0])->toBeInstanceOf(CandleEntity::class);
     }
 })->with('Bitfinex');
@@ -119,7 +141,7 @@ test('Should retrieve configs', function (Bitfinex $bitfinex) {
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
     $configs = $resp->content['configs'] ?? [];
     expect($configs)->toBeArray();
-    if (!empty($configs)) {
+    if (! empty($configs)) {
         expect($configs[0])->toBeInstanceOf(ConfigEntry::class);
     }
 })->with('Bitfinex');
@@ -129,14 +151,26 @@ test('Should retrieve derivatives status', function (Bitfinex $bitfinex) {
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
     $items = $resp->content['items'] ?? [];
     expect($items)->toBeArray();
-    if (!empty($items)) {
+    if (! empty($items)) {
         expect($items[0])->toBeInstanceOf(DerivativeStatusEntity::class);
     }
 })->with('Bitfinex');
 
 test('Should retrieve derivatives status history', function (Bitfinex $bitfinex) {
-    $resp = $bitfinex->public()->derivativesStatusHistory()->get(start: 1700000000000, end: 1700100000000, limit: 5, sort: -1);
+    // The history endpoint carries the symbol in the path and returns rows with no
+    // leading KEY field, so it maps to DerivativeStatusHistory, not DerivativeStatus.
+    $resp = $bitfinex->public()->derivativesStatusHistory()->history('tBTCF0:USTF0', limit: 5, sort: -1);
+
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
+    $items = $resp->content['items'] ?? [];
+    expect($items)->toBeArray();
+
+    if (! empty($items)) {
+        expect($items[0])->toBeInstanceOf(DerivativeStatusHistoryEntity::class)
+            // A history row's first field is a timestamp; reading it with the
+            // snapshot entity would take the price here instead.
+            ->and($items[0]->mts)->toBeGreaterThan(1_000_000_000_000);
+    }
 })->with('Bitfinex');
 
 test('Should retrieve liquidations', function (Bitfinex $bitfinex) {
@@ -149,7 +183,7 @@ test('Should retrieve leaderboards', function (Bitfinex $bitfinex) {
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
     $items = $resp->content['items'] ?? [];
     expect($items)->toBeArray();
-    if (!empty($items)) {
+    if (! empty($items)) {
         expect($items[0])->toBeInstanceOf(LeaderboardEntry::class);
     }
 })->with('Bitfinex');
@@ -159,7 +193,7 @@ test('Should retrieve funding stats', function (Bitfinex $bitfinex) {
     expect($resp)->toBeInstanceOf(PublicBitfinexResponse::class);
     $items = $resp->content['items'] ?? [];
     expect($items)->toBeArray();
-    if (!empty($items)) {
+    if (! empty($items)) {
         expect($items[0])->toBeInstanceOf(FundingStatEntity::class);
     }
 })->with('Bitfinex');

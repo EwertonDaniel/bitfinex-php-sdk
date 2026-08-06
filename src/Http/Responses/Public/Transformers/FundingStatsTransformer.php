@@ -10,12 +10,11 @@ use EwertonDaniel\Bitfinex\Http\Responses\Public\Contracts\PublicTransformer;
 /**
  * Maps funding stats rows to FundingStat.
  */
-
 class FundingStatsTransformer implements PublicTransformer
 {
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  array  $context  Contextual parameters.
+     * @param  mixed  $content  Decoded response content.
      * @return mixed Returns array{symbol, items: list<FundingStat>}.
      */
     public function transform(array $context, mixed $content): mixed

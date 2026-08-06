@@ -8,8 +8,10 @@
     "trades": "v2/trades/{symbol}/hist",
     "book": "v2/book/{symbol}/{precision}",
     "stats_one": "v2/stats1/{key}:{size}:{sym_platform}:{side_pair}/{section}",
+    "stats_one_no_side": "v2/stats1/{key}:{size}:{sym_platform}/{section}",
     "configs": "v2/conf/{keys}",
     "derivatives_status": "v2/status/deriv",
+    "derivatives_status_history": "v2/status/deriv/{symbol}/hist",
     "liquidations": "v2/liquidations/hist",
     "leaderboards": "v2/rankings/{key}:{timeframe}:{symbol}/{section}",
     "funding_stats": "v2/funding/stats/{symbol}/hist",
@@ -29,7 +31,9 @@
       "orders_history": "v2/auth/r/orders/hist",
       "order_trades": "v2/auth/r/order/{symbol}:{id}/trades",
       "trades": "v2/auth/r/trades/hist",
-      "ledgers": "v2/auth/r/ledgers/{currency}/hist"
+      "trades_by_symbol": "v2/auth/r/trades/{symbol}/hist",
+      "ledgers": "v2/auth/r/ledgers/{currency}/hist",
+      "ledgers_all": "v2/auth/r/ledgers/hist"
     },
     "positions": {
       "margin_info": "v2/auth/r/info/margin/{key}",

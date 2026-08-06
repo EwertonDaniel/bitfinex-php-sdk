@@ -18,4 +18,3 @@ test('maps conf to ConfigEntry entities and skips missing', function () {
         ->toHaveCount(1)
         ->and($resp->content['configs'][0]->key)->toBe('pub:map:currency:sym');
 });
-

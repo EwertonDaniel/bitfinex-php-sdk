@@ -60,6 +60,8 @@ class BitfinexAuthenticatedWallet
      */
     final public function get(): AuthenticatedBitfinexResponse
     {
+        $this->request->reset();
+
         $request = new BitfinexRequest($this->request, $this->credentials, $this->client);
 
         $apiPath = $this->url->setPath("$this->basePath.wallets")->getPath();

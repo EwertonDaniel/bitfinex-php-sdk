@@ -24,7 +24,6 @@ class BitfinexPublicConfigs
      *
      * @param  string|array  $keys  Single key (string), list of keys (array), or structured by mode (e.g., ['map' => [...], 'list' => [...], 'info' => [...]]).
      * @param  array  $query  Optional query params (e.g., flags).
-     * @return PublicBitfinexResponse
      *
      * @throws BitfinexException
      * @throws BitfinexPathNotFoundException
@@ -41,28 +40,29 @@ class BitfinexPublicConfigs
             if ($hasAssociative) {
                 $expanded = [];
                 foreach ($keysList as $mode => $items) {
-                    if (!is_array($items)) {
+                    if (! is_array($items)) {
                         $items = [$items];
                     }
                     foreach ($items as $item) {
                         // If already full key, keep as-is
                         if (is_string($item) && str_starts_with($item, 'pub:')) {
                             $expanded[] = $item;
+
                             continue;
                         }
                         $item = (string) $item;
                         switch ((string) $mode) {
                             case 'map':
-                                $expanded[] = 'pub:map:' . $item;
+                                $expanded[] = 'pub:map:'.$item;
                                 break;
                             case 'list':
-                                $expanded[] = 'pub:list:' . $item;
+                                $expanded[] = 'pub:list:'.$item;
                                 break;
                             case 'info':
                                 if (str_starts_with($item, 'tx:status')) {
                                     $expanded[] = 'pub:info:tx:status';
                                 } else {
-                                    $expanded[] = 'pub:info:' . $item;
+                                    $expanded[] = 'pub:info:'.$item;
                                 }
                                 break;
                             default:

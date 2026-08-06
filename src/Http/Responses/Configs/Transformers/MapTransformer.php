@@ -9,7 +9,6 @@ use EwertonDaniel\Bitfinex\Http\Responses\Configs\Contracts\ConfigTransformer;
 /**
  * Maps [[k,v],...] to associative dict.
  */
-
 class MapTransformer implements ConfigTransformer
 {
     public function supports(string $key, mixed $value): bool
@@ -18,8 +17,8 @@ class MapTransformer implements ConfigTransformer
     }
 
     /**
-     * @param array $context Contextual parameters.
-     * @param mixed $content Decoded response content.
+     * @param  string  $key  Config key the response came from (e.g. pub:map:currency:sym).
+     * @param  mixed  $value  Decoded payload for that key.
      * @return mixed Returns dict<string,mixed>.
      */
     public function transform(string $key, mixed $value): mixed
@@ -30,6 +29,7 @@ class MapTransformer implements ConfigTransformer
                 $map[(string) $pair[0]] = $pair[1];
             }
         }
+
         return $map;
     }
 }

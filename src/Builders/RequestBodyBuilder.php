@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace EwertonDaniel\Bitfinex\Builders;
 
+use EwertonDaniel\Bitfinex\Exceptions\BitfinexException;
+use EwertonDaniel\Bitfinex\Helpers\GetThis;
+use JsonException;
+use stdClass;
+
 /**
  * Class RequestBodyBuilder
  *
@@ -82,11 +87,34 @@ class RequestBodyBuilder
      * Converts the body parameters to a JSON string.
      *
      * Encodes the current body parameters into a JSON string with unescaped slashes.
+     * An empty body is encoded as `{}` rather than `[]`, since the API expects a JSON object.
      *
      * @return string The JSON representation of the body parameters.
      */
     final public function __toString(): string
     {
-        return json_encode($this->get(), JSON_UNESCAPED_SLASHES);
+        $body = $this->get();
+
+        $payload = GetThis::ifTrueOrFallback(
+            boolean: ! empty($body),
+            callback: $body,
+            fallback: fn () => new stdClass
+        );
+
+        try {
+            return json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            // Without this, a failed encode returned false and PHP raised a
+            // TypeError on the string return type. It happens twice per request
+            // (once to sign, once to send), so the caller saw a TypeError instead
+            // of being told which parameter it could not serialize. Invalid UTF-8
+            // in `meta` and NAN/INF amounts are the realistic triggers.
+            throw new BitfinexException(
+                'Could not encode the request body as JSON: '.$e->getMessage().
+                '. Check text fields for invalid UTF-8 and numeric fields for NAN or INF.',
+                $e->getCode(),
+                $e
+            );
+        }
     }
 }

@@ -9,8 +9,11 @@ use EwertonDaniel\Bitfinex\Helpers\GetThis;
 class PairInfoBlock
 {
     public readonly ?float $minOrderSize;
+
     public readonly ?float $maxOrderSize;
+
     public readonly ?float $initialMargin;
+
     public readonly ?float $minMargin;
 
     /**
@@ -25,4 +28,3 @@ class PairInfoBlock
         $this->minMargin = GetThis::ifTrueOrFallback(isset($data[9]), fn () => (float) $data[9]);
     }
 }
-
